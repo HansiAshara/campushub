@@ -1,0 +1,9 @@
+CampusHub- Supabase
+
+pw= IzTMbCxCtTocoRVX
+
+publishable key= sb_publishable_6mo3nbHQRgVpmsAdpbtxsA_JLe4X-RE
+
+secret key= sb_secret__Is8SdCMQ_FBkoBrf80Zew_jy5HezV2
+
+project url= https://feiuvwqkdecjvtwtmsnt.supabase.com
