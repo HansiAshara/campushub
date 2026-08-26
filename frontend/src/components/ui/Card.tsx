@@ -4,8 +4,9 @@ function Card({ children, style }: { children: React.ReactNode; style?: React.CS
             style={{
                 backgroundColor: "var(--color-card)",
                 border: "1px solid var(--color-border)",
-                borderRadius: 10,
-                padding: 20,
+                borderRadius: 16,
+                padding: 24,
+                boxShadow: "var(--shadow-md)",
                 ...style,
             }}
         >

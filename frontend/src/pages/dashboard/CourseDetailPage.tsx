@@ -29,27 +29,27 @@ function CourseDetailPage() {
     const contributors = new Set(resources.map((r) => r.uploadedByName)).size;
 
     return (
-        <div style={{ maxWidth: 820 }}>
-            <Link to="/dashboard/courses" style={{ fontSize: 13, color: "var(--color-text-muted)" }}>← Back to Courses</Link>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+            <Link to="/dashboard/courses" style={{ fontSize: 13, color: "#64748B", fontWeight: 500 }}>← Back to Courses</Link>
 
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", margin: "10px 0 24px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", margin: "16px 0 28px" }}>
                 <div>
-                    <span className="stamp" style={{ color: "var(--color-ink)" }}>{course?.code}</span>
-                    <h1 style={{ fontSize: 28, marginTop: 8 }}>{course?.name}</h1>
-                    <p style={{ color: "var(--color-text-muted)", fontSize: 14 }}>{course?.semester}</p>
+                    <span className="stamp" style={{ color: "#047857", backgroundColor: "#D1FAE5", border: "1px solid #A7F3D0" }}>{course?.code}</span>
+                    <h1 style={{ fontSize: 28, fontWeight: 700, color: "#0F172A", marginTop: 8 }}>{course?.name}</h1>
+                    <p style={{ color: "#64748B", fontSize: 14, marginTop: 4 }}>{course?.semester}</p>
                 </div>
                 <Link to={`/dashboard/courses/${courseId}/upload`}>
                     <Button variant="chalk">+ Upload Resource</Button>
                 </Link>
             </div>
 
-            <div style={{ display: "flex", gap: 16, marginBottom: 28 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20, marginBottom: 32 }}>
                 <KpiCard label="Resources" value={resources.length} />
                 <KpiCard label="Contributors" value={contributors} />
             </div>
 
             {resources.length === 0 ? (
-                <p style={{ color: "var(--color-text-muted)" }}>Nothing uploaded yet — be the first to share.</p>
+                <p style={{ color: "#64748B" }}>Nothing uploaded yet — be the first to share.</p>
             ) : (
                 resources.map((r) => <ResourceItem key={r.id} resource={r} />)
             )}

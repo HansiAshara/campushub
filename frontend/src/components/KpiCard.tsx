@@ -1,20 +1,32 @@
-function KpiCard({ label, value }: { label: string; value: string | number }) {
+interface KpiCardProps {
+    label: string;
+    value: string | number;
+    subtext?: string;
+}
+
+function KpiCard({ label, value, subtext }: KpiCardProps) {
     return (
         <div
             style={{
-                backgroundColor: "var(--color-card)",
-                border: "1px solid var(--color-border)",
-                borderRadius: 10,
-                padding: "18px 20px",
+                backgroundColor: "#FFFFFF",
+                border: "1px solid #E2E8F0",
+                borderRadius: 16,
+                padding: "20px 24px",
                 flex: 1,
+                boxShadow: "var(--shadow-sm)",
             }}
         >
-            <div style={{ fontFamily: "var(--font-display)", fontSize: 32, fontWeight: 600, color: "var(--color-ink)" }}>
-                {value}
-            </div>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--color-text-muted)", marginTop: 4 }}>
+            <div style={{ fontSize: 13, fontWeight: 500, color: "#64748B", marginBottom: 12 }}>
                 {label}
             </div>
+            <div style={{ fontSize: 28, fontWeight: 700, color: "#0F172A", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+                {value}
+            </div>
+            {subtext && (
+                <div style={{ fontSize: 12, color: "#94A3B8", marginTop: 8 }}>
+                    {subtext}
+                </div>
+            )}
         </div>
     );
 }
