@@ -1,9 +1,19 @@
 CampusHub- Supabase
 
 pw= IzTMbCxCtTocoRVX
-
 publishable key= sb_publishable_6mo3nbHQRgVpmsAdpbtxsA_JLe4X-RE
-
 secret key= sb_secret__Is8SdCMQ_FBkoBrf80Zew_jy5HezV2
-
 project url= https://feiuvwqkdecjvtwtmsnt.supabase.com
+
+
+Run Spring Boot Backend:     .\mvnw.cmd spring-boot:run
+
+
+
+
+To avoid  backend 8080 port blocking:
+   in powershell: 
+
+
+"I used Supabase as a managed PostgreSQL host with Spring Data JPA," not 
+"I used Supabase as a database"
