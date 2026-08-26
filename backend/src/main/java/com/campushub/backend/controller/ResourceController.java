@@ -1,11 +1,10 @@
 package com.campushub.backend.controller;
 
-import com.campushub.backend.dto.ResourceRequest;
 import com.campushub.backend.dto.ResourceResponse;
 import com.campushub.backend.service.ResourceService;
-import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -19,9 +18,14 @@ public class ResourceController {
         this.resourceService = resourceService;
     }
 
-    @PostMapping
-    public ResponseEntity<ResourceResponse> create(@Valid @RequestBody ResourceRequest request) {
-        return ResponseEntity.ok(resourceService.create(request));
+    @PostMapping(consumes = "multipart/form-data")
+    public ResponseEntity<ResourceResponse> upload(
+            @RequestParam String title,
+            @RequestParam String resourceType,
+            @RequestParam Long courseId,
+            @RequestParam MultipartFile file) {
+
+        return ResponseEntity.ok(resourceService.uploadResource(title, resourceType, courseId, file));
     }
 
     @GetMapping
