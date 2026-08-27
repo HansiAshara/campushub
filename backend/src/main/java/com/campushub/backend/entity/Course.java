@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
-@Table(name = "courses")
+@Table(name = "courses", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"code", "batch_id"})
+})
 @Data
 public class Course {
 
@@ -12,11 +14,19 @@ public class Course {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String code; // e.g. "IT2050"
+    @Column(nullable = false)
+    private String code; // e.g. "IN2340"
 
     @Column(nullable = false)
-    private String name; // e.g. "Database Systems"
+    private String name;
 
-    private String semester; // e.g. "Year 2 Sem 1"
+    @Column(nullable = false)
+    private int academicYear; // 1-4
+
+    @Column(nullable = false)
+    private int semesterNumber; // 1 or 2
+
+    @ManyToOne
+    @JoinColumn(name = "batch_id", nullable = false)
+    private Batch batch;
 }

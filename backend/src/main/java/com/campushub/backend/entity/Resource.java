@@ -39,6 +39,6 @@ public class Resource {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     public enum ResourceType {
-        PAST_PAPER, TUTE, KUPPI_NOTES, SLIDES
+        PAST_PAPER, TUTE, KUPPI_NOTES, SLIDES, NOTES
     }
 }
