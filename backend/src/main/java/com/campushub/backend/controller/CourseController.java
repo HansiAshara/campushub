@@ -24,13 +24,25 @@ public class CourseController {
         return ResponseEntity.ok(courseService.create(request));
     }
 
-    @GetMapping
-    public ResponseEntity<List<CourseResponse>> getAll() {
-        return ResponseEntity.ok(courseService.getAll());
+    @GetMapping("/batch/{batchId}")
+    public ResponseEntity<List<CourseResponse>> getByBatch(@PathVariable Long batchId) {
+        return ResponseEntity.ok(courseService.getByBatch(batchId));
+    }
+
+    @GetMapping("/batch/{batchId}/year/{year}/semester/{semester}")
+    public ResponseEntity<List<CourseResponse>> getByBatchAndSemester(
+            @PathVariable Long batchId, @PathVariable int year, @PathVariable int semester) {
+        return ResponseEntity.ok(courseService.getByBatchAndSemester(batchId, year, semester));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<CourseResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(courseService.getById(id));
+    }
+
+    @PostMapping("/{courseId}/moderators/{userId}")
+    public ResponseEntity<Void> assignModerator(@PathVariable Long courseId, @PathVariable Long userId) {
+        courseService.assignModerator(courseId, userId);
+        return ResponseEntity.ok().build();
     }
 }
