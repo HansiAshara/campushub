@@ -28,6 +28,12 @@ function CourseDetailPage() {
 
     const contributors = new Set(resources.map((r) => r.uploadedByName)).size;
 
+    const latestUpload = resources.length > 0
+        ? new Date(
+            Math.max(...resources.map((r) => new Date(r.createdAt).getTime()))
+        ).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+        : "—";
+
     return (
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <Link to="/dashboard/courses" style={{ fontSize: 13, color: "#64748B", fontWeight: 500 }}>← Back to Courses</Link>
@@ -46,6 +52,7 @@ function CourseDetailPage() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20, marginBottom: 32 }}>
                 <KpiCard label="Resources" value={resources.length} />
                 <KpiCard label="Contributors" value={contributors} />
+                <KpiCard label="Latest Upload" value={latestUpload} />
             </div>
 
             {resources.length === 0 ? (

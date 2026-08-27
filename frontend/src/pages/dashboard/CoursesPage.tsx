@@ -8,6 +8,7 @@ function CoursesPage() {
     const [courses, setCourses] = useState<Course[]>([]);
     const [resourceCount, setResourceCount] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [latestUpload, setLatestUpload] = useState("—");
 
     useEffect(() => {
         Promise.all([
@@ -17,6 +18,12 @@ function CoursesPage() {
             .then(([coursesRes, resourcesRes]) => {
                 setCourses(coursesRes.data);
                 setResourceCount(resourcesRes.data.length);
+                const latestUpload = resourcesRes.data.length > 0
+                    ? new Date(
+                        Math.max(...resourcesRes.data.map((r) => new Date(r.createdAt).getTime()))
+                    ).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+                    : "—";
+                setLatestUpload(latestUpload);
             })
             .finally(() => setLoading(false));
     }, []);
@@ -79,7 +86,7 @@ function CoursesPage() {
                 <KpiCard label="Total Courses" value={courses.length} />
                 <KpiCard label="Resources Shared" value={resourceCount} />
                 <KpiCard label="Top Category" value="Kuppi Notes" />
-                <KpiCard label="Duplicates Blocked" value="0" />
+                <KpiCard label="Latest Upload" value={latestUpload} />
             </div>
 
             {courses.length === 0 ? (
