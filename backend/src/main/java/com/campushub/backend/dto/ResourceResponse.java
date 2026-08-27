@@ -2,6 +2,7 @@ package com.campushub.backend.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+
 import java.time.LocalDateTime;
 
 @Data
@@ -14,5 +15,7 @@ public class ResourceResponse {
     private String summary;
     private String courseName;
     private String uploadedByName;
+    private Long uploadedById;
     private LocalDateTime createdAt;
+    private boolean canEdit;
 }

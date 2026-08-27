@@ -9,5 +9,8 @@ public class CourseResponse {
     private Long id;
     private String code;
     private String name;
-    private String semester;
+    private int academicYear;
+    private int semesterNumber;
+    private String batchName;
+    private boolean canManage;
 }
