@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
+import Topbar from "./Topbar";
 
 function DashboardLayout() {
     const token = localStorage.getItem("token");
@@ -8,9 +9,12 @@ function DashboardLayout() {
     return (
         <div style={{ display: "flex" }}>
             <Sidebar />
-            <main style={{ flex: 1, padding: "36px 48px", minHeight: "100vh" }}>
-                <Outlet />
-            </main>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                <Topbar />
+                <main style={{ flex: 1, padding: "36px 48px", minHeight: "100vh" }}>
+                    <Outlet />
+                </main>
+            </div>
         </div>
     );
 }
