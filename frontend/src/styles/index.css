@@ -337,27 +337,23 @@
 /*    SCROLLBAR          */
 /* ===================== */
 .custom-scrollbar::-webkit-scrollbar,
-div::-webkit-scrollbar,
 textarea::-webkit-scrollbar {
   width: 5px;
   height: 5px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track,
-div::-webkit-scrollbar-track,
 textarea::-webkit-scrollbar-track {
   background: transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb,
-div::-webkit-scrollbar-thumb,
 textarea::-webkit-scrollbar-thumb {
   background: #D1D5DB;
   border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover,
-div::-webkit-scrollbar-thumb:hover,
 textarea::-webkit-scrollbar-thumb:hover {
   background: #9CA3AF;
 }
