@@ -22,12 +22,22 @@ public class User {      //use User instead of users for class name to avoid con
     @Column(nullable = false)
     private String passwordHash;
 
+    @Column(nullable = true, unique = true)
+    private String indexNo;
+
+    @ManyToOne
+    @JoinColumn(name = "batch_id", nullable = true)
+    private Batch batch;
+
+    @Column(nullable = true)
+    private Integer academicYear;
+
     @Enumerated(EnumType.STRING)
     private Role role = Role.STUDENT;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
     public enum Role {
-        STUDENT, MODULE_REP, ADMIN
+        STUDENT, BATCH_LEADER, MODULE_REP, ADMIN
     }
 }

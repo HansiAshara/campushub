@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 @RestController
 @RequestMapping("/api/courses")
 public class CourseController {
@@ -20,6 +22,7 @@ public class CourseController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CourseResponse> create(@Valid @RequestBody CourseRequest request) {
         return ResponseEntity.ok(courseService.create(request));
     }
@@ -41,6 +44,7 @@ public class CourseController {
     }
 
     @PostMapping("/{courseId}/moderators/{userId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BATCH_LEADER')")
     public ResponseEntity<Void> assignModerator(@PathVariable Long courseId, @PathVariable Long userId) {
         courseService.assignModerator(courseId, userId);
         return ResponseEntity.ok().build();

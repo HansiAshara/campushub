@@ -1,29 +1,35 @@
 import { type ButtonHTMLAttributes } from "react";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: "primary" | "accent" | "ghost" | "danger";
+    variant?: "primary" | "ghost" | "danger";
     fullWidth?: boolean;
 }
 
-function Button({ variant = "primary", fullWidth, style, children, ...rest }: ButtonProps) {
-    const variants: Record<string, React.CSSProperties> = {
-        primary: { backgroundColor: "var(--color-primary)", color: "#fff", border: "1px solid var(--color-primary)" },
-        accent: { backgroundColor: "var(--color-accent)", color: "#fff", border: "1px solid var(--color-accent)" },
-        ghost: { backgroundColor: "transparent", color: "var(--color-primary-dark)", border: "1px solid var(--color-border)" },
-        danger: { backgroundColor: "var(--color-error)", color: "#fff", border: "1px solid var(--color-error)" },
-    };
+const VARIANT_STYLES: Record<string, React.CSSProperties> = {
+    primary: { background: "#10B981", color: "white", border: "none" },
+    ghost: { background: "white", color: "#374151", border: "1px solid #E5E7EB" },
+    danger: { background: "#EF4444", color: "white", border: "none" },
+};
 
+function Button({ variant = "primary", fullWidth, style, children, ...rest }: ButtonProps) {
     return (
         <button
             {...rest}
             style={{
-                padding: "10px 18px", borderRadius: 8, cursor: "pointer",
-                fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 14,
-                width: fullWidth ? "100%" : undefined, transition: "opacity 0.15s ease",
-                ...variants[variant], ...style,
+                display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
+                padding: "9px 18px",
+                borderRadius: 8,
+                fontSize: 14, fontWeight: 600,
+                cursor: "pointer",
+                fontFamily: "var(--font-sans)",
+                transition: "opacity 0.12s, background 0.12s",
+                width: fullWidth ? "100%" : undefined,
+                ...VARIANT_STYLES[variant],
+                ...(rest.disabled ? { opacity: 0.6, cursor: "not-allowed" } : {}),
+                ...style,
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
-            onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+            onMouseEnter={(e) => !rest.disabled && ((e.currentTarget as HTMLElement).style.opacity = "0.9")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.opacity = "1")}
         >
             {children}
         </button>

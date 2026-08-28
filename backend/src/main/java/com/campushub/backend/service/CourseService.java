@@ -83,11 +83,17 @@ public class CourseService {
 
     public void assignModerator(Long courseId, Long userId) {
         User currentUser = currentUser();
+        Course course = courseRepository.findById(courseId).orElseThrow(() -> new IllegalArgumentException("Course not found"));
+
         if (!permissionService.isAdmin(currentUser)) {
-            throw new AccessDeniedException("Only admins can assign module reps");
+            boolean isBatchLeader = currentUser.getRole() == User.Role.BATCH_LEADER;
+            boolean isSameBatch = isBatchLeader && currentUser.getBatch() != null && course.getBatch() != null 
+                    && currentUser.getBatch().getId().equals(course.getBatch().getId());
+            if (!isSameBatch) {
+                throw new AccessDeniedException("Only admins or the batch leader of this batch can assign module reps");
+            }
         }
 
-        Course course = courseRepository.findById(courseId).orElseThrow(() -> new IllegalArgumentException("Course not found"));
         User targetUser = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         if (courseModeratorRepository.existsByCourseIdAndUserId(courseId, userId)) return;

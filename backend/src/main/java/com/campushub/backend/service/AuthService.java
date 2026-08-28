@@ -2,7 +2,9 @@ package com.campushub.backend.service;
 
 import com.campushub.backend.dto.*;
 import com.campushub.backend.entity.User;
+import com.campushub.backend.entity.Batch;
 import com.campushub.backend.repository.UserRepository;
+import com.campushub.backend.repository.BatchRepository;
 import com.campushub.backend.security.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -11,11 +13,13 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final BatchRepository batchRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+    public AuthService(UserRepository userRepository, BatchRepository batchRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
+        this.batchRepository = batchRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
     }
@@ -29,11 +33,24 @@ public class AuthService {
         user.setName(request.getName());
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setIndexNo(request.getIndexNo());
+        user.setAcademicYear(request.getAcademicYear());
 
-        userRepository.save(user);
+        if (request.getBatchId() != null) {
+            Batch batch = batchRepository.findById(request.getBatchId())
+                    .orElseThrow(() -> new IllegalArgumentException("Batch not found"));
+            user.setBatch(batch);
+        }
 
-        String token = jwtUtil.generateToken(user.getEmail());
-        return new AuthResponse(token, user.getName(), user.getEmail(), user.getRole().name());
+        // Assign ADMIN role if email is admin@uom.lk
+        if ("admin@uom.lk".equalsIgnoreCase(request.getEmail())) {
+            user.setRole(User.Role.ADMIN);
+        }
+
+        User savedUser = userRepository.save(user);
+
+        String token = jwtUtil.generateToken(savedUser.getEmail());
+        return toAuthResponse(token, savedUser);
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -45,6 +62,21 @@ public class AuthService {
         }
 
         String token = jwtUtil.generateToken(user.getEmail());
-        return new AuthResponse(token, user.getName(), user.getEmail(), user.getRole().name());
+        return toAuthResponse(token, user);
+    }
+
+    private AuthResponse toAuthResponse(String token, User user) {
+        Long batchId = user.getBatch() != null ? user.getBatch().getId() : null;
+        String batchName = user.getBatch() != null ? user.getBatch().getName() : null;
+        return new AuthResponse(
+                token,
+                user.getName(),
+                user.getEmail(),
+                user.getRole().name(),
+                user.getIndexNo(),
+                batchId,
+                batchName,
+                user.getAcademicYear()
+        );
     }
 }

@@ -7,6 +7,15 @@ import SemesterCoursesPage from "../pages/dashboard/SemesterCoursesPage";
 import CourseDetailPage from "../pages/dashboard/CourseDetailPage";
 import UploadResourcePage from "../pages/dashboard/UploadResourcePage";
 import MyUploadsPage from "../pages/dashboard/MyUploadsPage";
+import AdminPanelPage from "../pages/dashboard/AdminPanelPage";
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+    const role = localStorage.getItem("role");
+    if (role !== "ADMIN" && role !== "BATCH_LEADER") {
+        return <Navigate to="/dashboard/batches" replace />;
+    }
+    return <>{children}</>;
+}
 
 function AppRoutes() {
     return (
@@ -21,6 +30,7 @@ function AppRoutes() {
                 <Route path="/dashboard/courses/:courseId" element={<CourseDetailPage />} />
                 <Route path="/dashboard/courses/:courseId/upload" element={<UploadResourcePage />} />
                 <Route path="/dashboard/my-uploads" element={<MyUploadsPage />} />
+                <Route path="/dashboard/admin" element={<AdminRoute><AdminPanelPage /></AdminRoute>} />
             </Route>
         </Routes>
     );

@@ -4,26 +4,32 @@ import { authService } from "../api/authService";
 export function useAuth() {
     const navigate = useNavigate();
 
-    const persistSession = (token: string, name: string) => {
+    const persistSession = (token: string, name: string, role: string, batchId?: number | null, batchName?: string | null) => {
         localStorage.setItem("token", token);
         localStorage.setItem("userName", name);
+        localStorage.setItem("role", role);
+        if (batchId) localStorage.setItem("batchId", batchId.toString());
+        if (batchName) localStorage.setItem("batchName", batchName);
     };
 
     const login = async (email: string, password: string) => {
         const res = await authService.login(email, password);
-        persistSession(res.data.token, res.data.name);
+        persistSession(res.data.token, res.data.name, res.data.role, res.data.batchId, res.data.batchName);
         navigate("/dashboard/batches");
     };
 
-    const signup = async (name: string, email: string, password: string) => {
-        const res = await authService.register(name, email, password);
-        persistSession(res.data.token, res.data.name);
+    const signup = async (name: string, email: string, password: string, indexNo?: string, batchId?: number, academicYear?: number) => {
+        const res = await authService.register(name, email, password, indexNo, batchId, academicYear);
+        persistSession(res.data.token, res.data.name, res.data.role, res.data.batchId, res.data.batchName);
         navigate("/dashboard/batches");
     };
 
     const logout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("userName");
+        localStorage.removeItem("role");
+        localStorage.removeItem("batchId");
+        localStorage.removeItem("batchName");
         navigate("/auth/login");
     };
 

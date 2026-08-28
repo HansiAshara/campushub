@@ -2,12 +2,13 @@ import { type InputHTMLAttributes, forwardRef } from "react";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     label?: string;
+    error?: string;
 }
 
-const Input = forwardRef<HTMLInputElement, InputProps>(({ label, style, ...rest }, ref) => (
-    <div style={{ marginBottom: 20 }}>
+const Input = forwardRef<HTMLInputElement, InputProps>(({ label, error, style, ...rest }, ref) => (
+    <div style={{ marginBottom: 16 }}>
         {label && (
-            <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: "#334155" }}>
+            <label style={{ display: "block", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", color: "#9CA3AF", textTransform: "uppercase", marginBottom: 8 }}>
                 {label}
             </label>
         )}
@@ -15,30 +16,21 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({ label, style, ...rest 
             ref={ref}
             {...rest}
             style={{
-                display: "block",
-                width: "100%",
-                padding: "12px 16px",
-                borderRadius: 10,
-                border: "1px solid #E2E8F0",
-                backgroundColor: "#FFFFFF",
-                color: "#0F172A",
-                fontFamily: "var(--font-body)",
-                fontSize: 14,
-                boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
-                outline: "none",
-                transition: "all 0.15s ease",
+                width: "100%", padding: "10px 14px",
+                border: `1px solid ${error ? "#FCA5A5" : "#E5E7EB"}`,
+                borderRadius: 8, fontSize: 14,
+                color: "#0D1B2A", outline: "none",
+                transition: "border-color 0.15s",
+                background: "white",
+                fontFamily: "var(--font-sans)",
                 ...style,
             }}
-            onFocus={(e) => {
-                e.currentTarget.style.borderColor = "#10B981";
-                e.currentTarget.style.boxShadow = "0 0 0 3px rgba(16, 185, 129, 0.15)";
-            }}
-            onBlur={(e) => {
-                e.currentTarget.style.borderColor = "#E2E8F0";
-                e.currentTarget.style.boxShadow = "0 1px 2px 0 rgba(0, 0, 0, 0.05)";
-            }}
+            onFocus={(e) => { (e.target as HTMLInputElement).style.borderColor = error ? "#EF4444" : "#10B981"; rest.onFocus?.(e); }}
+            onBlur={(e) => { (e.target as HTMLInputElement).style.borderColor = error ? "#FCA5A5" : "#E5E7EB"; rest.onBlur?.(e); }}
         />
+        {error && <p style={{ fontSize: 12, color: "#EF4444", marginTop: 4 }}>{error}</p>}
     </div>
 ));
 
+Input.displayName = "Input";
 export default Input;

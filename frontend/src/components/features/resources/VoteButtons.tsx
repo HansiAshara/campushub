@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { resourceService } from "../../../api/resourceService";
 import { type VoteSummary } from "../../../types";
+import { ChevronUp, ChevronDown } from "lucide-react";
 
 function VoteButtons({ resourceId }: { resourceId: number }) {
     const [summary, setSummary] = useState<VoteSummary | null>(null);
@@ -14,15 +15,31 @@ function VoteButtons({ resourceId }: { resourceId: number }) {
         setSummary(res.data);
     };
 
-    if (!summary) return null;
+    if (!summary) return (
+        <div className="vote-col">
+            <div style={{ width: 20, height: 48, background: "#F3F4F6", borderRadius: 6 }} />
+        </div>
+    );
+
     const score = summary.upvotes - summary.downvotes;
-    const btnStyle = (active: boolean, color: string) => ({ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: active ? color : "var(--color-text-muted)", padding: 2 });
 
     return (
-        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <button onClick={() => vote(1)} style={btnStyle(summary.userVote === 1, "var(--color-primary)")}>▲</button>
-            <span style={{ fontSize: 14, fontWeight: 700, minWidth: 20, textAlign: "center" }}>{score}</span>
-            <button onClick={() => vote(-1)} style={btnStyle(summary.userVote === -1, "var(--color-error)")}>▼</button>
+        <div className="vote-col">
+            <button
+                onClick={() => vote(1)}
+                className={`vote-btn up${summary.userVote === 1 ? " voted" : ""}`}
+                title="Upvote"
+            >
+                <ChevronUp size={18} />
+            </button>
+            <span className="vote-score">{score}</span>
+            <button
+                onClick={() => vote(-1)}
+                className={`vote-btn down${summary.userVote === -1 ? " voted" : ""}`}
+                title="Downvote"
+            >
+                <ChevronDown size={18} />
+            </button>
         </div>
     );
 }

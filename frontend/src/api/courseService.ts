@@ -10,4 +10,10 @@ export const courseService = {
 
     getById: (id: string | number) =>
         client.get<Course>(`/courses/${id}`),
+
+    create: (courseData: { code: string; name: string; academicYear: number; semesterNumber: number; batchId: number }) =>
+        client.post<Course>("/courses", courseData),
+
+    assignModerator: (courseId: number | string, userId: number | string) =>
+        client.post<void>(`/courses/${courseId}/moderators/${userId}`),
 };

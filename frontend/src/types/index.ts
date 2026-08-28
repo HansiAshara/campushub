@@ -45,4 +45,8 @@ export interface AuthResponse {
     name: string;
     email: string;
     role: string;
+    indexNo?: string;
+    batchId?: number | null;
+    batchName?: string | null;
+    academicYear?: number;
 }

@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { batchService } from "../../api/batchService";
+import { type Batch } from "../../types";
 import { Library } from "lucide-react";
 
 const font = '"DM Sans", system-ui, sans-serif';
@@ -9,9 +11,23 @@ function SignupPage() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [indexNo, setIndexNo] = useState("");
+    const [batchId, setBatchId] = useState<string>("");
+    const [academicYear, setAcademicYear] = useState<number>(1);
+    const [batches, setBatches] = useState<Batch[]>([]);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const { signup } = useAuth();
+
+    // Fetch batches for the dropdown select list
+    useEffect(() => {
+        batchService.getAll().then((res) => {
+            setBatches(res.data);
+            if (res.data.length > 0) {
+                setBatchId(res.data[0].id.toString());
+            }
+        });
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -19,7 +35,14 @@ function SignupPage() {
         if (password.length < 8) { setError("Password needs at least 8 characters."); return; }
         setLoading(true);
         try {
-            await signup(name, email, password);
+            await signup(
+                name,
+                email,
+                password,
+                indexNo.trim() || undefined,
+                batchId ? parseInt(batchId) : undefined,
+                academicYear || undefined
+            );
         } catch (err: any) {
             setError(err.response?.data?.message || "That email is already registered.");
         } finally {
@@ -84,8 +107,8 @@ function SignupPage() {
             </div>
 
             {/* ── RIGHT — Signup Form ── */}
-            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "white", padding: "48px 56px" }}>
-                <div style={{ width: "100%", maxWidth: 380 }}>
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "white", padding: "48px 56px", overflowY: "auto" }}>
+                <div style={{ width: "100%", maxWidth: 380, padding: "20px 0" }}>
                     <h2 style={{ fontFamily: font, fontSize: 28, fontWeight: 800, color: "#0D1B2A", marginBottom: 8, letterSpacing: "-0.02em" }}>
                         Create your account
                     </h2>
@@ -122,6 +145,58 @@ function SignupPage() {
                                 onFocus={(e) => { e.target.style.borderColor = "#10B981"; e.target.style.boxShadow = "0 0 0 3px rgba(16,185,129,0.1)"; }}
                                 onBlur={(e) => { e.target.style.borderColor = "#E5E7EB"; e.target.style.boxShadow = "none"; }}
                             />
+                        </div>
+
+                        {/* Index Number */}
+                        <div>
+                            <label style={labelStyle}>Index Number</label>
+                            <input
+                                type="text"
+                                value={indexNo}
+                                onChange={(e) => setIndexNo(e.target.value)}
+                                placeholder="e.g. 210015B"
+                                required
+                                style={inputStyle}
+                                onFocus={(e) => { e.target.style.borderColor = "#10B981"; e.target.style.boxShadow = "0 0 0 3px rgba(16,185,129,0.1)"; }}
+                                onBlur={(e) => { e.target.style.borderColor = "#E5E7EB"; e.target.style.boxShadow = "none"; }}
+                            />
+                        </div>
+
+                        {/* Batch selection */}
+                        <div>
+                            <label style={labelStyle}>Batch</label>
+                            <select
+                                value={batchId}
+                                onChange={(e) => setBatchId(e.target.value)}
+                                required
+                                style={{ ...inputStyle, cursor: "pointer" }}
+                                onFocus={(e) => { e.target.style.borderColor = "#10B981"; e.target.style.boxShadow = "0 0 0 3px rgba(16,185,129,0.1)"; }}
+                                onBlur={(e) => { e.target.style.borderColor = "#E5E7EB"; e.target.style.boxShadow = "none"; }}
+                            >
+                                {batches.map((b) => (
+                                    <option key={b.id} value={b.id}>
+                                        {b.name} (Intake {b.intakeYear})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Academic Year Selection */}
+                        <div>
+                            <label style={labelStyle}>Academic Year</label>
+                            <select
+                                value={academicYear}
+                                onChange={(e) => setAcademicYear(parseInt(e.target.value))}
+                                required
+                                style={{ ...inputStyle, cursor: "pointer" }}
+                                onFocus={(e) => { e.target.style.borderColor = "#10B981"; e.target.style.boxShadow = "0 0 0 3px rgba(16,185,129,0.1)"; }}
+                                onBlur={(e) => { e.target.style.borderColor = "#E5E7EB"; e.target.style.boxShadow = "none"; }}
+                            >
+                                <option value={1}>Year 1</option>
+                                <option value={2}>Year 2</option>
+                                <option value={3}>Year 3</option>
+                                <option value={4}>Year 4</option>
+                            </select>
                         </div>
 
                         {/* Password */}

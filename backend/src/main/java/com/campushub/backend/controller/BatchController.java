@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 @RestController
 @RequestMapping("/api/batches")
 public class BatchController {
@@ -20,6 +22,7 @@ public class BatchController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BatchResponse> create(@Valid @RequestBody BatchRequest request) {
         return ResponseEntity.ok(batchService.create(request));
     }
@@ -27,5 +30,12 @@ public class BatchController {
     @GetMapping
     public ResponseEntity<List<BatchResponse>> getAll() {
         return ResponseEntity.ok(batchService.getAll());
+    }
+
+    @PostMapping("/{batchId}/leader/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> assignBatchLeader(@PathVariable Long batchId, @PathVariable Long userId) {
+        batchService.assignBatchLeader(batchId, userId);
+        return ResponseEntity.ok().build();
     }
 }
