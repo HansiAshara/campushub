@@ -15,12 +15,7 @@ function SignupPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
-
-        if (password.length < 8) {
-            setError("Password needs at least 8 characters.");
-            return;
-        }
-
+        if (password.length < 8) { setError("Password needs at least 8 characters."); return; }
         setLoading(true);
         try {
             await signup(name, email, password);
@@ -32,62 +27,29 @@ function SignupPage() {
     };
 
     return (
-        <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#F9FAF5" }}>
-            <div
-                style={{
-                    flex: 1,
-                    backgroundColor: "#064E3B",
-                    color: "#FFFFFF",
-                    padding: 60,
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                }}
-            >
+        <div style={{ display: "flex", minHeight: "100vh" }}>
+            <div style={{ flex: 1, backgroundColor: "#064E3B", color: "#fff", padding: 60, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div style={{ fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 800 }}>📚 CampusHub</div>
                 <div>
-                    <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: "-0.02em" }}>CampusHub</div>
-                    <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", color: "#6EE7B7", marginTop: 4 }}>
-                        UNIVERSITY OF MORATUWA
-                    </div>
+                    <h1 style={{ color: "#fff", fontSize: 32, lineHeight: 1.3, maxWidth: 420 }}>Stop searching five different Drive links.</h1>
+                    <p style={{ color: "#D1FAE5", fontSize: 15, maxWidth: 380, marginTop: 16 }}>One account, every batch, every course you're taking.</p>
                 </div>
-                <div>
-                    <h1 style={{ color: "#FFFFFF", fontSize: 36, fontWeight: 700, lineHeight: 1.25, maxWidth: 440 }}>
-                        Stop searching five different Drive links.
-                    </h1>
-                    <p style={{ color: "#D1FAE5", fontSize: 15, maxWidth: 400, marginTop: 16, lineHeight: 1.6 }}>
-                        One account, every course, every kuppi note your batch has shared.
-                    </p>
-                </div>
-                <div style={{ fontSize: 13, color: "#A7F3D0" }}>Free for all current students.</div>
+                <div style={{ fontSize: 12, color: "#6EE7B7" }}>Free for all current students.</div>
             </div>
 
-            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 40 }}>
-                <div
-                    style={{
-                        width: "100%",
-                        maxWidth: 400,
-                        backgroundColor: "#FFFFFF",
-                        padding: "40px 36px",
-                        borderRadius: 16,
-                        boxShadow: "0 4px 20px -2px rgba(15, 23, 42, 0.08)",
-                        border: "1px solid #E2E8F0",
-                    }}
-                >
-                    <h2 style={{ fontSize: 24, fontWeight: 700, color: "#0F172A", marginBottom: 6 }}>Create your account</h2>
-                    <p style={{ color: "#64748B", fontSize: 14, marginBottom: 28 }}>Takes less than a minute.</p>
-
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--color-bg)" }}>
+                <div style={{ width: 360 }}>
+                    <h2 style={{ fontSize: 26, marginBottom: 6 }}>Create your account</h2>
+                    <p style={{ color: "var(--color-text-muted)", fontSize: 14, marginBottom: 28 }}>Takes less than a minute.</p>
                     <form onSubmit={handleSubmit}>
-                        <Input label="Full name" type="text" placeholder="Ashara Perera" value={name} onChange={(e) => setName(e.target.value)} required />
-                        <Input label="Email" type="email" placeholder="you@uom.lk" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                        <Input label="Full name" value={name} onChange={(e) => setName(e.target.value)} required />
+                        <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                         <Input label="Password" type="password" placeholder="At least 8 characters" value={password} onChange={(e) => setPassword(e.target.value)} required />
                         {error && <p style={{ color: "var(--color-error)", fontSize: 13, marginBottom: 12 }}>{error}</p>}
-                        <Button type="submit" variant="chalk" fullWidth disabled={loading}>
-                            {loading ? "Creating account..." : "Sign Up"}
-                        </Button>
+                        <Button type="submit" variant="primary" fullWidth disabled={loading}>{loading ? "Creating account..." : "Sign Up"}</Button>
                     </form>
-
-                    <p style={{ marginTop: 24, fontSize: 14, color: "var(--color-text-muted)", textAlign: "center" }}>
-                        Already have an account? <Link to="/auth/login" style={{ color: "var(--color-chalk)", fontWeight: 600 }}>Log in</Link>
+                    <p style={{ marginTop: 20, fontSize: 14, color: "var(--color-text-muted)" }}>
+                        Already have an account? <Link to="/auth/login" style={{ fontWeight: 600 }}>Log in</Link>
                     </p>
                 </div>
             </div>

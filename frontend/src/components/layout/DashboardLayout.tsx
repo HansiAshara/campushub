@@ -1,17 +1,17 @@
 import { Navigate, Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
-import Topbar from "./Topbar";
+import Header from "./Header";
 
 function DashboardLayout() {
     const token = localStorage.getItem("token");
     if (!token) return <Navigate to="/auth/login" />;
 
     return (
-        <div style={{ display: "flex" }}>
+        <div style={{ display: "flex", minHeight: "100vh" }}>
             <Sidebar />
             <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                <Topbar />
-                <main style={{ flex: 1, padding: "36px 48px", minHeight: "100vh" }}>
+                <Header />
+                <main style={{ flex: 1, padding: 32 }}>
                     <Outlet />
                 </main>
             </div>

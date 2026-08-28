@@ -1,14 +1,8 @@
-function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+function Card({ children, style, className }: { children: React.ReactNode; style?: React.CSSProperties; className?: string }) {
     return (
         <div
-            style={{
-                backgroundColor: "var(--color-card)",
-                border: "1px solid var(--color-border)",
-                borderRadius: 16,
-                padding: 24,
-                boxShadow: "var(--shadow-md)",
-                ...style,
-            }}
+            className={className}
+            style={{ backgroundColor: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 12, boxShadow: "var(--shadow-sm)", padding: 20, ...style }}
         >
             {children}
         </div>

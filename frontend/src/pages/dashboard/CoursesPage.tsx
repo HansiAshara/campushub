@@ -11,6 +11,7 @@ function CoursesPage() {
     const [topCategory, setTopCategory] = useState("—");
     const [latestUpload, setLatestUpload] = useState("—");
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         Promise.all([
@@ -29,16 +30,26 @@ function CoursesPage() {
                     const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
                     setTopCategory(top.replace("_", " "));
 
-                    const latest = Math.max(...resourcesRes.data.map((r) => new Date(r.createdAt).getTime()));
-                    setLatestUpload(
-                        new Date(latest).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
-                    );
+                    const validDates = resourcesRes.data
+                        .map((r) => new Date(r.createdAt).getTime())
+                        .filter((t) => !isNaN(t));
+
+                    if (validDates.length > 0) {
+                        const latest = Math.max(...validDates);
+                        setLatestUpload(
+                            new Date(latest).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+                        );
+                    }
                 }
+            })
+            .catch(() => {
+                setError("Failed to load courses. Please try again later.");
             })
             .finally(() => setLoading(false));
     }, []);
 
-    if (loading) return <p>Loading...</p>;
+    if (loading) return <p style={{ textAlign: "center", padding: "40px 0", color: "#64748B" }}>Loading dashboard...</p>;
+    if (error) return <p style={{ color: "#EF4444", textAlign: "center", padding: "40px 0" }}>{error}</p>;
 
     return (
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>

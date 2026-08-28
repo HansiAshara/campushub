@@ -1,22 +1,24 @@
 import { useNavigate } from "react-router-dom";
-import api from "../lib/axios";
-import { type AuthResponse } from "../types";
+import { authService } from "../api/authService";
 
 export function useAuth() {
     const navigate = useNavigate();
 
+    const persistSession = (token: string, name: string) => {
+        localStorage.setItem("token", token);
+        localStorage.setItem("userName", name);
+    };
+
     const login = async (email: string, password: string) => {
-        const response = await api.post<AuthResponse>("/auth/login", { email, password });
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("userName", response.data.name);
-        navigate("/dashboard/courses");
+        const res = await authService.login(email, password);
+        persistSession(res.data.token, res.data.name);
+        navigate("/dashboard/batches");
     };
 
     const signup = async (name: string, email: string, password: string) => {
-        const response = await api.post<AuthResponse>("/auth/register", { name, email, password });
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("userName", response.data.name);
-        navigate("/dashboard/courses");
+        const res = await authService.register(name, email, password);
+        persistSession(res.data.token, res.data.name);
+        navigate("/dashboard/batches");
     };
 
     const logout = () => {
@@ -25,5 +27,7 @@ export function useAuth() {
         navigate("/auth/login");
     };
 
-    return { login, signup, logout };
+    const isAuthenticated = () => !!localStorage.getItem("token");
+
+    return { login, signup, logout, isAuthenticated };
 }

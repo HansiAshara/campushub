@@ -1,0 +1,57 @@
+:root {
+    --color-primary: #10B981;
+    --color-primary-dark: #047857;
+    --color-secondary: #D1FAE5;
+    --color-bg: #F9FAF5;
+    --color-surface: #FFFFFF;
+    --color-text: #1F2937;
+    --color-text-muted: #6B7280;
+    --color-accent: #F59E0B;
+    --color-error: #EF4444;
+    --color-border: #E5E7EB;
+
+    --font-display: 'Plus Jakarta Sans', sans-serif;
+    --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-card: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-body);
+}
+
+h1,
+h2,
+h3 {
+    font-family: var(--font-display);
+    color: var(--color-text);
+    margin: 0;
+    font-weight: 700;
+}
+
+a {
+    color: var(--color-primary-dark);
+    text-decoration: none;
+}
+
+.stamp {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 4px 9px;
+    border-radius: 6px;
+    background-color: var(--color-secondary);
+    color: var(--color-primary-dark);
+}

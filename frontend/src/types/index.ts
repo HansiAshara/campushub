@@ -1,8 +1,17 @@
+export interface Batch {
+    id: number;
+    name: string;
+    intakeYear: number;
+}
+
 export interface Course {
     id: number;
     code: string;
     name: string;
-    semester: string;
+    academicYear: number;
+    semesterNumber: number;
+    batchName: string;
+    canManage: boolean;
 }
 
 export interface Resource {
@@ -13,6 +22,21 @@ export interface Resource {
     summary: string | null;
     courseName: string;
     uploadedByName: string;
+    uploadedById: number;
+    createdAt: string;
+    canEdit: boolean;
+}
+
+export interface VoteSummary {
+    upvotes: number;
+    downvotes: number;
+    userVote: number | null;
+}
+
+export interface Comment {
+    id: number;
+    content: string;
+    userName: string;
     createdAt: string;
 }
 
