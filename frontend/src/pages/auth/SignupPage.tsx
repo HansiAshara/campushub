@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import Input from "../../components/ui/Input";
-import Button from "../../components/ui/Button";
+import { Library } from "lucide-react";
+
+const font = '"DM Sans", system-ui, sans-serif';
 
 function SignupPage() {
     const [name, setName] = useState("");
@@ -26,31 +27,166 @@ function SignupPage() {
         }
     };
 
+    const inputStyle: React.CSSProperties = {
+        width: "100%", padding: "11px 14px", border: "1px solid #E5E7EB",
+        borderRadius: 8, fontSize: 14, fontFamily: font, color: "#0D1B2A",
+        outline: "none", transition: "border-color 0.15s, box-shadow 0.15s",
+        background: "white",
+    };
+
+    const labelStyle: React.CSSProperties = {
+        display: "block", fontFamily: font, fontSize: 11, fontWeight: 700,
+        color: "#9CA3AF", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 7,
+    };
+
     return (
-        <div style={{ display: "flex", minHeight: "100vh" }}>
-            <div style={{ flex: 1, backgroundColor: "#064E3B", color: "#fff", padding: 60, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <div style={{ fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 800 }}>📚 CampusHub</div>
-                <div>
-                    <h1 style={{ color: "#fff", fontSize: 32, lineHeight: 1.3, maxWidth: 420 }}>Stop searching five different Drive links.</h1>
-                    <p style={{ color: "#D1FAE5", fontSize: 15, maxWidth: 380, marginTop: 16 }}>One account, every batch, every course you're taking.</p>
+        <div style={{ display: "flex", minHeight: "100vh", fontFamily: font }}>
+            {/* ── LEFT — Hero Panel ── */}
+            <div
+                className="grid-bg"
+                style={{ flex: 1, padding: "48px 56px", display: "flex", flexDirection: "column", justifyContent: "space-between", borderRight: "1px solid #c6f0d9" }}
+            >
+                {/* Logo */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ width: 38, height: 38, borderRadius: "50%", background: "#10B981", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <Library size={20} color="white" />
+                    </div>
+                    <span style={{ fontFamily: font, fontWeight: 800, fontSize: 19, color: "#0D1B2A", letterSpacing: "-0.01em" }}>
+                        CampusHub
+                    </span>
                 </div>
-                <div style={{ fontSize: 12, color: "#6EE7B7" }}>Free for all current students.</div>
+
+                {/* Hero text */}
+                <div>
+                    <p style={{ fontFamily: font, fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "#10B981", textTransform: "uppercase", marginBottom: 18 }}>
+                        University of Moratuwa · IT
+                    </p>
+                    <h1 style={{ fontFamily: font, fontSize: 42, fontWeight: 800, color: "#0D1B2A", lineHeight: 1.1, marginBottom: 18, letterSpacing: "-0.02em" }}>
+                        Stop searching five<br />
+                        different{" "}
+                        <span style={{ color: "#10B981" }}>Drive links.</span>
+                    </h1>
+                    <p style={{ fontFamily: font, fontSize: 15, color: "#374151", maxWidth: 380, lineHeight: 1.65, fontWeight: 400 }}>
+                        One account, every batch and course you're taking — notes, tutes, past papers, all in one scoped hub.
+                    </p>
+
+                    <div style={{ marginTop: 36, display: "flex", flexDirection: "column", gap: 10 }}>
+                        {["Batch-scoped resource browsing", "SHA-256 duplicate prevention", "AI-powered summaries on every upload"].map((feat) => (
+                            <div key={feat} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981", flexShrink: 0 }} />
+                                <span style={{ fontFamily: font, fontSize: 14, color: "#374151" }}>{feat}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <p style={{ fontFamily: font, fontSize: 12, color: "#9CA3AF" }}>Free for all current students.</p>
             </div>
 
-            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--color-bg)" }}>
-                <div style={{ width: 360 }}>
-                    <h2 style={{ fontSize: 26, marginBottom: 6 }}>Create your account</h2>
-                    <p style={{ color: "var(--color-text-muted)", fontSize: 14, marginBottom: 28 }}>Takes less than a minute.</p>
-                    <form onSubmit={handleSubmit}>
-                        <Input label="Full name" value={name} onChange={(e) => setName(e.target.value)} required />
-                        <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                        <Input label="Password" type="password" placeholder="At least 8 characters" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                        {error && <p style={{ color: "var(--color-error)", fontSize: 13, marginBottom: 12 }}>{error}</p>}
-                        <Button type="submit" variant="primary" fullWidth disabled={loading}>{loading ? "Creating account..." : "Sign Up"}</Button>
-                    </form>
-                    <p style={{ marginTop: 20, fontSize: 14, color: "var(--color-text-muted)" }}>
-                        Already have an account? <Link to="/auth/login" style={{ fontWeight: 600 }}>Log in</Link>
+            {/* ── RIGHT — Signup Form ── */}
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "white", padding: "48px 56px" }}>
+                <div style={{ width: "100%", maxWidth: 380 }}>
+                    <h2 style={{ fontFamily: font, fontSize: 28, fontWeight: 800, color: "#0D1B2A", marginBottom: 8, letterSpacing: "-0.02em" }}>
+                        Create your account
+                    </h2>
+                    <p style={{ fontFamily: font, fontSize: 14, color: "#6B7280", marginBottom: 32, fontWeight: 400 }}>
+                        Takes less than a minute.
                     </p>
+
+                    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+                        {/* Full name */}
+                        <div>
+                            <label style={labelStyle}>Full Name</label>
+                            <input
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                placeholder="Sahan Wickramasinghe"
+                                required
+                                style={inputStyle}
+                                onFocus={(e) => { e.target.style.borderColor = "#10B981"; e.target.style.boxShadow = "0 0 0 3px rgba(16,185,129,0.1)"; }}
+                                onBlur={(e) => { e.target.style.borderColor = "#E5E7EB"; e.target.style.boxShadow = "none"; }}
+                            />
+                        </div>
+
+                        {/* Email */}
+                        <div>
+                            <label style={labelStyle}>Email</label>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="you@uom.lk"
+                                required
+                                style={inputStyle}
+                                onFocus={(e) => { e.target.style.borderColor = "#10B981"; e.target.style.boxShadow = "0 0 0 3px rgba(16,185,129,0.1)"; }}
+                                onBlur={(e) => { e.target.style.borderColor = "#E5E7EB"; e.target.style.boxShadow = "none"; }}
+                            />
+                        </div>
+
+                        {/* Password */}
+                        <div>
+                            <label style={labelStyle}>Password</label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="At least 8 characters"
+                                required
+                                style={inputStyle}
+                                onFocus={(e) => { e.target.style.borderColor = "#10B981"; e.target.style.boxShadow = "0 0 0 3px rgba(16,185,129,0.1)"; }}
+                                onBlur={(e) => { e.target.style.borderColor = "#E5E7EB"; e.target.style.boxShadow = "none"; }}
+                            />
+                        </div>
+
+                        {/* Error */}
+                        {error && (
+                            <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, padding: "11px 14px", fontFamily: font, fontSize: 13, color: "#DC2626" }}>
+                                {error}
+                            </div>
+                        )}
+
+                        {/* ── SUBMIT BUTTON ── */}
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            style={{
+                                width: "100%",
+                                padding: "13px 24px",
+                                background: loading ? "#6EE7B7" : "#10B981",
+                                color: "white",
+                                border: "none",
+                                borderRadius: 10,
+                                fontSize: 15,
+                                fontWeight: 700,
+                                fontFamily: font,
+                                cursor: loading ? "not-allowed" : "pointer",
+                                transition: "background 0.15s, transform 0.1s",
+                                letterSpacing: "-0.01em",
+                                marginTop: 4,
+                            }}
+                            onMouseEnter={(e) => !loading && ((e.currentTarget as HTMLElement).style.background = "#047857")}
+                            onMouseLeave={(e) => !loading && ((e.currentTarget as HTMLElement).style.background = "#10B981")}
+                            onMouseDown={(e) => !loading && ((e.currentTarget as HTMLElement).style.transform = "scale(0.98)")}
+                            onMouseUp={(e) => ((e.currentTarget as HTMLElement).style.transform = "scale(1)")}
+                        >
+                            {loading ? "Creating account..." : "Sign Up"}
+                        </button>
+                    </form>
+
+                    <div style={{ marginTop: 24, paddingTop: 24, borderTop: "1px solid #F3F4F6", textAlign: "center" }}>
+                        <p style={{ fontFamily: font, fontSize: 14, color: "#6B7280", fontWeight: 400 }}>
+                            Already have an account?{" "}
+                            <Link
+                                to="/auth/login"
+                                style={{ color: "#10B981", fontWeight: 700, textDecoration: "none" }}
+                                onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
+                                onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
+                            >
+                                Log in
+                            </Link>
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
