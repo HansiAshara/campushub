@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { batchService } from "../../api/batchService";
 import { type Batch } from "../../types";
-import { Library } from "lucide-react";
+import { Library, Eye, EyeOff } from "lucide-react";
 
 const font = '"DM Sans", system-ui, sans-serif';
 
@@ -11,6 +11,9 @@ function SignupPage() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [indexNo, setIndexNo] = useState("");
     const [batchId, setBatchId] = useState<string>("");
     const [academicYear, setAcademicYear] = useState<number>(1);
@@ -39,6 +42,7 @@ function SignupPage() {
         e.preventDefault();
         setError("");
         if (password.length < 8) { setError("Password needs at least 8 characters."); return; }
+        if (password !== confirmPassword) { setError("Passwords do not match."); return; }
         setLoading(true);
         try {
             await signup(
@@ -219,16 +223,79 @@ function SignupPage() {
                         {/* Password */}
                         <div>
                             <label style={labelStyle}>Password</label>
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="At least 8 characters"
-                                required
-                                style={inputStyle}
-                                onFocus={(e) => { e.target.style.borderColor = "#10B981"; e.target.style.boxShadow = "0 0 0 3px rgba(16,185,129,0.1)"; }}
-                                onBlur={(e) => { e.target.style.borderColor = "#E5E7EB"; e.target.style.boxShadow = "none"; }}
-                            />
+                            <div style={{ position: "relative" }}>
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="At least 8 characters"
+                                    required
+                                    style={{ ...inputStyle, paddingRight: 40 }}
+                                    onFocus={(e) => { e.target.style.borderColor = "#10B981"; e.target.style.boxShadow = "0 0 0 3px rgba(16,185,129,0.1)"; }}
+                                    onBlur={(e) => { e.target.style.borderColor = "#E5E7EB"; e.target.style.boxShadow = "none"; }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    tabIndex={-1}
+                                    style={{
+                                        position: "absolute",
+                                        right: 12,
+                                        top: "50%",
+                                        transform: "translateY(-50%)",
+                                        background: "none",
+                                        border: "none",
+                                        padding: 0,
+                                        cursor: "pointer",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        color: "#9CA3AF",
+                                    }}
+                                    title={showPassword ? "Hide password" : "Show password"}
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Confirm Password */}
+                        <div>
+                            <label style={labelStyle}>Confirm Password</label>
+                            <div style={{ position: "relative" }}>
+                                <input
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    placeholder="Re-enter your password"
+                                    required
+                                    style={{ ...inputStyle, paddingRight: 40 }}
+                                    onFocus={(e) => { e.target.style.borderColor = "#10B981"; e.target.style.boxShadow = "0 0 0 3px rgba(16,185,129,0.1)"; }}
+                                    onBlur={(e) => { e.target.style.borderColor = "#E5E7EB"; e.target.style.boxShadow = "none"; }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    tabIndex={-1}
+                                    style={{
+                                        position: "absolute",
+                                        right: 12,
+                                        top: "50%",
+                                        transform: "translateY(-50%)",
+                                        background: "none",
+                                        border: "none",
+                                        padding: 0,
+                                        cursor: "pointer",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        color: "#9CA3AF",
+                                    }}
+                                    title={showConfirmPassword ? "Hide password" : "Show password"}
+                                >
+                                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
                         </div>
 
                         {/* Error */}
