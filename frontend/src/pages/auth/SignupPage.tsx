@@ -21,12 +21,18 @@ function SignupPage() {
 
     // Fetch batches for the dropdown select list
     useEffect(() => {
-        batchService.getAll().then((res) => {
-            setBatches(res.data);
-            if (res.data.length > 0) {
-                setBatchId(res.data[0].id.toString());
-            }
-        });
+        batchService
+            .getAll()
+            .then((res) => {
+                const data = res.data || [];
+                setBatches(data);
+                if (data.length > 0) {
+                    setBatchId(data[0].id.toString());
+                }
+            })
+            .catch((err) => {
+                console.error("Failed to load batches:", err);
+            });
     }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -169,15 +175,26 @@ function SignupPage() {
                                 value={batchId}
                                 onChange={(e) => setBatchId(e.target.value)}
                                 required
-                                style={{ ...inputStyle, cursor: "pointer" }}
+                                style={{
+                                    ...inputStyle,
+                                    cursor: "pointer",
+                                    appearance: "auto",
+                                    WebkitAppearance: "menulist",
+                                }}
                                 onFocus={(e) => { e.target.style.borderColor = "#10B981"; e.target.style.boxShadow = "0 0 0 3px rgba(16,185,129,0.1)"; }}
                                 onBlur={(e) => { e.target.style.borderColor = "#E5E7EB"; e.target.style.boxShadow = "none"; }}
                             >
-                                {batches.map((b) => (
-                                    <option key={b.id} value={b.id}>
-                                        {b.name} (Intake {b.intakeYear})
+                                {batches.length === 0 ? (
+                                    <option value="" disabled>
+                                        No batches available
                                     </option>
-                                ))}
+                                ) : (
+                                    batches.map((b) => (
+                                        <option key={b.id} value={b.id} style={{ color: "#0D1B2A" }}>
+                                            {b.name} (Intake {b.intakeYear})
+                                        </option>
+                                    ))
+                                )}
                             </select>
                         </div>
 
