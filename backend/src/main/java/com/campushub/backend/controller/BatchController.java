@@ -32,10 +32,30 @@ public class BatchController {
         return ResponseEntity.ok(batchService.getAll());
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody BatchRequest request) {
+        if (!isAdmin()) return ResponseEntity.status(403).body(java.util.Map.of("message", "Access denied"));
+        return ResponseEntity.ok(batchService.update(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        if (!isAdmin()) return ResponseEntity.status(403).body(java.util.Map.of("message", "Access denied"));
+        batchService.delete(id);
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/{batchId}/leader/{userId}")
     public ResponseEntity<?> assignBatchLeader(@PathVariable Long batchId, @PathVariable Long userId) {
         if (!isAdmin()) return ResponseEntity.status(403).body(java.util.Map.of("message", "Access denied"));
         batchService.assignBatchLeader(batchId, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{batchId}/leader")
+    public ResponseEntity<?> removeBatchLeader(@PathVariable Long batchId) {
+        if (!isAdmin()) return ResponseEntity.status(403).body(java.util.Map.of("message", "Access denied"));
+        batchService.removeBatchLeader(batchId);
         return ResponseEntity.ok().build();
     }
 

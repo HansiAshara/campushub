@@ -27,6 +27,24 @@ public class CourseController {
         return ResponseEntity.ok(courseService.create(request));
     }
 
+    @GetMapping
+    public ResponseEntity<List<CourseResponse>> getAll() {
+        return ResponseEntity.ok(courseService.getAll());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody CourseRequest request) {
+        if (!hasRole("ROLE_ADMIN")) return ResponseEntity.status(403).body(java.util.Map.of("message", "Access denied"));
+        return ResponseEntity.ok(courseService.update(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        if (!hasRole("ROLE_ADMIN")) return ResponseEntity.status(403).body(java.util.Map.of("message", "Access denied"));
+        courseService.delete(id);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/batch/{batchId}")
     public ResponseEntity<List<CourseResponse>> getByBatch(@PathVariable Long batchId) {
         return ResponseEntity.ok(courseService.getByBatch(batchId));
@@ -43,11 +61,24 @@ public class CourseController {
         return ResponseEntity.ok(courseService.getById(id));
     }
 
+    @GetMapping("/moderators")
+    public ResponseEntity<?> getAllModerators() {
+        return ResponseEntity.ok(courseService.getAllModerators());
+    }
+
     @PostMapping("/{courseId}/moderators/{userId}")
     public ResponseEntity<?> assignModerator(@PathVariable Long courseId, @PathVariable Long userId) {
         if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_BATCH_LEADER"))
             return ResponseEntity.status(403).body(java.util.Map.of("message", "Access denied"));
         courseService.assignModerator(courseId, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{courseId}/moderators/{userId}")
+    public ResponseEntity<?> removeModerator(@PathVariable Long courseId, @PathVariable Long userId) {
+        if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_BATCH_LEADER"))
+            return ResponseEntity.status(403).body(java.util.Map.of("message", "Access denied"));
+        courseService.removeModerator(courseId, userId);
         return ResponseEntity.ok().build();
     }
 

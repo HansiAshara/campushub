@@ -12,4 +12,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT u FROM User u WHERE u.batch.id = :batchId AND u.role = :role")
     List<User> findByBatchIdAndRole(@Param("batchId") Long batchId, @Param("role") User.Role role);
+
+    long countByBatch_Id(Long batchId);
+
+    List<User> findByRole(User.Role role);
 }

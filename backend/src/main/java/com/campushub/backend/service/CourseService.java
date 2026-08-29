@@ -64,6 +64,93 @@ public class CourseService {
         return toResponse(saved, user);
     }
 
+    public CourseResponse update(Long id, CourseRequest request) {
+        User user = currentUser();
+        if (!permissionService.isAdmin(user)) {
+            throw new AccessDeniedException("Only admins can update courses");
+        }
+
+        Course course = courseRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Course not found"));
+
+        Batch batch = batchRepository.findById(request.getBatchId())
+                .orElseThrow(() -> new IllegalArgumentException("Batch not found"));
+
+        course.setCode(request.getCode());
+        course.setName(request.getName());
+        course.setAcademicYear(request.getAcademicYear());
+        course.setSemesterNumber(request.getSemesterNumber());
+        course.setBatch(batch);
+
+        Course updated = courseRepository.save(course);
+        return toResponse(updated, user);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void delete(Long id) {
+        User user = currentUser();
+        if (!permissionService.isAdmin(user)) {
+            throw new AccessDeniedException("Only admins can delete courses");
+        }
+
+        Course course = courseRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Course not found"));
+
+        // Delete associated course moderators
+        courseModeratorRepository.deleteByCourseId(id);
+        courseRepository.delete(course);
+    }
+
+    public List<com.campushub.backend.dto.CourseModeratorResponse> getAllModerators() {
+        return courseModeratorRepository.findAll().stream()
+                .map(cm -> new com.campushub.backend.dto.CourseModeratorResponse(
+                        cm.getId(),
+                        cm.getCourse().getId(),
+                        cm.getCourse().getCode(),
+                        cm.getCourse().getName(),
+                        cm.getCourse().getBatch().getId(),
+                        cm.getCourse().getBatch().getName(),
+                        cm.getUser().getId(),
+                        cm.getUser().getName(),
+                        cm.getUser().getEmail(),
+                        cm.getUser().getIndexNo()
+                ))
+                .toList();
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void removeModerator(Long courseId, Long userId) {
+        User currentUser = currentUser();
+        Course course = courseRepository.findById(courseId).orElseThrow(() -> new IllegalArgumentException("Course not found"));
+
+        if (!permissionService.isAdmin(currentUser)) {
+            boolean isBatchLeader = currentUser.getRole() == User.Role.BATCH_LEADER;
+            boolean isSameBatch = isBatchLeader && currentUser.getBatch() != null && course.getBatch() != null 
+                    && currentUser.getBatch().getId().equals(course.getBatch().getId());
+            if (!isSameBatch) {
+                throw new AccessDeniedException("Only admins or the batch leader of this batch can remove module reps");
+            }
+        }
+
+        courseModeratorRepository.deleteByCourseIdAndUserId(courseId, userId);
+
+        // If user no longer moderates any course and is not a batch leader/admin, revert to STUDENT
+        long remainingModCount = courseModeratorRepository.countByUserId(userId);
+        if (remainingModCount == 0) {
+            userRepository.findById(userId).ifPresent(u -> {
+                if (u.getRole() == User.Role.MODULE_REP) {
+                    u.setRole(User.Role.STUDENT);
+                    userRepository.save(u);
+                }
+            });
+        }
+    }
+
+    public List<CourseResponse> getAll() {
+        User user = currentUser();
+        return courseRepository.findAll().stream().map(c -> toResponse(c, user)).toList();
+    }
+
     public List<CourseResponse> getByBatch(Long batchId) {
         User user = currentUser();
         return courseRepository.findByBatchId(batchId).stream().map(c -> toResponse(c, user)).toList();

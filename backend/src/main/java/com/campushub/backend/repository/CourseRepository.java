@@ -10,4 +10,5 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     Optional<Course> findByCodeAndBatchId(String code, Long batchId);
     List<Course> findByBatchId(Long batchId);
     List<Course> findByBatchIdAndAcademicYearAndSemesterNumber(Long batchId, int academicYear, int semesterNumber);
+    long countByBatch_Id(Long batchId);
 }
