@@ -2,6 +2,12 @@ export interface Batch {
     id: number;
     name: string;
     intakeYear: number;
+    leaderId?: number | null;
+    leaderName?: string | null;
+    leaderEmail?: string | null;
+    leaderIndexNo?: string | null;
+    studentCount?: number;
+    courseCount?: number;
 }
 
 export interface Course {
@@ -11,7 +17,21 @@ export interface Course {
     academicYear: number;
     semesterNumber: number;
     batchName: string;
+    batchId?: number;
     canManage: boolean;
+}
+
+export interface CourseModerator {
+    id: number;
+    courseId: number;
+    courseCode: string;
+    courseName: string;
+    batchId: number;
+    batchName: string;
+    userId: number;
+    userName: string;
+    userEmail: string;
+    userIndexNo?: string | null;
 }
 
 export interface Resource {
