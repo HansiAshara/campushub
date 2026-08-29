@@ -79,6 +79,8 @@ export default function AppointRepTab({ batches }: AppointRepTabProps) {
         setMessage(null);
 
         try {
+            const displayName = selectedUser.indexNo ? `${selectedUser.name} (${selectedUser.indexNo})` : selectedUser.name;
+
             if (appointmentType === "leader") {
                 const batchIdToUse = selectedBatchId || (batches.length > 0 ? batches[0].id.toString() : "");
                 if (!batchIdToUse) {
@@ -89,7 +91,7 @@ export default function AppointRepTab({ batches }: AppointRepTabProps) {
                 await batchService.assignBatchLeader(batchIdToUse, selectedUser.id);
                 setMessage({
                     type: "success",
-                    text: `Successfully appointed ${selectedUser.name} as the Batch Leader for this batch!`,
+                    text: `Successfully appointed ${displayName} as the Batch Leader for this batch!`,
                 });
             } else {
                 if (!selectedCourseId) {
@@ -100,7 +102,7 @@ export default function AppointRepTab({ batches }: AppointRepTabProps) {
                 await courseService.assignModerator(selectedCourseId, selectedUser.id);
                 setMessage({
                     type: "success",
-                    text: `Successfully appointed ${selectedUser.name} as representative for this course!`,
+                    text: `Successfully appointed ${displayName} as representative for this course!`,
                 });
             }
             setSelectedUser(null);
