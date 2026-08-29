@@ -5,11 +5,11 @@ import com.campushub.backend.dto.BatchResponse;
 import com.campushub.backend.service.BatchService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
-import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/batches")
@@ -22,8 +22,8 @@ public class BatchController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<BatchResponse> create(@Valid @RequestBody BatchRequest request) {
+    public ResponseEntity<?> create(@Valid @RequestBody BatchRequest request) {
+        if (!isAdmin()) return ResponseEntity.status(403).body(java.util.Map.of("message", "Access denied"));
         return ResponseEntity.ok(batchService.create(request));
     }
 
@@ -33,9 +33,29 @@ public class BatchController {
     }
 
     @PostMapping("/{batchId}/leader/{userId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> assignBatchLeader(@PathVariable Long batchId, @PathVariable Long userId) {
+    public ResponseEntity<?> assignBatchLeader(@PathVariable Long batchId, @PathVariable Long userId) {
+        if (!isAdmin()) return ResponseEntity.status(403).body(java.util.Map.of("message", "Access denied"));
         batchService.assignBatchLeader(batchId, userId);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/debug/auth")
+    public ResponseEntity<?> debugAuth() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) {
+            return ResponseEntity.ok(java.util.Map.of("status", "no auth"));
+        }
+        return ResponseEntity.ok(java.util.Map.of(
+            "principal", auth.getName(),
+            "authorities", auth.getAuthorities().stream().map(a -> a.getAuthority()).toList(),
+            "isAdmin", isAdmin(),
+            "authClass", auth.getClass().getName()
+        ));
+    }
+
+    private boolean isAdmin() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 }

@@ -4,7 +4,7 @@ import com.campushub.backend.dto.UserResponse;
 import com.campushub.backend.entity.User;
 import com.campushub.backend.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,7 +14,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
-@PreAuthorize("hasAnyRole('ADMIN', 'BATCH_LEADER')")
 public class UserController {
 
     private final UserRepository userRepository;
@@ -24,7 +23,7 @@ public class UserController {
     }
 
     private User currentUser() {
-        String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 

@@ -5,11 +5,11 @@ import com.campushub.backend.dto.CourseResponse;
 import com.campushub.backend.service.CourseService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
-import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/courses")
@@ -22,8 +22,8 @@ public class CourseController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<CourseResponse> create(@Valid @RequestBody CourseRequest request) {
+    public ResponseEntity<?> create(@Valid @RequestBody CourseRequest request) {
+        if (!hasRole("ROLE_ADMIN")) return ResponseEntity.status(403).body(java.util.Map.of("message", "Access denied"));
         return ResponseEntity.ok(courseService.create(request));
     }
 
@@ -44,9 +44,16 @@ public class CourseController {
     }
 
     @PostMapping("/{courseId}/moderators/{userId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'BATCH_LEADER')")
-    public ResponseEntity<Void> assignModerator(@PathVariable Long courseId, @PathVariable Long userId) {
+    public ResponseEntity<?> assignModerator(@PathVariable Long courseId, @PathVariable Long userId) {
+        if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_BATCH_LEADER"))
+            return ResponseEntity.status(403).body(java.util.Map.of("message", "Access denied"));
         courseService.assignModerator(courseId, userId);
         return ResponseEntity.ok().build();
+    }
+
+    private boolean hasRole(String role) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals(role));
     }
 }

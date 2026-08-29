@@ -7,6 +7,7 @@ import com.campushub.backend.repository.BatchRepository;
 import com.campushub.backend.entity.User;
 import com.campushub.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -29,20 +30,24 @@ public class BatchService {
         return toResponse(saved);
     }
 
+    @Transactional
     public void assignBatchLeader(Long batchId, Long userId) {
-        // Demote existing batch leader if there is one
-        userRepository.findByBatchIdAndRole(batchId, User.Role.BATCH_LEADER).ifPresent(oldLeader -> {
-            oldLeader.setRole(User.Role.STUDENT);
-            userRepository.save(oldLeader);
-        });
-
-        // Set role of target user to BATCH_LEADER
-        User target = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        
-        // Ensure user belongs to the target batch
         Batch batch = batchRepository.findById(batchId)
-                .orElseThrow(() -> new IllegalArgumentException("Batch not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Batch not found with ID: " + batchId));
+
+        User target = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+
+        // Demote existing batch leader(s) for this batch (if any other than target)
+        List<User> oldLeaders = userRepository.findByBatchIdAndRole(batchId, User.Role.BATCH_LEADER);
+        for (User oldLeader : oldLeaders) {
+            if (!oldLeader.getId().equals(userId)) {
+                oldLeader.setRole(User.Role.STUDENT);
+                userRepository.save(oldLeader);
+            }
+        }
+
+        // Set role of target user to BATCH_LEADER and attach to batch
         target.setBatch(batch);
         target.setRole(User.Role.BATCH_LEADER);
         userRepository.save(target);

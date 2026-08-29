@@ -80,13 +80,22 @@ export default function AppointRepTab({ batches }: AppointRepTabProps) {
 
         try {
             if (appointmentType === "leader") {
+                const batchIdToUse = selectedBatchId || (batches.length > 0 ? batches[0].id.toString() : "");
+                if (!batchIdToUse) {
+                    setMessage({ type: "error", text: "Please select a batch." });
+                    return;
+                }
                 // Assign Batch Leader
-                await batchService.assignBatchLeader(selectedBatchId, selectedUser.id);
+                await batchService.assignBatchLeader(batchIdToUse, selectedUser.id);
                 setMessage({
                     type: "success",
                     text: `Successfully appointed ${selectedUser.name} as the Batch Leader for this batch!`,
                 });
             } else {
+                if (!selectedCourseId) {
+                    setMessage({ type: "error", text: "Please select a course module." });
+                    return;
+                }
                 // Assign Course/Module Rep
                 await courseService.assignModerator(selectedCourseId, selectedUser.id);
                 setMessage({
@@ -176,7 +185,14 @@ export default function AppointRepTab({ batches }: AppointRepTabProps) {
                     {foundUsers.map((u) => (
                         <div
                             key={u.id}
-                            onClick={() => setSelectedUser(u)}
+                            onClick={() => {
+                                setSelectedUser(u);
+                                if (u.batchId) {
+                                    setSelectedBatchId(u.batchId.toString());
+                                } else if (batches.length > 0 && !selectedBatchId) {
+                                    setSelectedBatchId(batches[0].id.toString());
+                                }
+                            }}
                             style={{
                                 padding: "12px 16px",
                                 borderBottom: "1px solid #F3F4F6",
