@@ -34,7 +34,9 @@ public class UserController {
         boolean isBatchLeader = current.getRole() == User.Role.BATCH_LEADER;
 
         List<UserResponse> users = userRepository.findAll().stream()
-                .filter(u -> u.getName().toLowerCase().contains(lowercaseQuery) || u.getEmail().toLowerCase().contains(lowercaseQuery))
+                .filter(u -> (u.getName() != null && u.getName().toLowerCase().contains(lowercaseQuery))
+                        || (u.getEmail() != null && u.getEmail().toLowerCase().contains(lowercaseQuery))
+                        || (u.getIndexNo() != null && u.getIndexNo().toLowerCase().contains(lowercaseQuery)))
                 .filter(u -> !isBatchLeader || (u.getBatch() != null && current.getBatch() != null && u.getBatch().getId().equals(current.getBatch().getId())))
                 .map(u -> {
                     Long batchId = u.getBatch() != null ? u.getBatch().getId() : null;
