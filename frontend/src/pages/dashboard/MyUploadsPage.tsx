@@ -6,6 +6,8 @@ import { Link } from "react-router-dom";
 function MyUploadsPage() {
     const { resources, loading, refetch } = useMyResources();
     const userName = localStorage.getItem("userName")?.split(" ")[0] || "there";
+    const myBatchId = localStorage.getItem("batchId");
+    const uploadTargetLink = myBatchId ? `/dashboard/batches/${myBatchId}` : "/dashboard/batches";
 
     return (
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "40px 40px 60px" }}>
@@ -21,10 +23,10 @@ function MyUploadsPage() {
                         {loading ? "Loading..." : `You've shared ${resources.length} resource${resources.length !== 1 ? "s" : ""} with your batch`}
                     </p>
                 </div>
-                <Link to="/dashboard/batches">
+                <Link to={uploadTargetLink}>
                     <button className="btn-primary" style={{ fontSize: 13, padding: "8px 16px" }}>
                         <Upload size={14} />
-                        Upload More
+                        Upload to My Batch
                     </button>
                 </Link>
             </div>
@@ -44,10 +46,10 @@ function MyUploadsPage() {
                     <p style={{ fontSize: 14, color: "#9CA3AF", maxWidth: 340, margin: "0 auto 20px" }}>
                         You haven't shared anything yet. Be the first to contribute to your batch's resource hub.
                     </p>
-                    <Link to="/dashboard/batches">
+                    <Link to={uploadTargetLink}>
                         <button className="btn-primary">
                             <Upload size={14} />
-                            Upload your first resource
+                            Upload to your batch courses
                         </button>
                     </Link>
                 </div>

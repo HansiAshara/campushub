@@ -9,9 +9,15 @@ function BatchesPage() {
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
+    const role = localStorage.getItem("role") || "STUDENT";
+    const myBatchId = localStorage.getItem("batchId");
+    const myAcademicYear = localStorage.getItem("academicYear");
+
     useEffect(() => {
         batchService.getAll().then((res) => setBatches(res.data)).finally(() => setLoading(false));
     }, []);
+
+    const myBatch = batches.find((b) => myBatchId && b.id.toString() === myBatchId.toString());
 
     return (
         <div>
@@ -64,9 +70,83 @@ function BatchesPage() {
 
             {/* ── BATCH SELECTOR SECTION ── */}
             <div style={{ maxWidth: 1160, margin: "0 auto", padding: "40px 40px 60px" }}>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 24 }}>
+                
+                {/* ── ENROLLED BATCH HUB (For Admins & Students who have an assigned batch) ── */}
+                {myBatch && (
+                    <div
+                        style={{
+                            background: "linear-gradient(135deg, #ECFDF5 0%, #F0FDF4 100%)",
+                            border: "1.5px solid #A7F3D0",
+                            borderRadius: 16,
+                            padding: "24px 28px",
+                            marginBottom: 36,
+                            boxShadow: "0 4px 12px rgba(16, 185, 129, 0.08)",
+                            display: "flex",
+                            flexWrap: "wrap",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: 20,
+                        }}
+                    >
+                        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+                            <div
+                                style={{
+                                    width: 52,
+                                    height: 52,
+                                    borderRadius: 14,
+                                    background: "#10B981",
+                                    color: "white",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    boxShadow: "0 4px 10px rgba(16, 185, 129, 0.3)",
+                                }}
+                            >
+                                <GraduationCap size={26} />
+                            </div>
+                            <div>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                    <span style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "#047857" }}>
+                                        Your Enrolled Batch Hub
+                                    </span>
+                                    {role === "ADMIN" && (
+                                        <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", background: "#FEF2F2", color: "#991B1B", borderRadius: 4 }}>
+                                            Admin
+                                        </span>
+                                    )}
+                                </div>
+                                <h3 style={{ fontSize: 22, fontWeight: 800, color: "#0D1B2A", margin: "3px 0 2px" }}>
+                                    {myBatch.name}
+                                </h3>
+                                <p style={{ fontSize: 13, color: "#065F46", margin: 0 }}>
+                                    Intake {myBatch.intakeYear} {myAcademicYear ? `· Year ${myAcademicYear}` : ""} · View your semester courses &amp; upload notes, tutes, or kuppi materials
+                                </p>
+                            </div>
+                        </div>
+
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            <button
+                                onClick={() => navigate(`/dashboard/batches/${myBatch.id}`)}
+                                className="btn-primary"
+                                style={{
+                                    padding: "11px 22px",
+                                    fontSize: 14,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    boxShadow: "0 2px 6px rgba(16, 185, 129, 0.25)",
+                                }}
+                            >
+                                Enter My Batch Courses
+                                <ChevronRight size={16} />
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 20 }}>
                     <h2 style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "#0D1B2A" }}>
-                        Select your Batch
+                        All Academic Batches
                     </h2>
                     <span style={{ fontSize: 14, color: "#9CA3AF" }}>{batches.length} batch{batches.length !== 1 ? "es" : ""} available</span>
                 </div>
@@ -83,23 +163,59 @@ function BatchesPage() {
                     </div>
                 ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                        {batches.map((batch) => (
-                            <button
-                                key={batch.id}
-                                onClick={() => navigate(`/dashboard/batches/${batch.id}`)}
-                                className="resource-card fade-in"
-                                style={{ display: "flex", alignItems: "center", gap: 16, padding: "18px 24px", textAlign: "left", width: "100%", cursor: "pointer", border: "none", background: "white" }}
-                            >
-                                <div style={{ width: 42, height: 42, borderRadius: 10, background: "rgba(16,185,129,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                    <GraduationCap size={20} color="#10B981" />
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                    <div style={{ fontWeight: 700, fontSize: 16, color: "#0D1B2A", marginBottom: 2 }}>{batch.name}</div>
-                                    <div style={{ fontSize: 13, color: "#6B7280" }}>Intake {batch.intakeYear}</div>
-                                </div>
-                                <ChevronRight size={18} color="#D1D5DB" />
-                            </button>
-                        ))}
+                        {batches.map((batch) => {
+                            const isMyBatch = myBatchId && batch.id.toString() === myBatchId.toString();
+                            return (
+                                <button
+                                    key={batch.id}
+                                    onClick={() => navigate(`/dashboard/batches/${batch.id}`)}
+                                    className="resource-card fade-in"
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 16,
+                                        padding: "18px 24px",
+                                        textAlign: "left",
+                                        width: "100%",
+                                        cursor: "pointer",
+                                        border: isMyBatch ? "1.5px solid #6EE7B7" : "1px solid #E5E7EB",
+                                        background: isMyBatch ? "#F9FDFB" : "white",
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            width: 42,
+                                            height: 42,
+                                            borderRadius: 10,
+                                            background: isMyBatch ? "#10B981" : "rgba(16,185,129,0.1)",
+                                            color: isMyBatch ? "white" : "#10B981",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            flexShrink: 0,
+                                        }}
+                                    >
+                                        <GraduationCap size={20} />
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                            <span style={{ fontWeight: 700, fontSize: 16, color: "#0D1B2A" }}>
+                                                {batch.name}
+                                            </span>
+                                            {isMyBatch && (
+                                                <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", background: "#ECFDF5", color: "#047857", borderRadius: 6 }}>
+                                                    Your Batch
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div style={{ fontSize: 13, color: "#6B7280", marginTop: 2 }}>
+                                            Intake {batch.intakeYear}
+                                        </div>
+                                    </div>
+                                    <ChevronRight size={18} color="#D1D5DB" />
+                                </button>
+                            );
+                        })}
                     </div>
                 )}
             </div>
