@@ -1,10 +1,9 @@
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import { Upload, Search, Library } from "lucide-react";
+import { Library } from "lucide-react";
 
 function TopNav() {
     const { logout } = useAuth();
-    const navigate = useNavigate();
     const userName = localStorage.getItem("userName") || "Student";
     const initials = userName
         .split(" ")
@@ -83,35 +82,8 @@ function TopNav() {
                     )}
                 </nav>
 
-                {/* Search Bar - grows */}
-                <div style={{ flex: 1, maxWidth: 380 }}>
-                    <div
-                        onClick={() => navigate("/dashboard/batches")}
-                        style={{
-                            display: "flex", alignItems: "center", gap: 8,
-                            padding: "8px 14px",
-                            background: "#F9FAFB",
-                            border: "1px solid #E5E7EB",
-                            borderRadius: 8,
-                            cursor: "text",
-                        }}
-                    >
-                        <Search size={15} color="#9CA3AF" />
-                        <span style={{ fontSize: 13, color: "#9CA3AF" }}>Search notes, papers, topics...</span>
-                    </div>
-                </div>
-
                 {/* Right actions */}
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginLeft: "auto" }}>
-                    <button
-                        onClick={logout}
-                        className="btn-primary"
-                        style={{ padding: "7px 16px", fontSize: 13 }}
-                    >
-                        <Upload size={14} />
-                        Upload
-                    </button>
-
                     {/* Avatar */}
                     <div
                         onClick={logout}
