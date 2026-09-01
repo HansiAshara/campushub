@@ -25,15 +25,16 @@ public class AuthService {
     }
 
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+        String email = request.getEmail() != null ? request.getEmail().trim() : "";
+        if (userRepository.findByEmailIgnoreCase(email).isPresent()) {
             throw new IllegalArgumentException("Email already registered");
         }
 
         User user = new User();
-        user.setName(request.getName());
-        user.setEmail(request.getEmail());
+        user.setName(request.getName() != null ? request.getName().trim() : "");
+        user.setEmail(email);
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setIndexNo(request.getIndexNo());
+        user.setIndexNo(request.getIndexNo() != null ? request.getIndexNo().trim() : null);
         user.setAcademicYear(request.getAcademicYear());
 
         if (request.getBatchId() != null) {
@@ -43,7 +44,7 @@ public class AuthService {
         }
 
         // Assign ADMIN role if email is admin@uom.lk
-        if ("admin@uom.lk".equalsIgnoreCase(request.getEmail())) {
+        if ("admin@uom.lk".equalsIgnoreCase(email)) {
             user.setRole(User.Role.ADMIN);
         }
 
@@ -54,7 +55,8 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
+        String email = request.getEmail() != null ? request.getEmail().trim() : "";
+        User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {

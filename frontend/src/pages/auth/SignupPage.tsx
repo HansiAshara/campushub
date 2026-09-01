@@ -46,15 +46,19 @@ function SignupPage() {
         setLoading(true);
         try {
             await signup(
-                name,
-                email,
+                name.trim(),
+                email.trim(),
                 password,
                 indexNo.trim() || undefined,
                 batchId ? parseInt(batchId) : undefined,
                 academicYear || undefined
             );
         } catch (err: any) {
-            setError(err.response?.data?.message || "That email is already registered.");
+            const msg = err?.response?.data?.message || 
+                (err?.message?.includes("Network Error") || !err?.response 
+                    ? "Unable to connect to server. Please ensure the backend server is running." 
+                    : "That email is already registered.");
+            setError(msg);
         } finally {
             setLoading(false);
         }

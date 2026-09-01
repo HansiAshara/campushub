@@ -18,9 +18,13 @@ function LoginPage() {
         setError("");
         setLoading(true);
         try {
-            await login(email, password);
-        } catch {
-            setError("That email and password don't match our records.");
+            await login(email.trim(), password);
+        } catch (err: any) {
+            const msg = err?.response?.data?.message || 
+                (err?.message?.includes("Network Error") || !err?.response 
+                    ? "Unable to connect to server. Please ensure the backend server is running." 
+                    : "That email and password don't match our records.");
+            setError(msg);
         } finally {
             setLoading(false);
         }

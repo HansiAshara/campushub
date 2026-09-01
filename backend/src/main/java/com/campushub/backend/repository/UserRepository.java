@@ -10,10 +10,10 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
 
-    @Query("SELECT u FROM User u WHERE u.batch.id = :batchId AND u.role = :role")
-    List<User> findByBatchIdAndRole(@Param("batchId") Long batchId, @Param("role") User.Role role);
+    Optional<User> findByEmailIgnoreCase(String email);
 
     long countByBatch_Id(Long batchId);
 
-    List<User> findByRole(User.Role role);
+    @Query("SELECT u FROM User u WHERE u.batch.id = :batchId AND u.role = :role")
+    List<User> findByBatchIdAndRole(@Param("batchId") Long batchId, @Param("role") User.Role role);
 }
