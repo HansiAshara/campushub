@@ -38,15 +38,17 @@ public class UserController {
                         || (u.getEmail() != null && u.getEmail().toLowerCase().contains(lowercaseQuery))
                         || (u.getIndexNo() != null && u.getIndexNo().toLowerCase().contains(lowercaseQuery)))
                 .filter(u -> !isBatchLeader || (u.getBatch() != null && current.getBatch() != null && u.getBatch().getId().equals(current.getBatch().getId())))
-                .map(u -> {
-                    Long batchId = u.getBatch() != null ? u.getBatch().getId() : null;
-                    String batchName = u.getBatch() != null ? u.getBatch().getName() : null;
-                    return new UserResponse(
-                            u.getId(), u.getName(), u.getEmail(), u.getRole().name(),
-                            u.getIndexNo(), batchId, batchName, u.getAcademicYear()
-                    );
-                })
+                .map(this::toUserResponse)
                 .toList();
         return ResponseEntity.ok(users);
+    }
+
+    private UserResponse toUserResponse(User u) {
+        Long batchId = u.getBatch() != null ? u.getBatch().getId() : null;
+        String batchName = u.getBatch() != null ? u.getBatch().getName() : null;
+        return new UserResponse(
+                u.getId(), u.getName(), u.getEmail(), u.getRole().name(),
+                u.getIndexNo(), batchId, batchName, u.getAcademicYear()
+        );
     }
 }

@@ -14,7 +14,7 @@ function BatchesPage() {
     const myAcademicYear = localStorage.getItem("academicYear");
 
     useEffect(() => {
-        batchService.getAll().then((res) => setBatches(res.data)).finally(() => setLoading(false));
+        batchService.getAll().then((res) => setBatches(res.data || [])).finally(() => setLoading(false));
     }, []);
 
     const myBatch = batches.find((b) => myBatchId && b.id.toString() === myBatchId.toString());
@@ -71,7 +71,7 @@ function BatchesPage() {
             {/* ── BATCH SELECTOR SECTION ── */}
             <div style={{ maxWidth: 1160, margin: "0 auto", padding: "40px 40px 60px" }}>
                 
-                {/* ── ENROLLED BATCH HUB (For Admins & Students who have an assigned batch) ── */}
+                {/* ── ENROLLED BATCH HUB (For users with an assigned batch from registration) ── */}
                 {myBatch && (
                     <div
                         style={{
