@@ -21,10 +21,12 @@ import ActiveLeadersList from "../../components/features/admin/leadership/Active
 import ActiveRepsList from "../../components/features/admin/leadership/ActiveRepsList";
 import AddBatchForm from "../../components/features/admin/forms/AddBatchForm";
 import AddCourseForm from "../../components/features/admin/forms/AddCourseForm";
+import AdminStudentProfileCard from "../../components/features/admin/profile/AdminStudentProfileCard";
+import { GraduationCap } from "lucide-react";
 
 const font = '"DM Sans", system-ui, sans-serif';
 
-type AdminTab = "batches" | "courses" | "leadership" | "create";
+type AdminTab = "batches" | "courses" | "leadership" | "create" | "profile";
 
 export default function AdminPanelPage() {
     const [activeTab, setActiveTab] = useState<AdminTab>("batches");
@@ -121,7 +123,7 @@ export default function AdminPanelPage() {
                                 style={{ width: "100%", justifyContent: "flex-start", padding: "9px 12px", fontSize: 13, borderRadius: 8 }}
                             >
                                 <Layers size={15} style={{ marginRight: 8 }} />
-                                Batches & Leaders
+                                Batches &amp; Leaders
                             </button>
 
                             <button
@@ -143,14 +145,25 @@ export default function AdminPanelPage() {
                             </button>
 
                             {role === "ADMIN" && (
-                                <button
-                                    onClick={() => setActiveTab("create")}
-                                    className={`filter-pill${activeTab === "create" ? " active" : ""}`}
-                                    style={{ width: "100%", justifyContent: "flex-start", padding: "9px 12px", fontSize: 13, borderRadius: 8 }}
-                                >
-                                    <PlusCircle size={15} style={{ marginRight: 8 }} />
-                                    Creation Hub
-                                </button>
+                                <>
+                                    <button
+                                        onClick={() => setActiveTab("create")}
+                                        className={`filter-pill${activeTab === "create" ? " active" : ""}`}
+                                        style={{ width: "100%", justifyContent: "flex-start", padding: "9px 12px", fontSize: 13, borderRadius: 8 }}
+                                    >
+                                        <PlusCircle size={15} style={{ marginRight: 8 }} />
+                                        Creation Hub
+                                    </button>
+
+                                    <button
+                                        onClick={() => setActiveTab("profile")}
+                                        className={`filter-pill${activeTab === "profile" ? " active" : ""}`}
+                                        style={{ width: "100%", justifyContent: "flex-start", padding: "9px 12px", fontSize: 13, borderRadius: 8 }}
+                                    >
+                                        <GraduationCap size={15} style={{ marginRight: 8 }} />
+                                        My Student Profile
+                                    </button>
+                                </>
                             )}
                         </div>
                     </div>
@@ -248,6 +261,22 @@ export default function AdminPanelPage() {
 
                                     <AddBatchForm onBatchCreated={refreshData} />
                                     <AddCourseForm batches={batches} onCourseCreated={refreshData} />
+                                </div>
+                            )}
+
+                            {/* TAB 5: Admin Student Profile Settings */}
+                            {role === "ADMIN" && activeTab === "profile" && (
+                                <div className="fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                                    <div>
+                                        <h2 style={{ fontSize: 20, fontWeight: 800, color: "#0D1B2A", margin: "0 0 4px 0" }}>
+                                            My Student Identity &amp; Batch
+                                        </h2>
+                                        <p style={{ fontSize: 13, color: "#6B7280", margin: 0 }}>
+                                            Configure your student batch enrollment, academic year, and index number.
+                                        </p>
+                                    </div>
+
+                                    <AdminStudentProfileCard batches={batches} onProfileUpdated={refreshData} />
                                 </div>
                             )}
                         </>
