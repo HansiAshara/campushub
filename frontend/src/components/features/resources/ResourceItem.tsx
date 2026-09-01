@@ -87,10 +87,17 @@ function ResourceItem({ resource, onChanged }: Props) {
 
                     {/* Meta row */}
                     <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 12, flexWrap: "wrap" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "#9CA3AF" }}>
+                        <a
+                            href={resource.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, color: "#6B7280", textDecoration: "none", transition: "color 0.12s" }}
+                            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#10B981")}
+                            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "#6B7280")}
+                        >
                             <FileText size={12} />
                             <span>{resource.fileUrl?.split("/").pop()?.slice(37) || "document.pdf"}</span>
-                        </div>
+                        </a>
 
                         <button
                             onClick={() => setExpanded(!expanded)}
