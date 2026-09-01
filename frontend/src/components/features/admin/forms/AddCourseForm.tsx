@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { courseService } from "../../../../api/courseService";
 import { type Batch } from "../../../../types";
+import { getBatchAcademicYear } from "../../../../utils/batchUtils";
 import { BookPlus, CheckCircle2 } from "lucide-react";
 
 interface AddCourseFormProps {
@@ -22,9 +23,19 @@ export default function AddCourseForm({ batches, onCourseCreated }: AddCourseFor
 
     useEffect(() => {
         if (batches.length > 0 && !batchId) {
-            setBatchId(batches[0].id.toString());
+            const first = batches[0];
+            setBatchId(first.id.toString());
+            setAcademicYear(getBatchAcademicYear(first));
         }
     }, [batches, batchId]);
+
+    const handleBatchChange = (newBatchId: string) => {
+        setBatchId(newBatchId);
+        const sel = batches.find((b) => b.id.toString() === newBatchId);
+        if (sel) {
+            setAcademicYear(getBatchAcademicYear(sel));
+        }
+    };
 
     const handleCreateCourse = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -93,13 +104,13 @@ export default function AddCourseForm({ batches, onCourseCreated }: AddCourseFor
                     <label style={labelStyle}>Target Academic Batch</label>
                     <select
                         value={batchId}
-                        onChange={(e) => setBatchId(e.target.value)}
+                        onChange={(e) => handleBatchChange(e.target.value)}
                         required
                         style={{ ...inputStyle, cursor: "pointer" }}
                     >
                         {batches.map((b) => (
                             <option key={b.id} value={b.id}>
-                                {b.name} (Intake {b.intakeYear})
+                                {b.name} (Intake {b.intakeYear} · Year {getBatchAcademicYear(b)})
                             </option>
                         ))}
                     </select>

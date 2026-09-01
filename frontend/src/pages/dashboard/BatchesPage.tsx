@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { batchService } from "../../api/batchService";
 import { type Batch } from "../../types";
 import { useNavigate } from "react-router-dom";
+import { formatBatchSubtitle } from "../../utils/batchUtils";
 import { Search, Fingerprint, Sparkles, GitBranch, ChevronRight, GraduationCap } from "lucide-react";
 
 function BatchesPage() {
@@ -11,7 +12,6 @@ function BatchesPage() {
 
     const role = localStorage.getItem("role") || "STUDENT";
     const myBatchId = localStorage.getItem("batchId");
-    const myAcademicYear = localStorage.getItem("academicYear");
 
     useEffect(() => {
         batchService.getAll().then((res) => setBatches(res.data || [])).finally(() => setLoading(false));
@@ -119,7 +119,7 @@ function BatchesPage() {
                                     {myBatch.name}
                                 </h3>
                                 <p style={{ fontSize: 13, color: "#065F46", margin: 0 }}>
-                                    Intake {myBatch.intakeYear} {myAcademicYear ? `· Year ${myAcademicYear}` : ""} · View your semester courses &amp; upload notes, tutes, or kuppi materials
+                                    {formatBatchSubtitle(myBatch)} · View your semester courses &amp; upload notes, tutes, or kuppi materials
                                 </p>
                             </div>
                         </div>
@@ -209,7 +209,7 @@ function BatchesPage() {
                                             )}
                                         </div>
                                         <div style={{ fontSize: 13, color: "#6B7280", marginTop: 2 }}>
-                                            Intake {batch.intakeYear}
+                                            {formatBatchSubtitle(batch)}
                                         </div>
                                     </div>
                                     <ChevronRight size={18} color="#D1D5DB" />
