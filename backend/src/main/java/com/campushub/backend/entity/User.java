@@ -38,6 +38,6 @@ public class User {      //use User instead of users for class name to avoid con
     private LocalDateTime createdAt = LocalDateTime.now();
 
     public enum Role {
-        STUDENT, BATCH_LEADER, MODULE_REP, ADMIN
+        STUDENT, BATCH_LEADER, MODULE_COORDINATOR, ADMIN
     }
 }

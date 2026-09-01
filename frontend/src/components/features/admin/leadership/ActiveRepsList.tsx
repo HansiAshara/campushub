@@ -53,18 +53,18 @@ export default function ActiveRepsList({ onRefresh }: ActiveRepsListProps) {
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <Users size={18} color="#F59E0B" />
                     <h3 style={{ fontSize: 15, fontWeight: 800, color: "#0D1B2A", margin: 0 }}>
-                        Active Course Representatives ({moderators.length})
+                        Active Module Coordinators ({moderators.length})
                     </h3>
                 </div>
             </div>
 
             {loading ? (
                 <div style={{ padding: 36, textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
-                    Loading representatives...
+                    Loading module coordinators...
                 </div>
             ) : moderators.length === 0 ? (
                 <div style={{ padding: 36, textAlign: "center", color: "#6B7280", fontSize: 13 }}>
-                    No course representatives appointed yet.
+                    No module coordinators appointed yet.
                 </div>
             ) : (
                 <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: 13 }}>
@@ -72,7 +72,7 @@ export default function ActiveRepsList({ onRefresh }: ActiveRepsListProps) {
                         <tr style={{ background: "#F9FAFB", borderBottom: "1px solid #E5E7EB" }}>
                             <th style={{ padding: "10px 18px", fontWeight: 700, color: "#6B7280", fontSize: 11, textTransform: "uppercase" }}>Course</th>
                             <th style={{ padding: "10px 18px", fontWeight: 700, color: "#6B7280", fontSize: 11, textTransform: "uppercase" }}>Batch</th>
-                            <th style={{ padding: "10px 18px", fontWeight: 700, color: "#6B7280", fontSize: 11, textTransform: "uppercase" }}>Representative</th>
+                            <th style={{ padding: "10px 18px", fontWeight: 700, color: "#6B7280", fontSize: 11, textTransform: "uppercase" }}>Coordinator</th>
                             <th style={{ padding: "10px 18px", fontWeight: 700, color: "#6B7280", fontSize: 11, textTransform: "uppercase" }}>Index No</th>
                             <th style={{ padding: "10px 18px", fontWeight: 700, color: "#6B7280", fontSize: 11, textTransform: "uppercase", textAlign: "right" }}>Action</th>
                         </tr>
@@ -115,7 +115,7 @@ export default function ActiveRepsList({ onRefresh }: ActiveRepsListProps) {
                                         }}
                                     >
                                         <UserMinus size={13} />
-                                        Revoke Rep
+                                        Revoke Coordinator
                                     </button>
                                 </td>
                             </tr>
@@ -126,8 +126,8 @@ export default function ActiveRepsList({ onRefresh }: ActiveRepsListProps) {
 
             <ConfirmDeleteDialog
                 isOpen={!!revokingMod}
-                title="Revoke Course Representative?"
-                description={`Are you sure you want to remove ${revokingMod?.userName} as the representative for ${revokingMod?.courseCode}? If they moderate no other courses, their role will revert to Student.`}
+                title="Revoke Module Coordinator?"
+                description={`Are you sure you want to remove ${revokingMod?.userName} as the coordinator for ${revokingMod?.courseCode}? If they coordinate no other courses, their role will revert to Student.`}
                 confirmText="Yes, Revoke Role"
                 loading={revokeLoading}
                 onConfirm={handleRevoke}

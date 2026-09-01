@@ -98,11 +98,11 @@ export default function AppointRepTab({ batches }: AppointRepTabProps) {
                     setMessage({ type: "error", text: "Please select a course module." });
                     return;
                 }
-                // Assign Course/Module Rep
+                // Assign Course/Module Coordinator
                 await courseService.assignModerator(selectedCourseId, selectedUser.id);
                 setMessage({
                     type: "success",
-                    text: `Successfully appointed ${displayName} as representative for this course!`,
+                    text: `Successfully appointed ${displayName} as Module Coordinator for this course!`,
                 });
             }
             setSelectedUser(null);
@@ -119,9 +119,14 @@ export default function AppointRepTab({ batches }: AppointRepTabProps) {
     };
 
     const inputStyle: React.CSSProperties = {
-        width: "100%", padding: "11px 14px", border: "1px solid #E5E7EB",
-        borderRadius: 8, fontSize: 14, fontFamily: font, color: "#0D1B2A",
-        outline: "none", transition: "border-color 0.15s, box-shadow 0.15s",
+        width: "100%",
+        padding: "11px 14px",
+        border: "1px solid #E5E7EB",
+        borderRadius: 8,
+        fontSize: 14,
+        fontFamily: font,
+        color: "#0D1B2A",
+        outline: "none",
         background: "white",
     };
 
@@ -133,26 +138,34 @@ export default function AppointRepTab({ batches }: AppointRepTabProps) {
     };
 
     const labelStyle: React.CSSProperties = {
-        display: "block", fontFamily: font, fontSize: 11, fontWeight: 700,
-        color: "#9CA3AF", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 7,
+        display: "block",
+        fontFamily: font,
+        fontSize: 11,
+        fontWeight: 700,
+        color: "#9CA3AF",
+        letterSpacing: "0.05em",
+        textTransform: "uppercase",
+        marginBottom: 6,
     };
 
     return (
-        <div className="fade-in" style={{ background: "white", border: "1px solid #E5E7EB", borderRadius: 14, padding: 28, fontFamily: font }}>
-            <h2 style={{ fontSize: 20, fontWeight: 800, color: "#0D1B2A", marginBottom: 6 }}>Appoint Representative / Leader</h2>
-            <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 24 }}>
-                Search for students and promote them to lead batches or moderate module courses.
+        <div style={{ background: "white", border: "1px solid #E5E7EB", borderRadius: 14, padding: 24, fontFamily: font }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: "#0D1B2A", margin: "0 0 6px 0" }}>
+                Appoint Leadership Role
+            </h3>
+            <p style={{ fontSize: 13, color: "#6B7280", margin: "0 0 20px 0" }}>
+                Search for an enrolled student by name, email, or index number to grant administrative privileges.
             </p>
 
-            {/* Role Assignment Type Selection (Admin only) */}
+            {/* Role selector pills */}
             {role === "ADMIN" && (
-                <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
+                <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
                     <button
                         onClick={() => { setAppointmentType("rep"); setSelectedUser(null); setMessage(null); }}
                         className={`filter-pill${appointmentType === "rep" ? " active" : ""}`}
                         style={{ fontSize: 13, padding: "7px 16px" }}
                     >
-                        Appoint Module Rep
+                        Appoint Module Coordinator
                     </button>
                     <button
                         onClick={() => { setAppointmentType("leader"); setSelectedUser(null); setMessage(null); }}
@@ -213,8 +226,8 @@ export default function AppointRepTab({ batches }: AppointRepTabProps) {
                                     {u.email} {u.batchName && `· ${u.batchName}`} {u.academicYear && `· Year ${u.academicYear}`}
                                 </div>
                             </div>
-                            <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", background: u.role === "ADMIN" ? "#FEF2F2" : u.role === "BATCH_LEADER" ? "#F5F3FF" : u.role === "MODULE_REP" ? "#FEF3C7" : "#EFF6FF", color: u.role === "ADMIN" ? "#991B1B" : u.role === "BATCH_LEADER" ? "#5B21B6" : u.role === "MODULE_REP" ? "#92400E" : "#1E40AF", borderRadius: 4 }}>
-                                {u.role === "BATCH_LEADER" ? "LEADER" : u.role === "MODULE_REP" ? "REP" : u.role}
+                            <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", background: u.role === "ADMIN" ? "#FEF2F2" : u.role === "BATCH_LEADER" ? "#F5F3FF" : u.role === "MODULE_COORDINATOR" ? "#FEF3C7" : "#EFF6FF", color: u.role === "ADMIN" ? "#991B1B" : u.role === "BATCH_LEADER" ? "#5B21B6" : u.role === "MODULE_COORDINATOR" ? "#92400E" : "#1E40AF", borderRadius: 4 }}>
+                                {u.role === "BATCH_LEADER" ? "LEADER" : u.role === "MODULE_COORDINATOR" ? "COORDINATOR" : u.role}
                             </span>
                         </div>
                     ))}

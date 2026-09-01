@@ -18,8 +18,10 @@ public class DatabaseConstraintFixer implements CommandLineRunner {
         try {
             // Drop outdated check constraint on users table
             jdbcTemplate.execute("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check");
+            // Migrate any existing users with MODULE_REP role to MODULE_COORDINATOR
+            jdbcTemplate.execute("UPDATE users SET role = 'MODULE_COORDINATOR' WHERE role = 'MODULE_REP'");
             // Recreate check constraint with all valid User.Role enum values
-            jdbcTemplate.execute("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('STUDENT', 'BATCH_LEADER', 'MODULE_REP', 'ADMIN'))");
+            jdbcTemplate.execute("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('STUDENT', 'BATCH_LEADER', 'MODULE_COORDINATOR', 'ADMIN'))");
         } catch (Exception e) {
             System.err.println("Warning: Could not update users_role_check constraint: " + e.getMessage());
         }

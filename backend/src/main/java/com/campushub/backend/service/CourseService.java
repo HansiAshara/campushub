@@ -128,7 +128,7 @@ public class CourseService {
             boolean isSameBatch = isBatchLeader && currentUser.getBatch() != null && course.getBatch() != null 
                     && currentUser.getBatch().getId().equals(course.getBatch().getId());
             if (!isSameBatch) {
-                throw new AccessDeniedException("Only admins or the batch leader of this batch can remove module reps");
+                throw new AccessDeniedException("Only admins or the batch leader of this batch can remove module coordinators");
             }
         }
 
@@ -138,7 +138,7 @@ public class CourseService {
         long remainingModCount = courseModeratorRepository.countByUserId(userId);
         if (remainingModCount == 0) {
             userRepository.findById(userId).ifPresent(u -> {
-                if (u.getRole() == User.Role.MODULE_REP) {
+                if (u.getRole() == User.Role.MODULE_COORDINATOR) {
                     u.setRole(User.Role.STUDENT);
                     userRepository.save(u);
                 }
@@ -177,7 +177,7 @@ public class CourseService {
             boolean isSameBatch = isBatchLeader && currentUser.getBatch() != null && course.getBatch() != null 
                     && currentUser.getBatch().getId().equals(course.getBatch().getId());
             if (!isSameBatch) {
-                throw new AccessDeniedException("Only admins or the batch leader of this batch can assign module reps");
+                throw new AccessDeniedException("Only admins or the batch leader of this batch can assign module coordinators");
             }
         }
 
@@ -191,7 +191,7 @@ public class CourseService {
         courseModeratorRepository.save(cm);
 
         if (targetUser.getRole() == User.Role.STUDENT) {
-            targetUser.setRole(User.Role.MODULE_REP);
+            targetUser.setRole(User.Role.MODULE_COORDINATOR);
             userRepository.save(targetUser);
         }
     }

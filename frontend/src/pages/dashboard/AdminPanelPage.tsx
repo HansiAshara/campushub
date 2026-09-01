@@ -208,10 +208,10 @@ export default function AdminPanelPage() {
                                 <div className="fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
                                     <div>
                                         <h2 style={{ fontSize: 20, fontWeight: 800, color: "#0D1B2A", margin: "0 0 4px 0" }}>
-                                            Leadership & Representatives
+                                            Leadership & Coordinators
                                         </h2>
                                         <p style={{ fontSize: 13, color: "#6B7280", margin: 0 }}>
-                                            Search students to promote them to Batch Leaders or Course Module Representatives, or revoke active privileges.
+                                            Search students to promote them to Batch Leaders or Module Coordinators, or revoke active privileges.
                                         </p>
                                     </div>
 
@@ -227,7 +227,7 @@ export default function AdminPanelPage() {
                                         onRefresh={refreshData}
                                     />
 
-                                    {/* Active Course Reps List */}
+                                    {/* Active Course Reps / Coordinators List */}
                                     <ActiveRepsList
                                         onRefresh={refreshData}
                                     />

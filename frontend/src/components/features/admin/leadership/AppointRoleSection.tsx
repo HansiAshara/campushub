@@ -91,7 +91,7 @@ export default function AppointRoleSection({ batches, onRoleAssigned }: AppointR
                 await courseService.assignModerator(selectedCourseId, selectedUser.id);
                 setMessage({
                     type: "success",
-                    text: `Successfully appointed ${displayName} as Course Representative!`,
+                    text: `Successfully appointed ${displayName} as Module Coordinator!`,
                 });
             }
 
@@ -158,7 +158,7 @@ export default function AppointRoleSection({ batches, onRoleAssigned }: AppointR
                         className={`filter-pill${appointmentType === "rep" ? " active" : ""}`}
                         style={{ fontSize: 13, padding: "7px 16px" }}
                     >
-                        Appoint Course Module Rep
+                        Appoint Module Coordinator
                     </button>
                 </div>
             )}
@@ -213,10 +213,10 @@ export default function AppointRoleSection({ batches, onRoleAssigned }: AppointR
                                 fontWeight: 700,
                                 padding: "3px 8px",
                                 borderRadius: 6,
-                                background: u.role === "ADMIN" ? "#FEF2F2" : u.role === "BATCH_LEADER" ? "#F5F3FF" : u.role === "MODULE_REP" ? "#FEF3C7" : "#EFF6FF",
-                                color: u.role === "ADMIN" ? "#991B1B" : u.role === "BATCH_LEADER" ? "#6D28D9" : u.role === "MODULE_REP" ? "#92400E" : "#1D4ED8",
+                                background: u.role === "ADMIN" ? "#FEF2F2" : u.role === "BATCH_LEADER" ? "#F5F3FF" : u.role === "MODULE_COORDINATOR" ? "#FEF3C7" : "#EFF6FF",
+                                color: u.role === "ADMIN" ? "#991B1B" : u.role === "BATCH_LEADER" ? "#6D28D9" : u.role === "MODULE_COORDINATOR" ? "#92400E" : "#1D4ED8",
                             }}>
-                                {u.role}
+                                {u.role === "MODULE_COORDINATOR" ? "COORDINATOR" : u.role}
                             </span>
                         </div>
                     ))}
@@ -253,7 +253,7 @@ export default function AppointRoleSection({ batches, onRoleAssigned }: AppointR
                         </div>
                     ) : (
                         <div style={{ marginBottom: 18 }}>
-                            <label style={labelStyle}>Assign as Rep for Course Module</label>
+                            <label style={labelStyle}>Assign as Coordinator for Course Module</label>
                             <select
                                 value={selectedCourseId}
                                 onChange={(e) => setSelectedCourseId(e.target.value)}
@@ -275,7 +275,7 @@ export default function AppointRoleSection({ batches, onRoleAssigned }: AppointR
                         style={{ padding: "10px 24px", fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}
                     >
                         <UserCheck size={16} />
-                        {loading ? "Assigning..." : appointmentType === "leader" ? "Appoint Batch Leader" : "Appoint Course Rep"}
+                        {loading ? "Assigning..." : appointmentType === "leader" ? "Appoint Batch Leader" : "Appoint Module Coordinator"}
                     </button>
                 </form>
             )}

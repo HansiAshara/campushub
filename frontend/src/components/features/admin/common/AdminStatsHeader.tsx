@@ -18,7 +18,7 @@ export default function AdminStatsHeader({
     const stats = [
         { label: "Total Batches", value: totalBatches, icon: Layers, color: "#10B981", bg: "#ECFDF5" },
         { label: "Active Leaders", value: totalLeaders, icon: Shield, color: "#8B5CF6", bg: "#F5F3FF" },
-        { label: "Module Reps", value: totalReps, icon: Users, color: "#F59E0B", bg: "#FFFBEB" },
+        { label: "Module Coordinators", value: totalReps, icon: Users, color: "#F59E0B", bg: "#FFFBEB" },
         { label: "Total Courses", value: totalCourses, icon: BookOpen, color: "#3B82F6", bg: "#EFF6FF" },
     ];
 
