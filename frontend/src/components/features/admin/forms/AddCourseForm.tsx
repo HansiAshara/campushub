@@ -21,13 +21,22 @@ export default function AddCourseForm({ batches, onCourseCreated }: AddCourseFor
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+    const currentRole = localStorage.getItem("role") || "STUDENT";
+    const myBatchId = localStorage.getItem("batchId");
+
     useEffect(() => {
         if (batches.length > 0 && !batchId) {
-            const first = batches[0];
-            setBatchId(first.id.toString());
-            setAcademicYear(getBatchAcademicYear(first));
+            if (myBatchId && batches.some((b) => b.id.toString() === myBatchId.toString())) {
+                const target = batches.find((b) => b.id.toString() === myBatchId.toString())!;
+                setBatchId(target.id.toString());
+                setAcademicYear(getBatchAcademicYear(target));
+            } else {
+                const first = batches[0];
+                setBatchId(first.id.toString());
+                setAcademicYear(getBatchAcademicYear(first));
+            }
         }
-    }, [batches, batchId]);
+    }, [batches, batchId, myBatchId]);
 
     const handleBatchChange = (newBatchId: string) => {
         setBatchId(newBatchId);
@@ -101,12 +110,20 @@ export default function AddCourseForm({ batches, onCourseCreated }: AddCourseFor
 
             <form onSubmit={handleCreateCourse} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 <div>
-                    <label style={labelStyle}>Target Academic Batch</label>
+                    <label style={labelStyle}>
+                        Target Academic Batch {currentRole === "BATCH_LEADER" ? "(Your Batch)" : ""}
+                    </label>
                     <select
                         value={batchId}
                         onChange={(e) => handleBatchChange(e.target.value)}
+                        disabled={currentRole === "BATCH_LEADER"}
                         required
-                        style={{ ...inputStyle, cursor: "pointer" }}
+                        style={{
+                            ...inputStyle,
+                            cursor: currentRole === "BATCH_LEADER" ? "not-allowed" : "pointer",
+                            background: currentRole === "BATCH_LEADER" ? "#F9FAFB" : "white",
+                            color: currentRole === "BATCH_LEADER" ? "#4B5563" : "#0D1B2A",
+                        }}
                     >
                         {batches.map((b) => (
                             <option key={b.id} value={b.id}>

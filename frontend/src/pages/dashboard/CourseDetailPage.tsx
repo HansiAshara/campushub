@@ -78,13 +78,17 @@ function CourseDetailPage() {
                         </div>
 
                         {/* Role badge */}
-                        {role === "BATCH_REP" && (
+                        {(role === "BATCH_LEADER" || role === "MODULE_COORDINATOR") && (
                             <div style={{ marginTop: 16, background: "#FEF3C7", border: "1px solid #FDE68A", borderRadius: 10, padding: "10px 14px" }}>
                                 <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "#92400E", textTransform: "uppercase" }}>
                                     Your Role
                                 </div>
-                                <div style={{ fontSize: 13, fontWeight: 600, color: "#78350F", marginTop: 2 }}>Batch Rep</div>
-                                <div style={{ fontSize: 11, color: "#92400E", marginTop: 1 }}>canManage &amp; canEdit enabled</div>
+                                <div style={{ fontSize: 13, fontWeight: 600, color: "#78350F", marginTop: 2 }}>
+                                    {role === "BATCH_LEADER" ? "Batch Leader" : "Module Coordinator"}
+                                </div>
+                                <div style={{ fontSize: 11, color: "#92400E", marginTop: 1 }}>
+                                    {role === "BATCH_LEADER" ? "Batch curriculum & leadership enabled" : "Course moderator privileges"}
+                                </div>
                             </div>
                         )}
                     </div>

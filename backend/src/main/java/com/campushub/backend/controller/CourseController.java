@@ -23,7 +23,9 @@ public class CourseController {
 
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody CourseRequest request) {
-        if (!hasRole("ROLE_ADMIN")) return ResponseEntity.status(403).body(java.util.Map.of("message", "Access denied"));
+        if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_BATCH_LEADER")) {
+            return ResponseEntity.status(403).body(java.util.Map.of("message", "Access denied"));
+        }
         return ResponseEntity.ok(courseService.create(request));
     }
 
@@ -34,13 +36,17 @@ public class CourseController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody CourseRequest request) {
-        if (!hasRole("ROLE_ADMIN")) return ResponseEntity.status(403).body(java.util.Map.of("message", "Access denied"));
+        if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_BATCH_LEADER")) {
+            return ResponseEntity.status(403).body(java.util.Map.of("message", "Access denied"));
+        }
         return ResponseEntity.ok(courseService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
-        if (!hasRole("ROLE_ADMIN")) return ResponseEntity.status(403).body(java.util.Map.of("message", "Access denied"));
+        if (!hasRole("ROLE_ADMIN") && !hasRole("ROLE_BATCH_LEADER")) {
+            return ResponseEntity.status(403).body(java.util.Map.of("message", "Access denied"));
+        }
         courseService.delete(id);
         return ResponseEntity.ok().build();
     }

@@ -16,7 +16,7 @@ export default function AppointRoleSection({ batches, onRoleAssigned }: AppointR
     const role = localStorage.getItem("role") || "STUDENT";
     const myBatchId = localStorage.getItem("batchId");
 
-    const [appointmentType, setAppointmentType] = useState<"leader" | "rep">("leader");
+    const [appointmentType, setAppointmentType] = useState<"leader" | "rep">(role === "ADMIN" ? "leader" : "rep");
     const [searchQuery, setSearchQuery] = useState("");
     const [foundUsers, setFoundUsers] = useState<UserResponse[]>([]);
     const [selectedUser, setSelectedUser] = useState<UserResponse | null>(null);

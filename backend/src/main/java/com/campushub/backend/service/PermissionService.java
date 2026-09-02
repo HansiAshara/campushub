@@ -15,7 +15,22 @@ public class PermissionService {
     }
 
     public boolean isAdmin(User user) {
-        return user.getRole() == User.Role.ADMIN;
+        return user != null && user.getRole() == User.Role.ADMIN;
+    }
+
+    public boolean canManageCoursesForBatch(User user, Long batchId) {
+        if (user == null || batchId == null) return false;
+        boolean isEnrolledInBatch = user.getBatch() != null && user.getBatch().getId().equals(batchId);
+        if (isEnrolledInBatch) {
+            return user.getRole() == User.Role.BATCH_LEADER || user.getRole() == User.Role.ADMIN;
+        }
+        return false;
+    }
+
+    public boolean canManageCourse(User user, Long courseId, Long batchId) {
+        if (user == null) return false;
+        if (canManageCoursesForBatch(user, batchId)) return true;
+        return courseModeratorRepository.existsByCourseIdAndUserId(courseId, user.getId());
     }
 
     public boolean canManageCourse(User user, Long courseId) {

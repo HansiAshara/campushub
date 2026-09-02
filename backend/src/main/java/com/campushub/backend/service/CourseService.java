@@ -42,8 +42,8 @@ public class CourseService {
 
     public CourseResponse create(CourseRequest request) {
         User user = currentUser();
-        if (!permissionService.isAdmin(user)) {
-            throw new AccessDeniedException("Only admins can create courses");
+        if (!permissionService.canManageCoursesForBatch(user, request.getBatchId())) {
+            throw new AccessDeniedException("You are not authorized to create courses for this batch. Only the batch leader or enrolled admin can add courses.");
         }
 
         Batch batch = batchRepository.findById(request.getBatchId())
@@ -54,8 +54,8 @@ public class CourseService {
         }
 
         Course course = new Course();
-        course.setCode(request.getCode());
-        course.setName(request.getName());
+        course.setCode(request.getCode() != null ? request.getCode().trim().toUpperCase() : "");
+        course.setName(request.getName() != null ? request.getName().trim() : "");
         course.setAcademicYear(request.getAcademicYear());
         course.setSemesterNumber(request.getSemesterNumber());
         course.setBatch(batch);
@@ -66,18 +66,22 @@ public class CourseService {
 
     public CourseResponse update(Long id, CourseRequest request) {
         User user = currentUser();
-        if (!permissionService.isAdmin(user)) {
-            throw new AccessDeniedException("Only admins can update courses");
-        }
-
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Course not found"));
+
+        if (!permissionService.canManageCoursesForBatch(user, course.getBatch().getId())) {
+            throw new AccessDeniedException("You are not authorized to update courses for this batch.");
+        }
 
         Batch batch = batchRepository.findById(request.getBatchId())
                 .orElseThrow(() -> new IllegalArgumentException("Batch not found"));
 
-        course.setCode(request.getCode());
-        course.setName(request.getName());
+        if (!course.getBatch().getId().equals(batch.getId()) && !permissionService.canManageCoursesForBatch(user, batch.getId())) {
+            throw new AccessDeniedException("You cannot move this course to another batch.");
+        }
+
+        course.setCode(request.getCode() != null ? request.getCode().trim().toUpperCase() : "");
+        course.setName(request.getName() != null ? request.getName().trim() : "");
         course.setAcademicYear(request.getAcademicYear());
         course.setSemesterNumber(request.getSemesterNumber());
         course.setBatch(batch);
@@ -89,12 +93,12 @@ public class CourseService {
     @org.springframework.transaction.annotation.Transactional
     public void delete(Long id) {
         User user = currentUser();
-        if (!permissionService.isAdmin(user)) {
-            throw new AccessDeniedException("Only admins can delete courses");
-        }
-
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Course not found"));
+
+        if (!permissionService.canManageCoursesForBatch(user, course.getBatch().getId())) {
+            throw new AccessDeniedException("You are not authorized to delete courses for this batch.");
+        }
 
         // Delete associated course moderators
         courseModeratorRepository.deleteByCourseId(id);
@@ -197,7 +201,7 @@ public class CourseService {
     }
 
     private CourseResponse toResponse(Course course, User currentUser) {
-        boolean canManage = permissionService.canManageCourse(currentUser, course.getId());
+        boolean canManage = permissionService.canManageCourse(currentUser, course.getId(), course.getBatch().getId());
         return new CourseResponse(
                 course.getId(), course.getCode(), course.getName(),
                 course.getAcademicYear(), course.getSemesterNumber(),

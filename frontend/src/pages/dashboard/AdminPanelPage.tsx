@@ -144,27 +144,23 @@ export default function AdminPanelPage() {
                                 Role Management
                             </button>
 
-                            {role === "ADMIN" && (
-                                <>
-                                    <button
-                                        onClick={() => setActiveTab("create")}
-                                        className={`filter-pill${activeTab === "create" ? " active" : ""}`}
-                                        style={{ width: "100%", justifyContent: "flex-start", padding: "9px 12px", fontSize: 13, borderRadius: 8 }}
-                                    >
-                                        <PlusCircle size={15} style={{ marginRight: 8 }} />
-                                        Creation Hub
-                                    </button>
+                            <button
+                                onClick={() => setActiveTab("create")}
+                                className={`filter-pill${activeTab === "create" ? " active" : ""}`}
+                                style={{ width: "100%", justifyContent: "flex-start", padding: "9px 12px", fontSize: 13, borderRadius: 8 }}
+                            >
+                                <PlusCircle size={15} style={{ marginRight: 8 }} />
+                                Creation Hub
+                            </button>
 
-                                    <button
-                                        onClick={() => setActiveTab("profile")}
-                                        className={`filter-pill${activeTab === "profile" ? " active" : ""}`}
-                                        style={{ width: "100%", justifyContent: "flex-start", padding: "9px 12px", fontSize: 13, borderRadius: 8 }}
-                                    >
-                                        <GraduationCap size={15} style={{ marginRight: 8 }} />
-                                        My Student Profile
-                                    </button>
-                                </>
-                            )}
+                            <button
+                                onClick={() => setActiveTab("profile")}
+                                className={`filter-pill${activeTab === "profile" ? " active" : ""}`}
+                                style={{ width: "100%", justifyContent: "flex-start", padding: "9px 12px", fontSize: 13, borderRadius: 8 }}
+                            >
+                                <GraduationCap size={15} style={{ marginRight: 8 }} />
+                                My Student Profile
+                            </button>
                         </div>
                     </div>
                 </aside>
@@ -248,24 +244,26 @@ export default function AdminPanelPage() {
                             )}
 
                             {/* TAB 4: Quick Creation Hub */}
-                            {role === "ADMIN" && activeTab === "create" && (
+                            {activeTab === "create" && (
                                 <div className="fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
                                     <div>
                                         <h2 style={{ fontSize: 20, fontWeight: 800, color: "#0D1B2A", margin: "0 0 4px 0" }}>
                                             Creation Hub
                                         </h2>
                                         <p style={{ fontSize: 13, color: "#6B7280", margin: 0 }}>
-                                            Quickly register new academic batches and course modules.
+                                            {role === "ADMIN"
+                                                ? "Quickly register new academic batches and course modules."
+                                                : "Quickly register new course modules for your academic batch."}
                                         </p>
                                     </div>
 
-                                    <AddBatchForm onBatchCreated={refreshData} />
+                                    {role === "ADMIN" && <AddBatchForm onBatchCreated={refreshData} />}
                                     <AddCourseForm batches={batches} onCourseCreated={refreshData} />
                                 </div>
                             )}
 
-                            {/* TAB 5: Admin Student Profile Settings */}
-                            {role === "ADMIN" && activeTab === "profile" && (
+                            {/* TAB 5: Student Profile Settings */}
+                            {activeTab === "profile" && (
                                 <div className="fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
                                     <div>
                                         <h2 style={{ fontSize: 20, fontWeight: 800, color: "#0D1B2A", margin: "0 0 4px 0" }}>
