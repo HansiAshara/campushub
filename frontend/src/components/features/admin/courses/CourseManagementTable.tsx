@@ -22,6 +22,10 @@ export default function CourseManagementTable({
     const [selectedBatchFilter, setSelectedBatchFilter] = useState<string>("ALL");
     const [selectedYearFilter, setSelectedYearFilter] = useState<string>("ALL");
 
+    const currentRole = localStorage.getItem("role") || "STUDENT";
+    const myBatchId = localStorage.getItem("batchId");
+    const canCreateCourse = currentRole === "BATCH_LEADER" || (currentRole === "ADMIN" && !!myBatchId);
+
     // Modal states
     const [editingCourse, setEditingCourse] = useState<Course | null>(null);
     const [deletingCourse, setDeletingCourse] = useState<Course | null>(null);
@@ -148,9 +152,23 @@ export default function CourseManagementTable({
                 </div>
 
                 <button
-                    onClick={onOpenAddCourse}
+                    onClick={() => {
+                        if (canCreateCourse) {
+                            onOpenAddCourse();
+                        } else {
+                            alert("To create courses for your batch, please set your enrolled student batch in the 'My Student Profile' tab.");
+                        }
+                    }}
                     className="btn-primary"
-                    style={{ padding: "8px 18px", fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}
+                    style={{
+                        padding: "8px 18px",
+                        fontSize: 13,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        opacity: canCreateCourse ? 1 : 0.85,
+                    }}
+                    title={canCreateCourse ? "Add a new course" : "Set your student batch in My Student Profile to add courses"}
                 >
                     <Plus size={15} />
                     New Course
@@ -226,46 +244,71 @@ export default function CourseManagementTable({
                                         Year {c.academicYear} · Sem {c.semesterNumber}
                                     </td>
                                     <td style={{ padding: "14px 18px", textAlign: "right" }}>
-                                        <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                                            <button
-                                                onClick={() => setEditingCourse(c)}
-                                                style={{
-                                                    border: "1px solid #E5E7EB",
-                                                    background: "white",
-                                                    borderRadius: 6,
-                                                    padding: "5px 8px",
-                                                    cursor: "pointer",
-                                                    color: "#4B5563",
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: 4,
-                                                    fontSize: 12,
-                                                }}
-                                                title="Edit course"
-                                            >
-                                                <Edit2 size={13} color="#6B7280" />
-                                                Edit
-                                            </button>
-                                            <button
-                                                onClick={() => setDeletingCourse(c)}
-                                                style={{
-                                                    border: "1px solid #FECACA",
-                                                    background: "#FEF2F2",
-                                                    borderRadius: 6,
-                                                    padding: "5px 8px",
-                                                    cursor: "pointer",
-                                                    color: "#DC2626",
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: 4,
-                                                    fontSize: 12,
-                                                }}
-                                                title="Delete course"
-                                            >
-                                                <Trash2 size={13} />
-                                                Delete
-                                            </button>
-                                        </div>
+                                        {(() => {
+                                            const isBatchManager = Boolean(
+                                                c.canManage ||
+                                                (myBatchId && batches.find((b) => b.id.toString() === myBatchId.toString())?.name === c.batchName)
+                                            );
+                                            return isBatchManager ? (
+                                                <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                                                    <button
+                                                        onClick={() => setEditingCourse(c)}
+                                                        style={{
+                                                            border: "1px solid #E5E7EB",
+                                                            background: "white",
+                                                            borderRadius: 6,
+                                                            padding: "5px 8px",
+                                                            cursor: "pointer",
+                                                            color: "#4B5563",
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            gap: 4,
+                                                            fontSize: 12,
+                                                        }}
+                                                        title="Edit course"
+                                                    >
+                                                        <Edit2 size={13} color="#6B7280" />
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setDeletingCourse(c)}
+                                                        style={{
+                                                            border: "1px solid #FECACA",
+                                                            background: "#FEF2F2",
+                                                            borderRadius: 6,
+                                                            padding: "5px 8px",
+                                                            cursor: "pointer",
+                                                            color: "#DC2626",
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            gap: 4,
+                                                            fontSize: 12,
+                                                        }}
+                                                        title="Delete course"
+                                                    >
+                                                        <Trash2 size={13} />
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <span
+                                                    style={{
+                                                        display: "inline-flex",
+                                                        alignItems: "center",
+                                                        padding: "3px 8px",
+                                                        background: "#F9FAFB",
+                                                        border: "1px solid #E5E7EB",
+                                                        color: "#6B7280",
+                                                        borderRadius: 6,
+                                                        fontSize: 11,
+                                                        fontWeight: 600,
+                                                    }}
+                                                    title="Global university directory view"
+                                                >
+                                                    Directory View
+                                                </span>
+                                            );
+                                        })()}
                                     </td>
                                 </tr>
                             ))}

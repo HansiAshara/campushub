@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { type Course, type Batch } from "../../../../types";
 import { courseService } from "../../../../api/courseService";
 import { X, BookOpen } from "lucide-react";
@@ -93,13 +94,19 @@ export default function EditCourseModal({
         marginBottom: 6,
     };
 
-    return (
+    return createPortal(
         <div
             style={{
                 position: "fixed",
-                inset: 0,
-                backgroundColor: "rgba(13, 27, 42, 0.45)",
-                backdropFilter: "blur(4px)",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: "100vw",
+                height: "100vh",
+                backgroundColor: "rgba(13, 27, 42, 0.5)",
+                backdropFilter: "blur(6px)",
+                WebkitBackdropFilter: "blur(6px)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -116,7 +123,7 @@ export default function EditCourseModal({
                     padding: 24,
                     width: "100%",
                     maxWidth: 480,
-                    boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+                    boxShadow: "0 25px 60px -15px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
                     border: "1px solid #E5E7EB",
                 }}
                 onClick={(e) => e.stopPropagation()}
@@ -137,12 +144,11 @@ export default function EditCourseModal({
 
                 <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                     <div>
-                        <label style={labelStyle}>Batch</label>
+                        <label style={labelStyle}>Batch (Locked)</label>
                         <select
                             value={batchId}
-                            onChange={(e) => setBatchId(e.target.value)}
-                            required
-                            style={{ ...inputStyle, cursor: "pointer" }}
+                            disabled
+                            style={{ ...inputStyle, background: "#F3F4F6", cursor: "not-allowed", color: "#4B5563" }}
                         >
                             {batches.map((b) => (
                                 <option key={b.id} value={b.id}>
