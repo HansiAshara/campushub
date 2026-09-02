@@ -69,4 +69,5 @@ export interface AuthResponse {
     batchId?: number | null;
     batchName?: string | null;
     academicYear?: number;
+    userId?: number;
 }

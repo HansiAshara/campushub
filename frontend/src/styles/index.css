@@ -410,6 +410,78 @@
   animation: spin 1s linear infinite;
 }
 
+.btn-resource-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: #FFFFFF;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid #CBD5E1;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: var(--font-sans);
+  line-height: 1.4;
+}
+
+.btn-resource-edit:hover {
+  background: #F8FAFC;
+  border-color: #94A3B8;
+  color: #0F172A;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.btn-resource-edit:active {
+  transform: translateY(0);
+}
+
+.btn-resource-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: #FEF2F2;
+  color: #DC2626;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid #FECACA;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: var(--font-sans);
+  line-height: 1.4;
+}
+
+.btn-resource-delete:hover {
+  background: #FEE2E2;
+  border-color: #F87171;
+  color: #991B1B;
+  box-shadow: 0 1px 4px rgba(220, 38, 38, 0.18);
+  transform: translateY(-1px);
+}
+
+.btn-resource-delete:active {
+  transform: translateY(0);
+}
+
+.badge-my-upload {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  background: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
 /* ===================== */
 /*    SCROLLBAR          */
 /* ===================== */

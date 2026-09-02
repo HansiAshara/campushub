@@ -25,7 +25,6 @@ public class PermissionService {
 
     public boolean canEditResource(User user, Resource resource) {
         if (isAdmin(user)) return true;
-        if (resource.getUploadedBy().getId().equals(user.getId())) return true;
-        return courseModeratorRepository.existsByCourseIdAndUserId(resource.getCourse().getId(), user.getId());
+        return resource.getUploadedBy() != null && resource.getUploadedBy().getId().equals(user.getId());
     }
 }

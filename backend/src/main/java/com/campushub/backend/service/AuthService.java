@@ -78,7 +78,8 @@ public class AuthService {
                 user.getIndexNo(),
                 batchId,
                 batchName,
-                user.getAcademicYear()
+                user.getAcademicYear(),
+                user.getId()
         );
     }
 }

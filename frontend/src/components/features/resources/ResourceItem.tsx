@@ -42,13 +42,31 @@ function ResourceItem({ resource, onChanged }: Props) {
     const [editing, setEditing] = useState(false);
     const [confirmingDelete, setConfirmingDelete] = useState(false);
     const [title, setTitle] = useState(resource.title);
+    const [resourceType, setResourceType] = useState(resource.resourceType);
     const [saving, setSaving] = useState(false);
     const [downloading, setDownloading] = useState(false);
+
+    const currentUserId = localStorage.getItem("userId");
+    const currentUserName = localStorage.getItem("userName");
+    const currentRole = localStorage.getItem("role");
+
+    // Match ownership by userId or userName
+    const isOwner = Boolean(
+        (currentUserId && String(resource.uploadedById) === String(currentUserId)) ||
+        (currentUserName && resource.uploadedByName && (
+            resource.uploadedByName.trim().toLowerCase() === currentUserName.trim().toLowerCase() ||
+            resource.uploadedByName.trim().toLowerCase().startsWith(currentUserName.trim().toLowerCase()) ||
+            currentUserName.trim().toLowerCase().startsWith(resource.uploadedByName.trim().toLowerCase())
+        ))
+    );
+
+    // Edit and delete actions allowed ONLY for resources uploaded by oneself (or system ADMIN)
+    const canModify = Boolean(resource.canEdit && (isOwner || currentRole === "ADMIN"));
 
     const saveEdit = async () => {
         setSaving(true);
         try {
-            await resourceService.update(resource.id, title, resource.resourceType);
+            await resourceService.update(resource.id, title, resourceType);
             setEditing(false);
             onChanged();
         } finally {
@@ -199,32 +217,39 @@ function ResourceItem({ resource, onChanged }: Props) {
                             <span>Discussions</span>
                         </button>
 
-                        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#9CA3AF" }}>
-                            <span>{resource.uploadedByName}</span>
+                        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#6B7280", flexWrap: "wrap" }}>
+                            <span style={{ fontWeight: 500, color: "#374151" }}>{resource.uploadedByName}</span>
+                            {isOwner && (
+                                <span className="badge-my-upload" title="You uploaded this resource">You</span>
+                            )}
                             <span>·</span>
                             <span>{formatDate(resource.createdAt)}</span>
 
-                            {resource.canEdit && (
-                                <>
+                            {canModify && (
+                                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginLeft: 6 }}>
                                     <button
-                                        onClick={() => setEditing(true)}
-                                        style={{ background: "none", border: "none", cursor: "pointer", padding: "2px 4px", color: "#D1D5DB", transition: "color 0.12s", borderRadius: 4 }}
-                                        onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#10B981")}
-                                        onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "#D1D5DB")}
-                                        title="Edit"
+                                        type="button"
+                                        onClick={() => {
+                                            setTitle(resource.title);
+                                            setResourceType(resource.resourceType);
+                                            setEditing(true);
+                                        }}
+                                        className="btn-resource-edit"
+                                        title="Edit this resource"
                                     >
-                                        <Edit2 size={13} />
+                                        <Edit2 size={12} />
+                                        <span>Edit</span>
                                     </button>
                                     <button
+                                        type="button"
                                         onClick={() => setConfirmingDelete(true)}
-                                        style={{ background: "none", border: "none", cursor: "pointer", padding: "2px 4px", color: "#D1D5DB", transition: "color 0.12s", borderRadius: 4 }}
-                                        onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#EF4444")}
-                                        onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "#D1D5DB")}
-                                        title="Delete"
+                                        className="btn-resource-delete"
+                                        title="Delete this resource"
                                     >
-                                        <Trash2 size={13} />
+                                        <Trash2 size={12} />
+                                        <span>Delete</span>
                                     </button>
-                                </>
+                                </div>
                             )}
                         </div>
                     </div>
@@ -240,10 +265,43 @@ function ResourceItem({ resource, onChanged }: Props) {
 
             {/* Edit Modal */}
             <Modal open={editing} onClose={() => setEditing(false)} title="Edit Resource">
-                <Input label="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 20 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                    <Input
+                        label="Resource Title"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="Enter resource title"
+                    />
+                    <div>
+                        <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>
+                            Resource Type
+                        </label>
+                        <select
+                            value={resourceType}
+                            onChange={(e) => setResourceType(e.target.value)}
+                            style={{
+                                width: "100%",
+                                padding: "9px 12px",
+                                borderRadius: 8,
+                                border: "1px solid #D1D5DB",
+                                fontSize: 14,
+                                color: "#111827",
+                                background: "#FFFFFF",
+                                outline: "none",
+                                cursor: "pointer",
+                            }}
+                        >
+                            <option value="NOTES">Notes</option>
+                            <option value="PAST_PAPER">Past Paper</option>
+                            <option value="TUTE">Tute</option>
+                            <option value="KUPPI_NOTES">Kuppi</option>
+                            <option value="SLIDES">Slides</option>
+                        </select>
+                    </div>
+                </div>
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 24 }}>
                     <button className="btn-secondary" onClick={() => setEditing(false)}>Cancel</button>
-                    <button className="btn-primary" onClick={saveEdit} disabled={saving}>
+                    <button className="btn-primary" onClick={saveEdit} disabled={saving || !title.trim()}>
                         {saving ? "Saving..." : "Save Changes"}
                     </button>
                 </div>

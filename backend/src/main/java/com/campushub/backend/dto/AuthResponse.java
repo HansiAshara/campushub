@@ -14,4 +14,5 @@ public class AuthResponse {
     private Long batchId;
     private String batchName;
     private Integer academicYear;
+    private Long userId;
 }
