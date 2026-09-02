@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 
 interface ModalProps {
     open: boolean;
@@ -23,14 +24,25 @@ function Modal({ open, onClose, title, children }: ModalProps) {
 
     if (!open) return null;
 
-    return (
+    return createPortal(
         <div
             onClick={onClose}
             style={{
-                position: "fixed", inset: 0, zIndex: 200,
-                background: "rgba(13, 27, 42, 0.4)",
-                backdropFilter: "blur(4px)",
-                display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: "100vw",
+                height: "100vh",
+                zIndex: 9999,
+                background: "rgba(13, 27, 42, 0.5)",
+                backdropFilter: "blur(6px)",
+                WebkitBackdropFilter: "blur(6px)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: 24,
             }}
         >
             <div
@@ -39,8 +51,8 @@ function Modal({ open, onClose, title, children }: ModalProps) {
                     background: "white",
                     borderRadius: 16,
                     width: "100%",
-                    maxWidth: 460,
-                    boxShadow: "0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06)",
+                    maxWidth: 480,
+                    boxShadow: "0 25px 60px -15px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.08)",
                     overflow: "hidden",
                     animation: "fadeSlideIn 0.2s ease",
                 }}
@@ -60,7 +72,8 @@ function Modal({ open, onClose, title, children }: ModalProps) {
                     {children}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 
