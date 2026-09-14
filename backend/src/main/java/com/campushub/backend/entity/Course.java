@@ -24,7 +24,7 @@ public class Course {
     private int academicYear; // 1-4
 
     @Column(nullable = false)
-    private int semesterNumber; // 1 or 2
+    private int semesterNumber; // 1 to 8
 
     @ManyToOne
     @JoinColumn(name = "batch_id", nullable = false)
