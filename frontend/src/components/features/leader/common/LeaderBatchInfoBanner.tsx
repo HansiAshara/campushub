@@ -1,4 +1,4 @@
-import { Plus, ArrowLeft, Crown } from "lucide-react";
+import { ArrowLeft, Crown } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface LeaderBatchInfoBannerProps {
@@ -14,7 +14,6 @@ export default function LeaderBatchInfoBanner({
     batchName,
     intakeYear,
     leaderName,
-    onOpenAddCourse,
 }: LeaderBatchInfoBannerProps) {
     return (
         <div style={{ marginBottom: 24, fontFamily: font }}>
@@ -104,7 +103,7 @@ export default function LeaderBatchInfoBanner({
                     </p>
                 </div>
 
-                <button
+                {/*<button
                     onClick={onOpenAddCourse}
                     style={{
                         background: "white",
@@ -125,9 +124,9 @@ export default function LeaderBatchInfoBanner({
                     onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.97)")}
                     onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
                 >
-                    <Plus size={16} color="#065F46" />
-                    Add New Module
-                </button>
+                    {/*<Plus size={16} color="#065F46" />
+                    Add New Module 
+                </button>*/}
             </div>
         </div>
     );
