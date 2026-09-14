@@ -54,10 +54,26 @@ function MyUploadsPage() {
                     </Link>
                 </div>
             ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    {resources.map((r, i) => (
-                        <div key={r.id} style={{ animationDelay: `${i * 0.04}s` }}>
-                            <ResourceItem resource={r} onChanged={refetch} />
+                <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+                    {Object.entries(
+                        resources.reduce((acc, r) => {
+                            const course = r.courseName || "Other Resources";
+                            if (!acc[course]) acc[course] = [];
+                            acc[course].push(r);
+                            return acc;
+                        }, {} as Record<string, typeof resources>)
+                    ).map(([courseName, courseResources]) => (
+                        <div key={courseName}>
+                            <h2 style={{ fontSize: 18, fontWeight: 700, color: "#0D1B2A", marginBottom: 16 }}>
+                                {courseName}
+                            </h2>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                                {courseResources.map((r, i) => (
+                                    <div key={r.id} style={{ animationDelay: `${i * 0.04}s` }}>
+                                        <ResourceItem resource={r} onChanged={refetch} />
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     ))}
                 </div>
