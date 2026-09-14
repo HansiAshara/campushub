@@ -211,10 +211,33 @@ function ResourceItem({ resource, onChanged }: Props) {
 
                         <button
                             onClick={() => setExpanded(!expanded)}
-                            style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: expanded ? "#10B981" : "#9CA3AF", background: "none", border: "none", cursor: "pointer", padding: 0, transition: "color 0.12s" }}
+                            style={{ 
+                                display: "inline-flex", 
+                                alignItems: "center", 
+                                gap: 6, 
+                                fontSize: 12, 
+                                fontWeight: 600, 
+                                color: expanded ? "#047857" : "#10B981", 
+                                background: expanded ? "#D1FAE5" : "#ECFDF5", 
+                                border: expanded ? "1px solid #6EE7B7" : "1px solid #A7F3D0", 
+                                padding: "4px 12px", 
+                                borderRadius: 16, 
+                                cursor: "pointer", 
+                                transition: "all 0.2s ease" 
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.background = "#D1FAE5";
+                                e.currentTarget.style.borderColor = "#6EE7B7";
+                            }}
+                            onMouseLeave={(e) => {
+                                if (!expanded) {
+                                    e.currentTarget.style.background = "#ECFDF5";
+                                    e.currentTarget.style.borderColor = "#A7F3D0";
+                                }
+                            }}
                         >
-                            <MessageCircle size={12} />
-                            <span>Discussions</span>
+                            <MessageCircle size={14} style={{ fill: expanded ? "currentColor" : "none" }} />
+                            <span>{expanded ? "Close Discussion" : "Discussions"}</span>
                         </button>
 
                         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#6B7280", flexWrap: "wrap" }}>
