@@ -13,7 +13,8 @@ function SemesterCoursesPage() {
     const navigate = useNavigate();
 
     const [currentBatch, setCurrentBatch] = useState<Batch | null>(null);
-    const [semester, setSemester] = useState(1);
+    const [selectedYear, setSelectedYear] = useState(1);
+    const [selectedSemester, setSelectedSemester] = useState(1);
 
     useEffect(() => {
         if (!batchId) return;
@@ -21,15 +22,17 @@ function SemesterCoursesPage() {
             const found = res.data?.find((b) => b.id.toString() === batchId.toString());
             if (found) {
                 setCurrentBatch(found);
+                const yr = getBatchAcademicYear(found);
+                setSelectedYear(yr);
+                setSelectedSemester((yr - 1) * 2 + 1);
             }
         }).catch((err) => {
             console.error("Failed to load batch info:", err);
         });
     }, [batchId]);
 
-    // Determine batch's academic year based on batch intake / name
-    const batchYear = getBatchAcademicYear(currentBatch);
-    const { courses, loading } = useCoursesByBatch(batchId, batchYear, semester);
+    const currentBatchYear = getBatchAcademicYear(currentBatch);
+    const { courses, loading } = useCoursesByBatch(batchId, selectedYear, selectedSemester);
 
     const batchName = currentBatch?.name || (courses[0]?.batchName || "Batch");
     const intakeYear = currentBatch?.intakeYear;
@@ -58,64 +61,81 @@ function SemesterCoursesPage() {
 
             <div style={{ display: "flex", gap: 32 }}>
                 {/* ── LEFT FILTER PANEL ── */}
-                <aside style={{ width: 230, flexShrink: 0 }}>
+                <aside style={{ width: 250, flexShrink: 0 }}>
                     <div style={{ background: "white", border: "1px solid #E5E7EB", borderRadius: 14, padding: 20, position: "sticky", top: 80 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
                             <Filter size={15} color="#10B981" />
                             <span style={{ fontSize: 14, fontWeight: 700, color: "#0D1B2A" }}>Scope Filter</span>
                         </div>
 
-                        {/* Academic Year (Fixed to current batch) */}
+                        {/* 4 Years Navigation */}
                         <div style={{ marginBottom: 20 }}>
-                            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "#9CA3AF", textTransform: "uppercase", marginBottom: 8 }}>
-                                Academic Year
+                            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "#9CA3AF", textTransform: "uppercase", marginBottom: 12 }}>
+                                Browse by Year
                             </div>
-                            <div
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    background: "#F0FDF4",
-                                    border: "1.5px solid #A7F3D0",
-                                    borderRadius: 10,
-                                    padding: "10px 14px",
-                                }}
-                            >
-                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                    <GraduationCap size={16} color="#059669" />
-                                    <span style={{ fontSize: 14, fontWeight: 800, color: "#065F46" }}>
-                                        Year {batchYear}
-                                    </span>
-                                </div>
-                                <span style={{ fontSize: 10, fontWeight: 700, color: "#059669", background: "#DCFCE7", padding: "2px 6px", borderRadius: 4 }}>
-                                    Current
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Semester Toggle */}
-                        <div style={{ marginBottom: 20 }}>
-                            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "#9CA3AF", textTransform: "uppercase", marginBottom: 10 }}>
-                                Select Semester
-                            </div>
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                                {SEMS.map((s) => (
-                                    <button
-                                        key={s}
-                                        onClick={() => setSemester(s)}
-                                        className={`filter-pill${s === semester ? " active" : ""}`}
-                                        style={{
-                                            padding: "10px 10px",
-                                            textAlign: "center",
-                                            fontWeight: 700,
-                                            fontSize: 13,
-                                            borderRadius: 8,
-                                            cursor: "pointer",
-                                        }}
-                                    >
-                                        Sem {s}
-                                    </button>
-                                ))}
+                            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                                {[1, 2, 3, 4].map((yr) => {
+                                    const s1 = (yr - 1) * 2 + 1;
+                                    const s2 = (yr - 1) * 2 + 2;
+                                    const isCurrentYear = yr === currentBatchYear;
+                                    
+                                    return (
+                                        <div key={yr} style={{ background: yr === selectedYear ? "#F0FDF4" : "#F9FAFB", border: yr === selectedYear ? "1.5px solid #A7F3D0" : "1px solid #E5E7EB", borderRadius: 10, padding: "12px 14px" }}>
+                                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }} onClick={() => { setSelectedYear(yr); setSelectedSemester(s1); }}>
+                                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                                    <GraduationCap size={16} color={yr === selectedYear ? "#059669" : "#6B7280"} />
+                                                    <span style={{ fontSize: 14, fontWeight: 800, color: yr === selectedYear ? "#065F46" : "#4B5563" }}>
+                                                        Year {yr}
+                                                    </span>
+                                                </div>
+                                                {isCurrentYear && (
+                                                    <span style={{ fontSize: 10, fontWeight: 700, color: "#059669", background: "#DCFCE7", padding: "2px 6px", borderRadius: 4 }}>
+                                                        Current
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {/* Semesters for this year */}
+                                            {yr === selectedYear && (
+                                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 12 }}>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); setSelectedSemester(s1); }}
+                                                        className={`filter-pill${s1 === selectedSemester ? " active" : ""}`}
+                                                        style={{
+                                                            padding: "8px",
+                                                            textAlign: "center",
+                                                            fontWeight: 700,
+                                                            fontSize: 12,
+                                                            borderRadius: 6,
+                                                            cursor: "pointer",
+                                                            border: s1 === selectedSemester ? "none" : "1px solid #E5E7EB",
+                                                            background: s1 === selectedSemester ? "#10B981" : "white",
+                                                            color: s1 === selectedSemester ? "white" : "#4B5563",
+                                                        }}
+                                                    >
+                                                        Sem {s1}
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); setSelectedSemester(s2); }}
+                                                        className={`filter-pill${s2 === selectedSemester ? " active" : ""}`}
+                                                        style={{
+                                                            padding: "8px",
+                                                            textAlign: "center",
+                                                            fontWeight: 700,
+                                                            fontSize: 12,
+                                                            borderRadius: 6,
+                                                            cursor: "pointer",
+                                                            border: s2 === selectedSemester ? "none" : "1px solid #E5E7EB",
+                                                            background: s2 === selectedSemester ? "#10B981" : "white",
+                                                            color: s2 === selectedSemester ? "white" : "#4B5563",
+                                                        }}
+                                                    >
+                                                        Sem {s2}
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
 
@@ -128,7 +148,7 @@ function SemesterCoursesPage() {
                                 {batchName}
                             </div>
                             <div style={{ fontSize: 12, color: "#059669", marginTop: 2, fontWeight: 600 }}>
-                                Year {batchYear} · Semester {semester}
+                                Year {selectedYear} · Semester {selectedSemester}
                             </div>
                             {intakeYear && (
                                 <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 4 }}>
@@ -137,7 +157,6 @@ function SemesterCoursesPage() {
                             )}
                         </div>
 
-                        {/* Link to other batches if user wants other years */}
                         <div style={{ marginTop: 16, textAlign: "center" }}>
                             <Link
                                 to="/dashboard/batches"
@@ -166,13 +185,13 @@ function SemesterCoursesPage() {
                                     {batchName}
                                 </h1>
                                 <span style={{ fontSize: 12, fontWeight: 700, padding: "3px 10px", background: "#ECFDF5", color: "#047857", borderRadius: 6, border: "1px solid #A7F3D0" }}>
-                                    Year {batchYear}
+                                    Year {selectedYear}
                                 </span>
                             </div>
                             <p style={{ fontSize: 13, color: "#6B7280", margin: 0 }}>
                                 {loading
                                     ? "Loading courses..."
-                                    : `${courses.length} course${courses.length !== 1 ? "s" : ""} · Year ${batchYear}, Semester ${semester}`}
+                                    : `${courses.length} course${courses.length !== 1 ? "s" : ""} · Year ${selectedYear}, Semester ${selectedSemester}`}
                             </p>
                         </div>
                     </div>
@@ -187,7 +206,7 @@ function SemesterCoursesPage() {
                         <div style={{ textAlign: "center", padding: "60px 20px", background: "white", borderRadius: 14, border: "1.5px dashed #E5E7EB" }}>
                             <BookOpen size={32} color="#D1D5DB" style={{ margin: "0 auto 12px" }} />
                             <p style={{ fontSize: 15, color: "#374151", fontWeight: 600, marginBottom: 4 }}>
-                                No courses found for Year {batchYear} · Semester {semester}
+                                No courses found for Year {selectedYear} · Semester {selectedSemester}
                             </p>
                             <p style={{ fontSize: 13, color: "#9CA3AF", maxWidth: 400, margin: "0 auto" }}>
                                 Modules for this semester haven't been added yet. Module reps and administrators can add courses from the admin panel.
