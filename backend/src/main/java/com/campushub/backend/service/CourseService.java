@@ -200,6 +200,24 @@ public class CourseService {
         }
     }
 
+    @jakarta.annotation.PostConstruct
+    @org.springframework.transaction.annotation.Transactional
+    public void migrateSemesters() {
+        List<Course> courses = courseRepository.findAll();
+        int count = 0;
+        for (Course course : courses) {
+            if (course.getAcademicYear() > 1 && course.getSemesterNumber() <= 2) {
+                int absoluteSemester = (course.getAcademicYear() - 1) * 2 + course.getSemesterNumber();
+                course.setSemesterNumber(absoluteSemester);
+                courseRepository.save(course);
+                count++;
+            }
+        }
+        if (count > 0) {
+            System.out.println("Migrated " + count + " courses to absolute semesters.");
+        }
+    }
+
     private CourseResponse toResponse(Course course, User currentUser) {
         boolean canManage = permissionService.canManageCourse(currentUser, course.getId(), course.getBatch().getId());
         return new CourseResponse(
