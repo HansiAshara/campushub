@@ -10,11 +10,42 @@ const ROLE_LABELS: Record<string, { label: string; Icon: typeof ShieldCheck }> =
     STUDENT:      { label: "Student",               Icon: GraduationCap },
 };
 
-function TopNav() {
-    const { logout } = useAuth();
-    const location = useLocation();
+/* ─────────────────────────────────────────────────────────────────
+   Shared tab style
+   active  → green filled pill
+   enabled → plain, hoverable
+   ghost   → muted, not clickable (no context yet)
+───────────────────────────────────────────────────────────────── */
+function tabStyle(active: boolean, ghost = false): React.CSSProperties {
+    return {
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 5,
+        padding: "5px 13px",
+        borderRadius: 7,
+        fontSize: 13.5,
+        fontWeight: 600,
+        border: "none",
+        cursor: ghost ? "default" : "pointer",
+        textDecoration: "none",
+        transition: "all 0.14s ease",
+        background: active ? "#10B981" : "transparent",
+        color:  active ? "#ffffff" : ghost ? "#C0C8D4" : "#4B5563",
+        boxShadow: active ? "0 2px 8px rgba(16,185,129,0.22)" : "none",
+        whiteSpace: "nowrap",
+        userSelect: "none",
+        pointerEvents: ghost ? "none" : "auto",
+    };
+}
 
-    const [open, setOpen] = useState(false);
+function TopNav() {
+    const { logout }  = useAuth();
+    const location    = useLocation();
+
+    const [open, setOpen]             = useState(false);
+    const [lastBatchId, setLastBatchId] = useState<string>(
+        () => localStorage.getItem("lastBatchId") || ""
+    );
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const userName = localStorage.getItem("userName") || "Student";
@@ -29,50 +60,48 @@ function TopNav() {
 
     const { label: roleLabel, Icon: RoleIcon } = ROLE_LABELS[role] ?? ROLE_LABELS.STUDENT;
 
-    /* Close dropdown when clicking outside */
+    /* ── Derive navigation context from the current URL ── */
+    const path = location.pathname;
+
+    // e.g. /dashboard/batches/4  or /dashboard/batches/4/...
+    const batchIdInUrl = path.match(/^\/dashboard\/batches\/(\d+)/)?.[1] ?? null;
+    // e.g. /dashboard/courses/5  or /dashboard/courses/5/...
+    const onCoursePage = /^\/dashboard\/courses\/\d+/.test(path);
+    const onBatchList  = path === "/dashboard/batches";
+    const onCourseList = !!batchIdInUrl && !onCoursePage; // /dashboard/batches/:id
+
+    /* Remember the last visited batch so "Courses" tab survives on resource pages */
     useEffect(() => {
-        function handleClick(e: MouseEvent) {
+        if (batchIdInUrl && batchIdInUrl !== lastBatchId) {
+            localStorage.setItem("lastBatchId", batchIdInUrl);
+            setLastBatchId(batchIdInUrl);
+        }
+    }, [batchIdInUrl, lastBatchId]);
+
+    /* Close avatar dropdown when clicking outside or on route change */
+    useEffect(() => {
+        function handler(e: MouseEvent) {
             if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
                 setOpen(false);
             }
         }
-        document.addEventListener("mousedown", handleClick);
-        return () => document.removeEventListener("mousedown", handleClick);
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
     }, []);
+    useEffect(() => { setOpen(false); }, [path]);
 
-    /* Close dropdown on route change */
-    useEffect(() => { setOpen(false); }, [location.pathname]);
+    /* Courses tab destination */
+    const coursesLink = lastBatchId ? `/dashboard/batches/${lastBatchId}` : null;
 
-    /* "Batches" tab should be active for the whole /batches and /courses sub-tree */
-    const batchesActive =
-        location.pathname.startsWith("/dashboard/batches") ||
-        location.pathname.startsWith("/dashboard/courses");
-
-    /* shared tab style builder */
-    const tabStyle = (active: boolean): React.CSSProperties => ({
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 6,
-        padding: "6px 14px",
-        borderRadius: 8,
-        fontSize: 14,
-        fontWeight: 600,
-        border: "none",
-        cursor: "pointer",
-        textDecoration: "none",
-        transition: "all 0.14s ease",
-        background: active ? "#10B981" : "transparent",
-        color:      active ? "#ffffff" : "#4B5563",
-        boxShadow:  active ? "0 2px 8px rgba(16,185,129,0.22)" : "none",
-        whiteSpace: "nowrap",
-    });
+    /* Whether content-hierarchy tabs are "in scope" */
+    const inContentScope = onBatchList || onCourseList || onCoursePage;
 
     return (
         <header style={{
             position: "sticky",
             top: 0,
             zIndex: 50,
-            background: "rgba(255,255,255,0.92)",
+            background: "rgba(255,255,255,0.93)",
             backdropFilter: "blur(14px)",
             WebkitBackdropFilter: "blur(14px)",
             borderBottom: "1px solid #E5E7EB",
@@ -84,19 +113,19 @@ function TopNav() {
                 height: 60,
                 display: "flex",
                 alignItems: "center",
-                gap: 8,
+                gap: 6,
             }}>
 
                 {/* ── Logo ── */}
                 <Link
                     to="/dashboard/batches"
-                    style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0, marginRight: 16 }}
+                    style={{ display: "flex", alignItems: "center", gap: 9, flexShrink: 0, marginRight: 20 }}
                 >
                     <div style={{
                         width: 34, height: 34, borderRadius: 10,
                         background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
                         display: "flex", alignItems: "center", justifyContent: "center",
-                        boxShadow: "0 2px 8px rgba(16,185,129,0.30)",
+                        boxShadow: "0 2px 8px rgba(16,185,129,0.28)",
                     }}>
                         <Library size={17} color="white" />
                     </div>
@@ -111,47 +140,56 @@ function TopNav() {
                     </span>
                 </Link>
 
-                {/* ── Nav tabs ── */}
+                {/* ── Navigation ── */}
                 <nav style={{ display: "flex", alignItems: "center", gap: 2, flex: 1 }}>
 
-                    {/* Batches — always visible, active for /batches and /courses sub-tree */}
-                    <Link
+                    {/* ─── GROUP 1: Content hierarchy tabs ─── */}
+
+                    {/* 1. Batches — always visible */}
+                    <HoverTab
                         to="/dashboard/batches"
-                        style={tabStyle(batchesActive)}
-                        onMouseOver={(e) => {
-                            if (!batchesActive) {
-                                (e.currentTarget as HTMLElement).style.background = "#F3F4F6";
-                                (e.currentTarget as HTMLElement).style.color = "#0D1B2A";
-                            }
-                        }}
-                        onMouseOut={(e) => {
-                            if (!batchesActive) {
-                                (e.currentTarget as HTMLElement).style.background = "transparent";
-                                (e.currentTarget as HTMLElement).style.color = "#4B5563";
-                            }
-                        }}
-                    >
-                        Batches
-                    </Link>
+                        active={onBatchList}
+                        ghost={false}
+                        label="Batches"
+                    />
+
+                    {/* Arrow separator */}
+                    <span style={{ color: "#D1D5DB", fontSize: 14, margin: "0 1px", userSelect: "none" }}>›</span>
+
+                    {/* 2. Courses — enabled once a batch has been visited */}
+                    {coursesLink ? (
+                        <HoverTab
+                            to={coursesLink}
+                            active={onCourseList}
+                            ghost={false}
+                            label="Courses"
+                        />
+                    ) : (
+                        <span style={tabStyle(false, true)}>Courses</span>
+                    )}
+
+                    {/* Arrow separator */}
+                    <span style={{ color: "#D1D5DB", fontSize: 14, margin: "0 1px", userSelect: "none" }}>›</span>
+
+                    {/* 3. Resources — active only when inside a course */}
+                    <span style={tabStyle(onCoursePage, !onCoursePage)}>Resources</span>
+
+                    {/* ─── Vertical divider ─── */}
+                    <div style={{
+                        width: 1, height: 20,
+                        background: "#E5E7EB",
+                        margin: "0 10px",
+                        flexShrink: 0,
+                    }} />
+
+                    {/* ─── GROUP 2: Personal / management tabs ─── */}
 
                     {/* My Uploads — always visible */}
                     <NavLink
                         to="/dashboard/my-uploads"
                         style={({ isActive }) => tabStyle(isActive)}
-                        onMouseOver={(e) => {
-                            const el = e.currentTarget as HTMLElement;
-                            if (!el.classList.contains("active")) {
-                                el.style.background = "#F3F4F6";
-                                el.style.color = "#0D1B2A";
-                            }
-                        }}
-                        onMouseOut={(e) => {
-                            const el = e.currentTarget as HTMLElement;
-                            if (!el.classList.contains("active")) {
-                                el.style.background = "transparent";
-                                el.style.color = "#4B5563";
-                            }
-                        }}
+                        onMouseOver={hoverOn}
+                        onMouseOut={hoverOff}
                     >
                         My Uploads
                     </NavLink>
@@ -161,20 +199,8 @@ function TopNav() {
                         <NavLink
                             to="/dashboard/batch-leader"
                             style={({ isActive }) => tabStyle(isActive)}
-                            onMouseOver={(e) => {
-                                const el = e.currentTarget as HTMLElement;
-                                if (!el.classList.contains("active")) {
-                                    el.style.background = "#F3F4F6";
-                                    el.style.color = "#0D1B2A";
-                                }
-                            }}
-                            onMouseOut={(e) => {
-                                const el = e.currentTarget as HTMLElement;
-                                if (!el.classList.contains("active")) {
-                                    el.style.background = "transparent";
-                                    el.style.color = "#4B5563";
-                                }
-                            }}
+                            onMouseOver={hoverOn}
+                            onMouseOut={hoverOff}
                         >
                             Leader Panel
                         </NavLink>
@@ -185,27 +211,15 @@ function TopNav() {
                         <NavLink
                             to="/dashboard/admin"
                             style={({ isActive }) => tabStyle(isActive)}
-                            onMouseOver={(e) => {
-                                const el = e.currentTarget as HTMLElement;
-                                if (!el.classList.contains("active")) {
-                                    el.style.background = "#F3F4F6";
-                                    el.style.color = "#0D1B2A";
-                                }
-                            }}
-                            onMouseOut={(e) => {
-                                const el = e.currentTarget as HTMLElement;
-                                if (!el.classList.contains("active")) {
-                                    el.style.background = "transparent";
-                                    el.style.color = "#4B5563";
-                                }
-                            }}
+                            onMouseOver={hoverOn}
+                            onMouseOut={hoverOff}
                         >
                             Admin Panel
                         </NavLink>
                     )}
                 </nav>
 
-                {/* ── Avatar Dropdown ── */}
+                {/* ── Avatar / Dropdown ── */}
                 <div ref={dropdownRef} style={{ position: "relative", marginLeft: "auto" }}>
                     <button
                         onClick={() => setOpen(!open)}
@@ -219,6 +233,7 @@ function TopNav() {
                             background: open ? "#F9FAFB" : "white",
                             cursor: "pointer",
                             transition: "all 0.14s ease",
+                            fontFamily: "var(--font-sans)",
                         }}
                         onMouseOver={(e) => (e.currentTarget.style.borderColor = "#D1D5DB")}
                         onMouseOut={(e) => (e.currentTarget.style.borderColor = "#E5E7EB")}
@@ -232,21 +247,16 @@ function TopNav() {
                             background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
                             display: "flex", alignItems: "center", justifyContent: "center",
                             color: "white", fontWeight: 700, fontSize: 12,
-                            flexShrink: 0,
-                            userSelect: "none",
+                            flexShrink: 0, userSelect: "none",
                         }}>
                             {initials}
                         </div>
 
-                        {/* Name truncated */}
+                        {/* First name */}
                         <span style={{
-                            fontSize: 13,
-                            fontWeight: 600,
-                            color: "#0D1B2A",
-                            maxWidth: 120,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
+                            fontSize: 13, fontWeight: 600, color: "#0D1B2A",
+                            maxWidth: 110, overflow: "hidden",
+                            textOverflow: "ellipsis", whiteSpace: "nowrap",
                         }}>
                             {userName.split(" ")[0]}
                         </span>
@@ -254,7 +264,10 @@ function TopNav() {
                         <ChevronDown
                             size={14}
                             color="#9CA3AF"
-                            style={{ transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
+                            style={{
+                                transition: "transform 0.2s",
+                                transform: open ? "rotate(180deg)" : "rotate(0deg)",
+                            }}
                         />
                     </button>
 
@@ -272,29 +285,21 @@ function TopNav() {
                             overflow: "hidden",
                             zIndex: 200,
                         }}>
-                            {/* User info header */}
+                            {/* User info */}
                             <div style={{
                                 padding: "14px 16px 12px",
                                 borderBottom: "1px solid #F3F4F6",
                             }}>
                                 <div style={{
-                                    fontWeight: 700,
-                                    fontSize: 14,
-                                    color: "#0D1B2A",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                    marginBottom: 4,
+                                    fontWeight: 700, fontSize: 14, color: "#0D1B2A",
+                                    overflow: "hidden", textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap", marginBottom: 4,
                                 }}>
                                     {userName}
                                 </div>
                                 <div style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 5,
-                                    fontSize: 12,
-                                    color: "#6B7280",
-                                    fontWeight: 500,
+                                    display: "flex", alignItems: "center", gap: 5,
+                                    fontSize: 12, color: "#6B7280", fontWeight: 500,
                                 }}>
                                     <RoleIcon size={12} color="#10B981" />
                                     {roleLabel}
@@ -307,18 +312,11 @@ function TopNav() {
                                     onClick={logout}
                                     style={{
                                         width: "100%",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 10,
-                                        padding: "9px 10px",
-                                        borderRadius: 8,
-                                        border: "none",
-                                        background: "transparent",
-                                        color: "#DC2626",
-                                        fontSize: 13,
-                                        fontWeight: 600,
-                                        cursor: "pointer",
-                                        textAlign: "left",
+                                        display: "flex", alignItems: "center", gap: 10,
+                                        padding: "9px 10px", borderRadius: 8,
+                                        border: "none", background: "transparent",
+                                        color: "#DC2626", fontSize: 13, fontWeight: 600,
+                                        cursor: "pointer", textAlign: "left",
                                         transition: "background 0.12s",
                                         fontFamily: "var(--font-sans)",
                                     }}
@@ -332,10 +330,49 @@ function TopNav() {
                         </div>
                     )}
                 </div>
-
             </div>
         </header>
     );
+}
+
+/* ─── Reusable hoverable Link tab ─── */
+function HoverTab({ to, active, ghost, label }: {
+    to: string;
+    active: boolean;
+    ghost: boolean;
+    label: string;
+}) {
+    const [hovered, setHovered] = useState(false);
+    const style: React.CSSProperties = {
+        ...tabStyle(active, ghost),
+        ...(hovered && !active ? { background: "#F3F4F6", color: "#0D1B2A" } : {}),
+    };
+    return (
+        <Link
+            to={to}
+            style={style}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+        >
+            {label}
+        </Link>
+    );
+}
+
+/* ─── Hover helpers for NavLink tabs (which track isActive via className) ─── */
+function hoverOn(e: React.MouseEvent<HTMLAnchorElement>) {
+    const el = e.currentTarget as HTMLElement;
+    if (el.style.background !== "rgb(16, 185, 129)") {
+        el.style.background = "#F3F4F6";
+        el.style.color = "#0D1B2A";
+    }
+}
+function hoverOff(e: React.MouseEvent<HTMLAnchorElement>) {
+    const el = e.currentTarget as HTMLElement;
+    if (el.style.background !== "rgb(16, 185, 129)") {
+        el.style.background = "transparent";
+        el.style.color = "#4B5563";
+    }
 }
 
 export default TopNav;
