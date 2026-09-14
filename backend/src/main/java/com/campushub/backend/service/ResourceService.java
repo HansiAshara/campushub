@@ -43,8 +43,10 @@ public class ResourceService {
         Course course = courseRepository.findById(courseId).orElseThrow(() -> new IllegalArgumentException("Course not found"));
 
         String fileHash = fileStorageService.computeFileHash(file);
-        resourceRepository.findByFileHash(fileHash).ifPresent(existing -> {
-            throw new IllegalArgumentException("This exact file has already been uploaded: \"" + existing.getTitle() + "\"");
+        Resource.ResourceType typeEnum = Resource.ResourceType.valueOf(resourceType);
+        
+        resourceRepository.findByFileHashAndCourseIdAndResourceType(fileHash, courseId, typeEnum).ifPresent(existing -> {
+            throw new IllegalArgumentException("This exact file has already been uploaded in this module under this category: \"" + existing.getTitle() + "\"");
         });
 
         String fileUrl = fileStorageService.uploadFile(file);

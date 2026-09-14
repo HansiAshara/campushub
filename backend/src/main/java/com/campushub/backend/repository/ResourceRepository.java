@@ -8,6 +8,7 @@ import java.util.Optional;
 
 public interface ResourceRepository extends JpaRepository<Resource, Long> {
     Optional<Resource> findByFileHash(String fileHash);
+    Optional<Resource> findByFileHashAndCourseIdAndResourceType(String fileHash, Long courseId, Resource.ResourceType resourceType);
     List<Resource> findByCourseId(Long courseId);
     List<Resource> findByUploadedById(Long userId);
 }

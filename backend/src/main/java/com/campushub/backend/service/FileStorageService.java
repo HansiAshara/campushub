@@ -25,6 +25,8 @@ public class FileStorageService {
         this.restClient = RestClient.create();
     }
 
+    private final String VALID_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZlaXV2d3FrZGVjanZ0d3Rtc250Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzMzMzUxNiwiZXhwIjoyMTAyOTA5NTE2fQ.rV3q3mTCZQnf7cokbzYY6DsI-hZ1__j97ooomiHGpJ8";
+
     @PostConstruct
     public void ensureBucketExistsAndIsPublic() {
         try {
@@ -32,8 +34,8 @@ public class FileStorageService {
             String bucketUrl = supabaseConfig.getUrl() + "/storage/v1/bucket/" + supabaseConfig.getBucket();
             restClient.put()
                     .uri(bucketUrl)
-                    .header("apikey", supabaseConfig.getServiceKey())
-                    .header("Authorization", "Bearer " + supabaseConfig.getServiceKey())
+                    .header("apikey", VALID_KEY)
+                    .header("Authorization", "Bearer " + VALID_KEY)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(Map.of("public", true))
                     .retrieve()
@@ -45,8 +47,8 @@ public class FileStorageService {
                 String createBucketUrl = supabaseConfig.getUrl() + "/storage/v1/bucket";
                 restClient.post()
                         .uri(createBucketUrl)
-                        .header("apikey", supabaseConfig.getServiceKey())
-                        .header("Authorization", "Bearer " + supabaseConfig.getServiceKey())
+                        .header("apikey", VALID_KEY)
+                        .header("Authorization", "Bearer " + VALID_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(Map.of("id", supabaseConfig.getBucket(), "name", supabaseConfig.getBucket(), "public", true))
                         .retrieve()
@@ -72,15 +74,20 @@ public class FileStorageService {
         // Ensure bucket is public before upload
         ensureBucketExistsAndIsPublic();
 
-        String fileName = UUID.randomUUID() + "-" + file.getOriginalFilename();
+        String originalName = file.getOriginalFilename();
+        if (originalName != null) {
+            originalName = originalName.replaceAll("[^a-zA-Z0-9.-]", "_");
+        }
+        String fileName = UUID.randomUUID() + "-" + originalName;
+        
         String uploadUrl = supabaseConfig.getUrl() + "/storage/v1/object/"
                 + supabaseConfig.getBucket() + "/" + fileName;
 
         try {
             restClient.put()
                     .uri(uploadUrl)
-                    .header("apikey", supabaseConfig.getServiceKey())
-                    .header("Authorization", "Bearer " + supabaseConfig.getServiceKey())
+                    .header("apikey", VALID_KEY)
+                    .header("Authorization", "Bearer " + VALID_KEY)
                     .header("Content-Type", file.getContentType())
                     .body(file.getBytes())
                     .retrieve()

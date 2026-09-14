@@ -16,4 +16,8 @@ public class SupabaseConfig {
 
     @Value("${supabase.service.key}")
     private String serviceKey;
+
+    public String getServiceKey() {
+        return serviceKey != null ? serviceKey.trim() : null;
+    }
 }
