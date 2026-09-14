@@ -190,7 +190,11 @@ export default function LeaderEditCourseModal({
                             <label style={labelStyle}>Academic Year</label>
                             <select
                                 value={academicYear}
-                                onChange={(e) => setAcademicYear(Number(e.target.value))}
+                                onChange={(e) => {
+                                    const newYear = Number(e.target.value);
+                                    setAcademicYear(newYear);
+                                    setSemesterNumber((newYear - 1) * 2 + 1);
+                                }}
                                 style={inputStyle}
                             >
                                 <option value={1}>Year 1</option>
@@ -206,8 +210,8 @@ export default function LeaderEditCourseModal({
                                 onChange={(e) => setSemesterNumber(Number(e.target.value))}
                                 style={inputStyle}
                             >
-                                <option value={1}>Semester 1</option>
-                                <option value={2}>Semester 2</option>
+                                <option value={(academicYear - 1) * 2 + 1}>Semester {(academicYear - 1) * 2 + 1}</option>
+                                <option value={(academicYear - 1) * 2 + 2}>Semester {(academicYear - 1) * 2 + 2}</option>
                             </select>
                         </div>
                     </div>
