@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
-import { type Course, type Batch } from "../../../../types";
+import { type Course } from "../../../../types";
 import { courseService } from "../../../../api/courseService";
 import { X, BookOpen } from "lucide-react";
 
-interface EditCourseModalProps {
+interface LeaderEditCourseModalProps {
     course: Course | null;
-    batches: Batch[];
+    batchId: number | string;
     isOpen: boolean;
     onClose: () => void;
     onUpdated: () => void;
@@ -14,18 +13,17 @@ interface EditCourseModalProps {
 
 const font = '"DM Sans", system-ui, sans-serif';
 
-export default function EditCourseModal({
+export default function LeaderEditCourseModal({
     course,
-    batches,
+    batchId,
     isOpen,
     onClose,
     onUpdated,
-}: EditCourseModalProps) {
+}: LeaderEditCourseModalProps) {
     const [code, setCode] = useState("");
     const [name, setName] = useState("");
     const [academicYear, setAcademicYear] = useState<number>(1);
     const [semesterNumber, setSemesterNumber] = useState<number>(1);
-    const [batchId, setBatchId] = useState<string>("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -35,32 +33,29 @@ export default function EditCourseModal({
             setName(course.name);
             setAcademicYear(course.academicYear);
             setSemesterNumber(course.semesterNumber);
-            
-            // Match batch by batchName or batchId
-            const matchedBatch = batches.find((b) => b.name === course.batchName);
-            if (matchedBatch) {
-                setBatchId(matchedBatch.id.toString());
-            } else if (batches.length > 0) {
-                setBatchId(batches[0].id.toString());
-            }
             setError("");
         }
-    }, [course, batches]);
+    }, [course]);
 
     if (!isOpen || !course) return null;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!code.trim() || !name.trim() || !batchId) return;
-        setLoading(true);
         setError("");
+
+        if (!code.trim() || !name.trim()) {
+            setError("Please fill out all required fields.");
+            return;
+        }
+
+        setLoading(true);
         try {
             await courseService.update(course.id, {
                 code: code.trim().toUpperCase(),
                 name: name.trim(),
                 academicYear,
                 semesterNumber,
-                batchId: parseInt(batchId),
+                batchId: Number(batchId),
             });
             onUpdated();
             onClose();
@@ -81,6 +76,7 @@ export default function EditCourseModal({
         color: "#0D1B2A",
         outline: "none",
         background: "white",
+        boxSizing: "border-box",
     };
 
     const labelStyle: React.CSSProperties = {
@@ -94,19 +90,13 @@ export default function EditCourseModal({
         marginBottom: 6,
     };
 
-    return createPortal(
+    return (
         <div
             style={{
                 position: "fixed",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                width: "100vw",
-                height: "100vh",
-                backgroundColor: "rgba(13, 27, 42, 0.5)",
-                backdropFilter: "blur(6px)",
-                WebkitBackdropFilter: "blur(6px)",
+                inset: 0,
+                backgroundColor: "rgba(13, 27, 42, 0.45)",
+                backdropFilter: "blur(4px)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -123,74 +113,85 @@ export default function EditCourseModal({
                     padding: 24,
                     width: "100%",
                     maxWidth: 480,
-                    boxShadow: "0 25px 60px -15px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+                    boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
                     border: "1px solid #E5E7EB",
                 }}
                 onClick={(e) => e.stopPropagation()}
             >
+                {/* Header */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: 10, background: "#EFF6FF", color: "#3B82F6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <div
+                            style={{
+                                width: 36,
+                                height: 36,
+                                borderRadius: 10,
+                                background: "#EFF6FF",
+                                color: "#2563EB",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                            }}
+                        >
                             <BookOpen size={18} />
                         </div>
-                        <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0D1B2A", margin: 0 }}>
-                            Edit Academic Course
-                        </h3>
+                        <div>
+                            <h3 style={{ fontSize: 17, fontWeight: 800, color: "#0D1B2A", margin: 0 }}>
+                                Edit Course Module
+                            </h3>
+                            <div style={{ fontSize: 12, color: "#6B7280" }}>{course.code} · {course.batchName}</div>
+                        </div>
                     </div>
-                    <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#9CA3AF" }}>
+                    <button
+                        onClick={onClose}
+                        style={{
+                            background: "transparent",
+                            border: "none",
+                            cursor: "pointer",
+                            color: "#9CA3AF",
+                            padding: 4,
+                            borderRadius: 6,
+                        }}
+                    >
                         <X size={18} />
                     </button>
                 </div>
 
                 <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                    {/* Course Code */}
                     <div>
-                        <label style={labelStyle}>Batch (Locked)</label>
-                        <select
-                            value={batchId}
-                            disabled
-                            style={{ ...inputStyle, background: "#F3F4F6", cursor: "not-allowed", color: "#4B5563" }}
-                        >
-                            {batches.map((b) => (
-                                <option key={b.id} value={b.id}>
-                                    {b.name} (Intake {b.intakeYear})
-                                </option>
-                            ))}
-                        </select>
+                        <label style={labelStyle}>Course Code</label>
+                        <input
+                            type="text"
+                            value={code}
+                            onChange={(e) => setCode(e.target.value)}
+                            placeholder="e.g. IT3020"
+                            required
+                            style={inputStyle}
+                        />
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 12 }}>
-                        <div>
-                            <label style={labelStyle}>Course Code</label>
-                            <input
-                                type="text"
-                                value={code}
-                                onChange={(e) => setCode(e.target.value)}
-                                required
-                                placeholder="e.g. IN1010"
-                                style={inputStyle}
-                            />
-                        </div>
-
-                        <div>
-                            <label style={labelStyle}>Course Name</label>
-                            <input
-                                type="text"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                required
-                                placeholder="e.g. Data Structures"
-                                style={inputStyle}
-                            />
-                        </div>
+                    {/* Course Name */}
+                    <div>
+                        <label style={labelStyle}>Course Name</label>
+                        <input
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="e.g. Distributed Systems"
+                            required
+                            style={inputStyle}
+                        />
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    {/* Year and Semester */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                         <div>
                             <label style={labelStyle}>Academic Year</label>
                             <select
                                 value={academicYear}
-                                onChange={(e) => setAcademicYear(parseInt(e.target.value))}
-                                style={{ ...inputStyle, cursor: "pointer" }}
+                                onChange={(e) => setAcademicYear(Number(e.target.value))}
+                                style={inputStyle}
                             >
                                 <option value={1}>Year 1</option>
                                 <option value={2}>Year 2</option>
@@ -198,13 +199,12 @@ export default function EditCourseModal({
                                 <option value={4}>Year 4</option>
                             </select>
                         </div>
-
                         <div>
                             <label style={labelStyle}>Semester</label>
                             <select
                                 value={semesterNumber}
-                                onChange={(e) => setSemesterNumber(parseInt(e.target.value))}
-                                style={{ ...inputStyle, cursor: "pointer" }}
+                                onChange={(e) => setSemesterNumber(Number(e.target.value))}
+                                style={inputStyle}
                             >
                                 <option value={1}>Semester 1</option>
                                 <option value={2}>Semester 2</option>
@@ -213,17 +213,19 @@ export default function EditCourseModal({
                     </div>
 
                     {error && (
-                        <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, padding: "9px 12px", color: "#DC2626", fontSize: 13 }}>
+                        <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#DC2626" }}>
                             {error}
                         </div>
                     )}
 
+                    {/* Actions */}
                     <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 8 }}>
                         <button
                             type="button"
                             onClick={onClose}
+                            disabled={loading}
                             style={{
-                                padding: "9px 16px",
+                                padding: "9px 18px",
                                 borderRadius: 8,
                                 border: "1px solid #D1D5DB",
                                 background: "white",
@@ -239,14 +241,17 @@ export default function EditCourseModal({
                             type="submit"
                             disabled={loading}
                             className="btn-primary"
-                            style={{ padding: "9px 20px", fontSize: 13 }}
+                            style={{
+                                padding: "9px 22px",
+                                fontSize: 13,
+                                cursor: loading ? "not-allowed" : "pointer",
+                            }}
                         >
-                            {loading ? "Saving..." : "Save Changes"}
+                            {loading ? "Saving Changes..." : "Save Changes"}
                         </button>
                     </div>
                 </form>
             </div>
-        </div>,
-        document.body
+        </div>
     );
 }

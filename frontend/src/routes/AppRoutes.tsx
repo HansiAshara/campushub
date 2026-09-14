@@ -8,10 +8,19 @@ import CourseDetailPage from "../pages/dashboard/CourseDetailPage";
 import UploadResourcePage from "../pages/dashboard/UploadResourcePage";
 import MyUploadsPage from "../pages/dashboard/MyUploadsPage";
 import AdminPanelPage from "../pages/dashboard/AdminPanelPage";
+import BatchLeaderPanelPage from "../pages/dashboard/BatchLeaderPanelPage";
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
     const role = localStorage.getItem("role");
-    if (role !== "ADMIN" && role !== "BATCH_LEADER") {
+    if (role !== "ADMIN") {
+        return <Navigate to="/dashboard/batches" replace />;
+    }
+    return <>{children}</>;
+}
+
+function BatchLeaderRoute({ children }: { children: React.ReactNode }) {
+    const role = localStorage.getItem("role");
+    if (role !== "BATCH_LEADER" && role !== "ADMIN") {
         return <Navigate to="/dashboard/batches" replace />;
     }
     return <>{children}</>;
@@ -31,6 +40,7 @@ function AppRoutes() {
                 <Route path="/dashboard/courses/:courseId/upload" element={<UploadResourcePage />} />
                 <Route path="/dashboard/my-uploads" element={<MyUploadsPage />} />
                 <Route path="/dashboard/admin" element={<AdminRoute><AdminPanelPage /></AdminRoute>} />
+                <Route path="/dashboard/batch-leader" element={<BatchLeaderRoute><BatchLeaderPanelPage /></BatchLeaderRoute>} />
             </Route>
         </Routes>
     );

@@ -63,7 +63,7 @@ function TopNav() {
                     >
                         My Uploads
                     </NavLink>
-                    {(role === "ADMIN" || role === "BATCH_LEADER") && (
+                    {role === "ADMIN" && (
                         <NavLink
                             to="/dashboard/admin"
                             className={({ isActive }) => isActive ? "nav-tab active" : "nav-tab"}
@@ -78,6 +78,23 @@ function TopNav() {
                             })}
                         >
                             Admin Panel
+                        </NavLink>
+                    )}
+                    {role === "BATCH_LEADER" && (
+                        <NavLink
+                            to="/dashboard/batch-leader"
+                            className={({ isActive }) => isActive ? "nav-tab active" : "nav-tab"}
+                            style={({ isActive }) => ({
+                                padding: "6px 16px",
+                                borderRadius: 8,
+                                fontSize: 14,
+                                fontWeight: 600,
+                                transition: "all 0.12s",
+                                background: "transparent",
+                                color: isActive ? "#10B981" : "#374151",
+                            })}
+                        >
+                            Batch Leader Panel
                         </NavLink>
                     )}
                 </nav>

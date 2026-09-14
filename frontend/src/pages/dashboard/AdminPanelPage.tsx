@@ -86,7 +86,7 @@ export default function AdminPanelPage() {
 
                 <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#ECFDF5", padding: "4px 12px", borderRadius: 8, color: "#065F46", fontSize: 12, fontWeight: 700 }}>
                     <ShieldAlert size={14} color="#10B981" />
-                    {role === "ADMIN" ? "System Administrator" : "Batch Leadership"}
+                    System Administrator
                 </div>
             </div>
 

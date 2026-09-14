@@ -13,16 +13,26 @@ export function useAuth() {
         if (userId) localStorage.setItem("userId", userId.toString());
     };
 
+    const redirectByRole = (role: string) => {
+        if (role === "ADMIN") {
+            navigate("/dashboard/admin");
+        } else if (role === "BATCH_LEADER") {
+            navigate("/dashboard/batch-leader");
+        } else {
+            navigate("/dashboard/batches");
+        }
+    };
+
     const login = async (email: string, password: string) => {
         const res = await authService.login(email, password);
         persistSession(res.data.token, res.data.name, res.data.role, res.data.batchId, res.data.batchName, res.data.userId);
-        navigate("/dashboard/batches");
+        redirectByRole(res.data.role);
     };
 
     const signup = async (name: string, email: string, password: string, indexNo?: string, batchId?: number, academicYear?: number) => {
         const res = await authService.register(name, email, password, indexNo, batchId, academicYear);
         persistSession(res.data.token, res.data.name, res.data.role, res.data.batchId, res.data.batchName, res.data.userId);
-        navigate("/dashboard/batches");
+        redirectByRole(res.data.role);
     };
 
     const logout = () => {
