@@ -5,9 +5,9 @@ import { Library, LogOut, ChevronDown, GraduationCap, ShieldCheck, Users } from 
 
 /* ── Role labels shown in the avatar dropdown ── */
 const ROLE_LABELS: Record<string, { label: string; Icon: typeof ShieldCheck }> = {
-    ADMIN:        { label: "System Administrator", Icon: ShieldCheck },
-    BATCH_LEADER: { label: "Batch Leader",          Icon: Users },
-    STUDENT:      { label: "Student",               Icon: GraduationCap },
+    ADMIN: { label: "System Administrator", Icon: ShieldCheck },
+    BATCH_LEADER: { label: "Batch Leader", Icon: Users },
+    STUDENT: { label: "Student", Icon: GraduationCap },
 };
 
 /* ─────────────────────────────────────────────────────────────────
@@ -30,7 +30,7 @@ function tabStyle(active: boolean, ghost = false): React.CSSProperties {
         textDecoration: "none",
         transition: "all 0.14s ease",
         background: active ? "#10B981" : "transparent",
-        color:  active ? "#ffffff" : ghost ? "#C0C8D4" : "#4B5563",
+        color: active ? "#ffffff" : ghost ? "#C0C8D4" : "#4B5563",
         boxShadow: active ? "0 2px 8px rgba(16,185,129,0.22)" : "none",
         whiteSpace: "nowrap",
         userSelect: "none",
@@ -39,17 +39,17 @@ function tabStyle(active: boolean, ghost = false): React.CSSProperties {
 }
 
 function TopNav() {
-    const { logout }  = useAuth();
-    const location    = useLocation();
+    const { logout } = useAuth();
+    const location = useLocation();
 
-    const [open, setOpen]             = useState(false);
+    const [open, setOpen] = useState(false);
     const [lastBatchId, setLastBatchId] = useState<string>(
         () => localStorage.getItem("lastBatchId") || ""
     );
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const userName = localStorage.getItem("userName") || "Student";
-    const role     = localStorage.getItem("role")     || "STUDENT";
+    const role = localStorage.getItem("role") || "STUDENT";
 
     const initials = userName
         .split(" ")
@@ -67,7 +67,7 @@ function TopNav() {
     const batchIdInUrl = path.match(/^\/dashboard\/batches\/(\d+)/)?.[1] ?? null;
     // e.g. /dashboard/courses/5  or /dashboard/courses/5/...
     const onCoursePage = /^\/dashboard\/courses\/\d+/.test(path);
-    const onBatchList  = path === "/dashboard/batches";
+    const onBatchList = path === "/dashboard/batches";
     const onCourseList = !!batchIdInUrl && !onCoursePage; // /dashboard/batches/:id
 
     /* Remember the last visited batch so "Courses" tab survives on resource pages */
@@ -92,9 +92,6 @@ function TopNav() {
 
     /* Courses tab destination */
     const coursesLink = lastBatchId ? `/dashboard/batches/${lastBatchId}` : null;
-
-    /* Whether content-hierarchy tabs are "in scope" */
-    const inContentScope = onBatchList || onCourseList || onCoursePage;
 
     return (
         <header style={{

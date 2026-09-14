@@ -24,11 +24,14 @@ function CourseDetailPage() {
     const courseName = resources[0]?.courseName || "Course";
     const role = localStorage.getItem("role") || "STUDENT";
 
+    const lastBatchId = localStorage.getItem("lastBatchId");
+    const backLink = lastBatchId ? `/dashboard/batches/${lastBatchId}` : "/dashboard/batches";
+
     return (
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "32px 40px 60px" }}>
 
             {/* Breadcrumb */}
-            <Link to="/dashboard/batches" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#6B7280", marginBottom: 28 }}
+            <Link to={backLink} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#6B7280", marginBottom: 28 }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = "#10B981")}
                 onMouseLeave={(e) => (e.currentTarget.style.color = "#6B7280")}
             >
