@@ -19,7 +19,7 @@ export function useAuth() {
         } else if (role === "BATCH_LEADER") {
             navigate("/dashboard/batch-leader");
         } else {
-            navigate("/dashboard/batches");
+            navigate("/dashboard/batches"); // STUDENT default
         }
     };
 
