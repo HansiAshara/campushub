@@ -17,7 +17,7 @@ public class CourseRequest {
     @Min(1) @Max(4)
     private int academicYear;
 
-    @Min(1) @Max(2)
+    @Min(1) @Max(8)
     private int semesterNumber;
 
     @NotNull
