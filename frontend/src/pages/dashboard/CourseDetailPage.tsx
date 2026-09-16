@@ -101,8 +101,8 @@ function CourseDetailPage() {
                 />
             )}
 
-            {/* Module coordinator info — shown to normal students when a coordinator is assigned */}
-            {!isCoordinator && role === "STUDENT" && course?.moderatorName && (
+            {/* Module coordinator info — shown to all non-coordinator users when a coordinator is assigned */}
+            {!isCoordinator && course?.moderatorName && (
                 <StudentCoordinatorInfo
                     moderatorName={course.moderatorName}
                     moderatorIndexNo={course.moderatorIndexNo}
