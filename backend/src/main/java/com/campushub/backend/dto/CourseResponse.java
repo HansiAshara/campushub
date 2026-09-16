@@ -13,4 +13,6 @@ public class CourseResponse {
     private int semesterNumber;
     private String batchName;
     private boolean canManage;
+    private String moderatorName;
+    private String moderatorIndexNo;
 }

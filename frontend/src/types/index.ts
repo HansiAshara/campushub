@@ -19,6 +19,8 @@ export interface Course {
     batchName: string;
     batchId?: number;
     canManage: boolean;
+    moderatorName?: string | null;
+    moderatorIndexNo?: string | null;
 }
 
 export interface CourseModerator {

@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { useResourcesByCourse } from "../../hooks/useResources";
 import ResourceItem from "../../components/features/resources/ResourceItem";
 import { resourceService } from "../../api/resourceService";
+import { CoordinatorOwnBanner, StudentCoordinatorInfo } from "../../components/features/courses/CoordinatorBanner";
 import { Filter, Upload, ArrowLeft, FileText, Users, Clock, TrendingUp, CheckSquare, Square, Trash2, X, ListChecks } from "lucide-react";
 import { latestDate } from "../../utils/dateUtils";
 
@@ -34,6 +35,9 @@ function CourseDetailPage() {
     const contributors = new Set(resources.map((r) => r.uploadedByName)).size;
     const courseName = course?.name || resources[0]?.courseName || "Course";
     const role = localStorage.getItem("role") || "STUDENT";
+    const userName = localStorage.getItem("userName") || "";
+    const userIndexNo = localStorage.getItem("indexNo") || "";
+    const isCoordinator = role === "MODULE_COORDINATOR" && course?.canManage;
     const canManageResources = course?.canManage || role === "BATCH_LEADER" || role === "ADMIN";
 
     const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -86,6 +90,24 @@ function CourseDetailPage() {
                 <ArrowLeft size={14} />
                 Back to Courses
             </Link>
+
+            {/* Coordinator banner — shown only to the coordinator of this specific course */}
+            {isCoordinator && course && (
+                <CoordinatorOwnBanner
+                    courseCode={course.code}
+                    courseName={course.name}
+                    userName={userName}
+                    userIndexNo={userIndexNo}
+                />
+            )}
+
+            {/* Module coordinator info — shown to normal students when a coordinator is assigned */}
+            {!isCoordinator && role === "STUDENT" && course?.moderatorName && (
+                <StudentCoordinatorInfo
+                    moderatorName={course.moderatorName}
+                    moderatorIndexNo={course.moderatorIndexNo}
+                />
+            )}
 
             <div style={{ display: "flex", gap: 32 }}>
                 {/* ── LEFT FILTER SIDEBAR ── */}

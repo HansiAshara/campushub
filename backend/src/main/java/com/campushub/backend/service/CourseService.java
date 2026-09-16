@@ -227,10 +227,19 @@ public class CourseService {
 
     private CourseResponse toResponse(Course course, User currentUser) {
         boolean canManage = permissionService.canManageCourse(currentUser, course.getId(), course.getBatch().getId());
+        // Find the first assigned moderator for this course
+        String moderatorName = null;
+        String moderatorIndexNo = null;
+        java.util.List<com.campushub.backend.entity.CourseModerator> mods = courseModeratorRepository.findByCourseId(course.getId());
+        if (!mods.isEmpty()) {
+            com.campushub.backend.entity.User mod = mods.get(0).getUser();
+            moderatorName = mod.getName();
+            moderatorIndexNo = mod.getIndexNo();
+        }
         return new CourseResponse(
                 course.getId(), course.getCode(), course.getName(),
                 course.getAcademicYear(), course.getSemesterNumber(),
-                course.getBatch().getName(), canManage
+                course.getBatch().getName(), canManage, moderatorName, moderatorIndexNo
         );
     }
 }
