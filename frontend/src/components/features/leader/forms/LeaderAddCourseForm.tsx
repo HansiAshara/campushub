@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { courseService } from "../../../../api/courseService";
-import { BookOpen, Plus, CheckCircle } from "lucide-react";
+import { BookOpen, CheckCircle } from "lucide-react";
 
 interface LeaderAddCourseFormProps {
     batchId: number | string;
@@ -236,7 +236,6 @@ export default function LeaderAddCourseForm({
                             cursor: loading ? "not-allowed" : "pointer",
                         }}
                     >
-                        <Plus size={15} />
                         {loading ? "Creating Module..." : "Create Course Module"}
                     </button>
                 </div>
