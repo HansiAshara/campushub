@@ -100,10 +100,11 @@ public class ResourceService {
 
     private ResourceResponse toResponse(Resource resource, User currentUser) {
         boolean canEdit = permissionService.canEditResource(currentUser, resource);
+        String courseDisplayName = resource.getCourse().getCode() + " - " + resource.getCourse().getName();
         return new ResourceResponse(
                 resource.getId(), resource.getTitle(), resource.getFileUrl(),
                 resource.getResourceType().name(), resource.getSummary(),
-                resource.getCourse().getName(), resource.getUploadedBy().getName(),
+                courseDisplayName, resource.getUploadedBy().getName(),
                 resource.getUploadedBy().getId(), resource.getCreatedAt(), canEdit
         );
     }
