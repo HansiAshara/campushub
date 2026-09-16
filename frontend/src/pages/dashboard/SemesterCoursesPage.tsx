@@ -6,7 +6,7 @@ import { type Batch, type Course } from "../../types";
 import { getBatchAcademicYear } from "../../utils/batchUtils";
 import { Filter, ChevronRight, BookOpen, ArrowLeft, GraduationCap } from "lucide-react";
 
-const SEMS = [1, 2];
+//const SEMS = [1, 2];
 
 function SemesterCoursesPage() {
     const { batchId } = useParams();
@@ -79,7 +79,7 @@ function SemesterCoursesPage() {
                                     const s1 = (yr - 1) * 2 + 1;
                                     const s2 = (yr - 1) * 2 + 2;
                                     const isCurrentYear = yr === currentBatchYear;
-                                    
+
                                     return (
                                         <div key={yr} style={{ background: yr === selectedYear ? "#F0FDF4" : "#F9FAFB", border: yr === selectedYear ? "1.5px solid #A7F3D0" : "1px solid #E5E7EB", borderRadius: 10, padding: "12px 14px" }}>
                                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }} onClick={() => { setSelectedYear(yr); setSelectedSemester(s1); }}>

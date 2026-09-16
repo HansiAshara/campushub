@@ -1,19 +1,27 @@
-import { ArrowLeft, Crown } from "lucide-react";
+import { ArrowLeft, Crown, BookOpen, UserPlus, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface LeaderBatchInfoBannerProps {
     batchName: string;
     intakeYear: number | string;
     leaderName: string;
+    leaderIndexNo?: string;
     onOpenAddCourse: () => void;
 }
 
 const font = '"DM Sans", system-ui, sans-serif';
 
+const permissions = [
+    { icon: BookOpen, label: "Manage Modules" },
+    { icon: UserPlus, label: "Appoint Coordinators" },
+    { icon: Users, label: "Oversee Students" },
+];
+
 export default function LeaderBatchInfoBanner({
     batchName,
     intakeYear,
     leaderName,
+    leaderIndexNo,
 }: LeaderBatchInfoBannerProps) {
     return (
         <div style={{ marginBottom: 24, fontFamily: font }}>
@@ -57,50 +65,71 @@ export default function LeaderBatchInfoBanner({
                 </div>
             </div>
 
-            {/* Banner Header Card */}
+            {/* Compact Banner */}
             <div
                 style={{
                     background: "linear-gradient(135deg, #064E3B 0%, #065F46 60%, #047857 100%)",
                     borderRadius: 16,
-                    padding: "24px 28px",
+                    padding: "20px 28px",
                     color: "white",
                     display: "flex",
-                    flexWrap: "wrap",
                     alignItems: "center",
                     justifyContent: "space-between",
                     gap: 18,
+                    flexWrap: "wrap",
                     boxShadow: "0 10px 25px -5px rgba(6, 78, 59, 0.25)",
                 }}
             >
+                {/* Left: Identity */}
                 <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 5 }}>
                         <span
                             style={{
-                                background: "rgba(255, 255, 255, 0.2)",
+                                background: "rgba(255,255,255,0.18)",
                                 backdropFilter: "blur(4px)",
-                                padding: "3px 10px",
+                                padding: "2px 10px",
                                 borderRadius: 6,
-                                fontSize: 11,
+                                fontSize: 10,
                                 fontWeight: 700,
-                                letterSpacing: "0.06em",
+                                letterSpacing: "0.07em",
                                 textTransform: "uppercase",
                             }}
                         >
                             Batch Leader Portal
                         </span>
-                        {intakeYear && (
-                            <span style={{ fontSize: 13, color: "#A7F3D0", fontWeight: 600 }}>
-                                Intake {intakeYear}
-                            </span>
-                        )}
                     </div>
-
-                    <h1 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 6px 0", letterSpacing: "-0.02em" }}>
+                    <h1 style={{ fontSize: 22, fontWeight: 800, margin: "0 0 3px 0", letterSpacing: "-0.02em" }}>
                         {batchName ? `${batchName} Management` : "Batch Leader Management"}
                     </h1>
-                    <p style={{ fontSize: 13, color: "#D1FAE5", margin: 0, maxWidth: 540, lineHeight: 1.4 }}>
-                        Logged in as <strong>{leaderName}</strong>. You have authority to manage course modules, appoint module coordinators, and oversee your batch.
+                    <p style={{ fontSize: 12, color: "#A7F3D0", margin: 0, fontWeight: 500 }}>
+                        {intakeYear && `Intake ${intakeYear} · `}Logged in as <strong style={{ color: "#D1FAE5" }}>{leaderName}{leaderIndexNo ? ` (${leaderIndexNo})` : ""}</strong>
                     </p>
+                </div>
+
+                {/* Right: Permission chips */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                    {permissions.map(({ icon: Icon, label }) => (
+                        <div
+                            key={label}
+                            style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 7,
+                                background: "rgba(255,255,255,0.12)",
+                                border: "1px solid rgba(255,255,255,0.2)",
+                                borderRadius: 20,
+                                padding: "6px 14px",
+                                fontSize: 12,
+                                fontWeight: 600,
+                                color: "white",
+                                backdropFilter: "blur(4px)",
+                                whiteSpace: "nowrap",
+                            }}
+                        >
+                            <Icon size={13} style={{ flexShrink: 0 }} />
+                            {label}
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>

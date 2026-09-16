@@ -33,6 +33,7 @@ export default function BatchLeaderPanelPage() {
     const [selectedCourseForRep, setSelectedCourseForRep] = useState<number | null>(null);
 
     const userName = localStorage.getItem("userName") || "Batch Leader";
+    const userIndexNo = localStorage.getItem("indexNo") || "";
     const myBatchId = localStorage.getItem("batchId");
     const myBatchName = localStorage.getItem("batchName") || "";
 
@@ -109,6 +110,7 @@ export default function BatchLeaderPanelPage() {
                 batchName={effectiveBatchName}
                 intakeYear={effectiveIntakeYear}
                 leaderName={userName}
+                leaderIndexNo={userIndexNo}
                 onOpenAddCourse={() => setActiveTab("create")}
             />
 
