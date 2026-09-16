@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useResourcesByCourse } from "../../hooks/useResources";
 import ResourceItem from "../../components/features/resources/ResourceItem";
@@ -20,11 +20,21 @@ function CourseDetailPage() {
     const [category, setCategory] = useState("ALL");
     const { resources, loading, refetch } = useResourcesByCourse(courseId);
 
+    const [course, setCourse] = useState<any>(null);
+
+    useEffect(() => {
+        if (courseId) {
+            import("../../api/courseService").then(({ courseService }) => {
+                courseService.getById(courseId).then(res => setCourse(res.data)).catch(console.error);
+            });
+        }
+    }, [courseId]);
+
     const filtered = category === "ALL" ? resources : resources.filter((r) => r.resourceType === category);
     const contributors = new Set(resources.map((r) => r.uploadedByName)).size;
-    const courseName = resources[0]?.courseName || "Course";
+    const courseName = course?.name || resources[0]?.courseName || "Course";
     const role = localStorage.getItem("role") || "STUDENT";
-    const canManageResources = role === "BATCH_LEADER" || role === "MODULE_COORDINATOR" || role === "ADMIN";
+    const canManageResources = course?.canManage || role === "BATCH_LEADER" || role === "ADMIN";
 
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());

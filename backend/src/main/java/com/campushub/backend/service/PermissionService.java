@@ -40,6 +40,7 @@ public class PermissionService {
 
     public boolean canEditResource(User user, Resource resource) {
         if (isAdmin(user)) return true;
+        if (canManageCourse(user, resource.getCourse().getId(), resource.getCourse().getBatch().getId())) return true;
         return resource.getUploadedBy() != null && resource.getUploadedBy().getId().equals(user.getId());
     }
 }
