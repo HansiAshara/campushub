@@ -11,6 +11,7 @@ const SEMS = [1, 2];
 function SemesterCoursesPage() {
     const { batchId } = useParams();
     const navigate = useNavigate();
+    const role = localStorage.getItem("role") || "STUDENT";
 
     const [currentBatch, setCurrentBatch] = useState<Batch | null>(null);
     const [selectedYear, setSelectedYear] = useState(1);
@@ -237,7 +238,7 @@ function SemesterCoursesPage() {
                                         <div style={{ fontWeight: 600, fontSize: 15, color: "#0D1B2A", marginBottom: 2 }}>{course.name}</div>
                                         <div style={{ fontSize: 12, color: "#9CA3AF" }}>Year {course.academicYear} · Sem {course.semesterNumber}</div>
                                     </div>
-                                    {course.canManage && (
+                                    {course.canManage && role !== "ADMIN" && role !== "BATCH_LEADER" && (
                                         <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", background: "#FEF3C7", color: "#92400E", borderRadius: 4, border: "1px solid #FDE68A", letterSpacing: "0.04em" }}>
                                             REP
                                         </span>

@@ -102,31 +102,6 @@ export default function LeaderBatchInfoBanner({
                         Logged in as <strong>{leaderName}</strong>. You have authority to manage course modules, appoint module coordinators, and oversee your batch.
                     </p>
                 </div>
-
-                {/*<button
-                    onClick={onOpenAddCourse}
-                    style={{
-                        background: "white",
-                        color: "#065F46",
-                        border: "none",
-                        borderRadius: 10,
-                        padding: "11px 20px",
-                        fontSize: 13,
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                        transition: "transform 0.15s, background 0.15s",
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = "#F0FDF4")}
-                    onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.97)")}
-                    onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
-                >
-                    {/*<Plus size={16} color="#065F46" />
-                    Add New Module 
-                </button>*/}
             </div>
         </div>
     );
