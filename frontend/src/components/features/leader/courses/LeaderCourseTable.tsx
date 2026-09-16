@@ -38,8 +38,9 @@ export default function LeaderCourseTable({
         if (!deletingCourse) return;
         setDeleteLoading(true);
         try {
+            const deletedCourseInfo = `${deletingCourse.code} - ${deletingCourse.name}`;
             await courseService.delete(deletingCourse.id);
-            setMessage({ type: "success", text: "Course module deleted successfully!" });
+            setMessage({ type: "success", text: `Course module "${deletedCourseInfo}" deleted successfully!` });
             setDeletingCourse(null);
             onRefresh();
         } catch (err: any) {
