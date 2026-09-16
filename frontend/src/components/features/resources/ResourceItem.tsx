@@ -13,6 +13,9 @@ import { FileText, MessageCircle, Edit2, Trash2, ExternalLink, Eye, Download, Lo
 interface Props {
     resource: Resource;
     onChanged: () => void;
+    selectable?: boolean;
+    selected?: boolean;
+    onToggleSelect?: () => void;
 }
 
 const RESOURCE_TYPE_STYLE: Record<string, { label: string; className: string }> = {
@@ -37,7 +40,7 @@ function getResourceFileName(fileUrl?: string, title?: string): string {
     }
 }
 
-function ResourceItem({ resource, onChanged }: Props) {
+function ResourceItem({ resource, onChanged, selectable, selected, onToggleSelect }: Props) {
     const [expanded, setExpanded] = useState(false);
     const [editing, setEditing] = useState(false);
     const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -120,8 +123,20 @@ function ResourceItem({ resource, onChanged }: Props) {
     return (
         <div className="resource-card fade-in" style={{ padding: 0, overflow: "hidden" }}>
             <div style={{ display: "flex", alignItems: "stretch" }}>
+                {/* Select column */}
+                {selectable && (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "0 10px 0 20px" }}>
+                        <input
+                            type="checkbox"
+                            checked={selected}
+                            onChange={onToggleSelect}
+                            style={{ width: 16, height: 16, cursor: "pointer" }}
+                        />
+                    </div>
+                )}
+
                 {/* Vote column */}
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px 0", width: 56, flexShrink: 0, borderRight: "1px solid #F3F4F6" }}>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px 0", width: selectable ? 46 : 56, flexShrink: 0, borderRight: "1px solid #F3F4F6" }}>
                     <VoteButtons resourceId={resource.id} />
                 </div>
 

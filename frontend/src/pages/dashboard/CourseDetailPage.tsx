@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useResourcesByCourse } from "../../hooks/useResources";
 import ResourceItem from "../../components/features/resources/ResourceItem";
-import { Filter, Upload, ArrowLeft, FileText, Users, Clock, TrendingUp } from "lucide-react";
+import { resourceService } from "../../api/resourceService";
+import { Filter, Upload, ArrowLeft, FileText, Users, Clock, TrendingUp, CheckSquare, Square, Trash2, X, ListChecks } from "lucide-react";
 import { latestDate } from "../../utils/dateUtils";
 
 const RESOURCE_TYPES = [
@@ -23,6 +24,43 @@ function CourseDetailPage() {
     const contributors = new Set(resources.map((r) => r.uploadedByName)).size;
     const courseName = resources[0]?.courseName || "Course";
     const role = localStorage.getItem("role") || "STUDENT";
+    const canManageResources = role === "BATCH_LEADER" || role === "MODULE_COORDINATOR" || role === "ADMIN";
+
+    const [isSelectionMode, setIsSelectionMode] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+    const [bulkDeleting, setBulkDeleting] = useState(false);
+
+    const toggleSelectAll = () => {
+        if (selectedIds.size === filtered.length) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(filtered.map(r => r.id)));
+        }
+    };
+
+    const toggleSelect = (id: number) => {
+        const newSet = new Set(selectedIds);
+        if (newSet.has(id)) newSet.delete(id);
+        else newSet.add(id);
+        setSelectedIds(newSet);
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedIds.size === 0) return;
+        if (!confirm(`Are you sure you want to delete ${selectedIds.size} resources? This action cannot be undone.`)) return;
+
+        setBulkDeleting(true);
+        try {
+            await Promise.all(Array.from(selectedIds).map(id => resourceService.remove(id)));
+            setSelectedIds(new Set());
+            setIsSelectionMode(false);
+            refetch();
+        } catch (err: any) {
+            alert(err.response?.data?.message || "Failed to delete some resources.");
+        } finally {
+            setBulkDeleting(false);
+        }
+    };
 
     const lastBatchId = localStorage.getItem("lastBatchId");
     const backLink = lastBatchId ? `/dashboard/batches/${lastBatchId}` : "/dashboard/batches";
@@ -115,6 +153,20 @@ function CourseDetailPage() {
                                 <TrendingUp size={13} color="#10B981" />
                                 Sorted by community score
                             </div>
+                            {canManageResources && (
+                                <button
+                                    onClick={() => setIsSelectionMode(!isSelectionMode)}
+                                    style={{
+                                        display: "inline-flex", alignItems: "center", gap: 6,
+                                        padding: "8px 12px", fontSize: 13, fontWeight: 600, borderRadius: 8,
+                                        border: "1px solid #E5E7EB", background: isSelectionMode ? "#F3F4F6" : "white",
+                                        color: "#4B5563", cursor: "pointer"
+                                    }}
+                                >
+                                    <ListChecks size={14} />
+                                    {isSelectionMode ? "Cancel Selection" : "Bulk Select"}
+                                </button>
+                            )}
                             <Link to={`/dashboard/courses/${courseId}/upload`}>
                                 <button className="btn-primary" style={{ fontSize: 13, padding: "8px 16px" }}>
                                     <Upload size={14} />
@@ -123,6 +175,37 @@ function CourseDetailPage() {
                             </Link>
                         </div>
                     </div>
+
+                    {isSelectionMode && filtered.length > 0 && (
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 10, padding: "12px 16px", marginBottom: 16 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                <button
+                                    onClick={toggleSelectAll}
+                                    style={{ display: "flex", alignItems: "center", gap: 6, background: "transparent", border: "none", cursor: "pointer", color: "#1D4ED8", fontSize: 13, fontWeight: 600 }}
+                                >
+                                    {selectedIds.size === filtered.length ? <CheckSquare size={16} /> : <Square size={16} />}
+                                    Select All
+                                </button>
+                                <span style={{ fontSize: 13, color: "#1E40AF" }}>
+                                    {selectedIds.size} selected
+                                </span>
+                            </div>
+                            {selectedIds.size > 0 && (
+                                <button
+                                    onClick={handleBulkDelete}
+                                    disabled={bulkDeleting}
+                                    style={{
+                                        display: "flex", alignItems: "center", gap: 6, background: "#DC2626", color: "white",
+                                        border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 13, fontWeight: 600,
+                                        cursor: bulkDeleting ? "not-allowed" : "pointer", opacity: bulkDeleting ? 0.7 : 1
+                                    }}
+                                >
+                                    <Trash2 size={14} />
+                                    {bulkDeleting ? "Deleting..." : "Delete Selected"}
+                                </button>
+                            )}
+                        </div>
+                    )}
 
                     {/* Resources */}
                     {loading ? (
@@ -140,7 +223,13 @@ function CourseDetailPage() {
                         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                             {filtered.map((r, i) => (
                                 <div key={r.id} style={{ animationDelay: `${i * 0.04}s` }}>
-                                    <ResourceItem resource={r} onChanged={refetch} />
+                                    <ResourceItem 
+                                        resource={r} 
+                                        onChanged={refetch} 
+                                        selectable={isSelectionMode}
+                                        selected={selectedIds.has(r.id)}
+                                        onToggleSelect={() => toggleSelect(r.id)}
+                                    />
                                 </div>
                             ))}
                         </div>
