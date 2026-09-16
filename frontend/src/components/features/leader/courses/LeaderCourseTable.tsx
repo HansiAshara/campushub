@@ -32,16 +32,18 @@ export default function LeaderCourseTable({
     const [editingCourse, setEditingCourse] = useState<Course | null>(null);
     const [deletingCourse, setDeletingCourse] = useState<Course | null>(null);
     const [deleteLoading, setDeleteLoading] = useState(false);
+    const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
     const handleDeleteCourse = async () => {
         if (!deletingCourse) return;
         setDeleteLoading(true);
         try {
             await courseService.delete(deletingCourse.id);
+            setMessage({ type: "success", text: "Course module deleted successfully!" });
             setDeletingCourse(null);
             onRefresh();
         } catch (err: any) {
-            alert(err.response?.data?.message || "Failed to delete course module.");
+            setMessage({ type: "error", text: err.response?.data?.message || "Failed to delete course module." });
         } finally {
             setDeleteLoading(false);
         }
@@ -155,6 +157,24 @@ export default function LeaderCourseTable({
                     New Course Module
                 </button>
             </div>
+
+            {/* Notification Message */}
+            {message && (
+                <div
+                    style={{
+                        marginBottom: 20,
+                        background: message.type === "success" ? "#ECFDF5" : "#FEF2F2",
+                        border: `1px solid ${message.type === "success" ? "#A7F3D0" : "#FCA5A5"}`,
+                        color: message.type === "success" ? "#065F46" : "#991B1B",
+                        padding: "12px 16px",
+                        borderRadius: 8,
+                        fontSize: 13,
+                        fontWeight: 500,
+                    }}
+                >
+                    {message.text}
+                </div>
+            )}
 
             {/* Table Container */}
             <div
