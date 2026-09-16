@@ -4,7 +4,7 @@ import { useResourcesByCourse } from "../../hooks/useResources";
 import ResourceItem from "../../components/features/resources/ResourceItem";
 import { resourceService } from "../../api/resourceService";
 import { CoordinatorOwnBanner, StudentCoordinatorInfo } from "../../components/features/courses/CoordinatorBanner";
-import { Filter, Upload, ArrowLeft, FileText, Users, Clock, TrendingUp, CheckSquare, Square, Trash2, X, ListChecks } from "lucide-react";
+import { Filter, Upload, ArrowLeft, FileText, Users, Clock, TrendingUp, CheckSquare, Square, Trash2, ListChecks } from "lucide-react";
 import { latestDate } from "../../utils/dateUtils";
 
 const RESOURCE_TYPES = [
@@ -61,7 +61,7 @@ function CourseDetailPage() {
 
     const handleBulkDelete = async () => {
         if (selectedIds.size === 0) return;
-        if (!confirm(`Are you sure you want to delete ${selectedIds.size} resources? This action cannot be undone.`)) return;
+        if (!window.confirm(`Are you sure you want to delete ${selectedIds.size} resource${selectedIds.size !== 1 ? "s" : ""}? This action cannot be undone.`)) return;
 
         setBulkDeleting(true);
         try {
@@ -69,8 +69,9 @@ function CourseDetailPage() {
             setSelectedIds(new Set());
             setIsSelectionMode(false);
             refetch();
-        } catch (err: any) {
-            alert(err.response?.data?.message || "Failed to delete some resources.");
+        } catch (err) {
+            const error = err as { response?: { data?: { message?: string } } };
+            alert(error.response?.data?.message || "Failed to delete some resources.");
         } finally {
             setBulkDeleting(false);
         }
