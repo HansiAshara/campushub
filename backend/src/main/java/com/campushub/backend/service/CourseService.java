@@ -102,7 +102,14 @@ public class CourseService {
 
         // Delete associated course moderators
         courseModeratorRepository.deleteByCourseId(id);
-        courseRepository.delete(course);
+        
+        try {
+            courseRepository.delete(course);
+            courseRepository.flush();
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            String courseInfo = course.getCode() + " - " + course.getName();
+            throw new IllegalArgumentException("Cannot delete course module \"" + courseInfo + "\" because it contains uploaded resources. Please delete the resources first.");
+        }
     }
 
     public List<com.campushub.backend.dto.CourseModeratorResponse> getAllModerators() {

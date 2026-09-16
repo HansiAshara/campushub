@@ -45,6 +45,7 @@ export default function LeaderCourseTable({
             onRefresh();
         } catch (err: any) {
             setMessage({ type: "error", text: err.response?.data?.message || "Failed to delete course module." });
+            setDeletingCourse(null);
         } finally {
             setDeleteLoading(false);
         }

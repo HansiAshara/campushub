@@ -59,6 +59,7 @@ export default function CourseManagementTable({
             loadCourses();
         } catch (err: any) {
             setMessage({ type: "error", text: err.response?.data?.message || "Failed to delete course." });
+            setDeletingCourse(null);
         } finally {
             setDeleteLoading(false);
         }
