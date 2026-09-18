@@ -4,7 +4,8 @@ import { useResourcesByCourse } from "../../hooks/useResources";
 import ResourceItem from "../../components/features/resources/ResourceItem";
 import { resourceService } from "../../api/resourceService";
 import { CoordinatorOwnBanner, StudentCoordinatorInfo } from "../../components/features/courses/CoordinatorBanner";
-import { Filter, Upload, ArrowLeft, FileText, Users, Clock, TrendingUp, CheckSquare, Square, Trash2, ListChecks } from "lucide-react";
+import { CourseQueriesList } from "../../components/features/courses/CourseQueriesList";
+import { Filter, Upload, ArrowLeft, FileText, Users, Clock, TrendingUp, CheckSquare, Square, Trash2, ListChecks, Database, MessageSquare } from "lucide-react";
 import { latestDate } from "../../utils/dateUtils";
 
 const RESOURCE_TYPES = [
@@ -19,6 +20,7 @@ const RESOURCE_TYPES = [
 function CourseDetailPage() {
     const { courseId } = useParams();
     const [category, setCategory] = useState("ALL");
+    const [activeTab, setActiveTab] = useState<"RESOURCES" | "QUERIES">("RESOURCES");
     const { resources, loading, refetch } = useResourcesByCourse(courseId);
 
     const [course, setCourse] = useState<any>(null);
@@ -110,9 +112,44 @@ function CourseDetailPage() {
                 />
             )}
 
-            <div style={{ display: "flex", gap: 32 }}>
-                {/* ── LEFT FILTER SIDEBAR ── */}
-                <aside style={{ width: 220, flexShrink: 0 }}>
+            {/* Tabs for Coordinators */}
+            {isCoordinator && (
+                <div style={{ display: "flex", gap: 32, marginBottom: 24, borderBottom: "1px solid #E5E7EB" }}>
+                    <button
+                        onClick={() => setActiveTab("RESOURCES")}
+                        style={{
+                            background: "none", border: "none", padding: "0 0 12px",
+                            fontSize: 15, fontWeight: 700, cursor: "pointer",
+                            color: activeTab === "RESOURCES" ? "#10B981" : "#6B7280",
+                            borderBottom: activeTab === "RESOURCES" ? "2px solid #10B981" : "2px solid transparent",
+                            display: "flex", alignItems: "center", gap: 8
+                        }}
+                    >
+                        <Database size={16} />
+                        Resources
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("QUERIES")}
+                        style={{
+                            background: "none", border: "none", padding: "0 0 12px",
+                            fontSize: 15, fontWeight: 700, cursor: "pointer",
+                            color: activeTab === "QUERIES" ? "#10B981" : "#6B7280",
+                            borderBottom: activeTab === "QUERIES" ? "2px solid #10B981" : "2px solid transparent",
+                            display: "flex", alignItems: "center", gap: 8
+                        }}
+                    >
+                        <MessageSquare size={16} />
+                        Student Queries
+                    </button>
+                </div>
+            )}
+
+            {activeTab === "QUERIES" ? (
+                <CourseQueriesList courseId={Number(courseId)} />
+            ) : (
+                <div style={{ display: "flex", gap: 32 }}>
+                    {/* ── LEFT FILTER SIDEBAR ── */}
+                    <aside style={{ width: 220, flexShrink: 0 }}>
                     <div style={{ background: "white", border: "1px solid #E5E7EB", borderRadius: 14, padding: 20, position: "sticky", top: 80 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
                             <Filter size={15} color="#10B981" />
@@ -269,6 +306,7 @@ function CourseDetailPage() {
                     )}
                 </div>
             </div>
+            )}
         </div>
     );
 }

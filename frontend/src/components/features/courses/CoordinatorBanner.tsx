@@ -1,4 +1,6 @@
-import { Shield, Edit, Trash2, User } from "lucide-react";
+import { Shield, Edit, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { SubmitQueryModal } from "./SubmitQueryModal";
 
 interface CoordinatorBannerProps {
     courseCode: string;
@@ -112,59 +114,95 @@ export function StudentCoordinatorInfo({ moderatorName, moderatorIndexNo }: Stud
         .join("")
         .toUpperCase();
 
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
     return (
-        <div
-            style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 16,
-                background: "#ECFDF5",
-                border: "1px solid #A7F3D0",
-                borderLeft: "4px solid #059669",
-                borderRadius: 12,
-                padding: "14px 18px",
-                marginBottom: 24,
-                fontFamily: font,
-            }}
-        >
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                {/* Avatar */}
-                <div
-                    style={{
-                        width: 38,
-                        height: 38,
-                        borderRadius: "50%",
-                        background: "linear-gradient(135deg, #064E3B, #059669)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "white",
-                        fontSize: 13,
-                        fontWeight: 800,
-                        flexShrink: 0,
-                    }}
-                >
-                    {initials}
+        <>
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 16,
+                    background: "#ECFDF5",
+                    border: "1px solid #A7F3D0",
+                    borderLeft: "4px solid #059669",
+                    borderRadius: 12,
+                    padding: "14px 18px",
+                    marginBottom: 24,
+                    fontFamily: font,
+                }}
+            >
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    {/* Avatar */}
+                    <div
+                        style={{
+                            width: 38,
+                            height: 38,
+                            borderRadius: "50%",
+                            background: "linear-gradient(135deg, #064E3B, #059669)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "white",
+                            fontSize: 13,
+                            fontWeight: 800,
+                            flexShrink: 0,
+                        }}
+                    >
+                        {initials}
+                    </div>
+                    <div>
+                        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: "#065F46", textTransform: "uppercase", marginBottom: 1 }}>
+                            Module Coordinator
+                        </div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: "#064E3B" }}>
+                            {moderatorName}
+                            {moderatorIndexNo && (
+                                <span style={{ fontWeight: 500, color: "#059669", marginLeft: 6 }}>
+                                    ({moderatorIndexNo})
+                                </span>
+                            )}
+                        </div>
+                        <div style={{ fontSize: 11, color: "#6B7280", marginTop: 1 }}>
+                            Contact for module queries &amp; resource concerns
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: "#065F46", textTransform: "uppercase", marginBottom: 1 }}>
-                        Module Coordinator
-                    </div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: "#064E3B" }}>
-                        {moderatorName}
-                        {moderatorIndexNo && (
-                            <span style={{ fontWeight: 500, color: "#059669", marginLeft: 6 }}>
-                                ({moderatorIndexNo})
-                            </span>
-                        )}
-                    </div>
-                    <div style={{ fontSize: 11, color: "#6B7280", marginTop: 1 }}>
-                        Contact for module queries &amp; resource concerns
-                    </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        style={{
+                            background: "#059669",
+                            color: "white",
+                            border: "none",
+                            padding: "8px 14px",
+                            borderRadius: 8,
+                            fontSize: 12,
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6
+                        }}
+                    >
+                        Submit Query
+                    </button>
+
                 </div>
             </div>
-            <User size={20} color="#6EE7B7" style={{ flexShrink: 0 }} />
-        </div>
+
+            {isModalOpen && (
+                <SubmitQueryModal
+                    courseId={Number(window.location.pathname.split("/").pop())}
+                    courseName="Course" // Or pass course name as prop
+                    onClose={() => setIsModalOpen(false)}
+                    onSuccess={() => {
+                        setIsModalOpen(false);
+                        alert("Query submitted successfully.");
+                    }}
+                />
+            )}
+        </>
     );
 }
