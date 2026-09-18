@@ -51,7 +51,7 @@ function ResourceItem({ resource, onChanged, selectable, selected, onToggleSelec
 
     const currentUserId = localStorage.getItem("userId");
     const currentUserName = localStorage.getItem("userName");
-    const currentRole = localStorage.getItem("role");
+    //const currentRole = localStorage.getItem("role");
 
     // Match ownership by userId or userName
     const isOwner = Boolean(
@@ -63,8 +63,8 @@ function ResourceItem({ resource, onChanged, selectable, selected, onToggleSelec
         ))
     );
 
-    // Edit and delete actions allowed ONLY for resources uploaded by oneself (or system ADMIN)
-    const canModify = Boolean(resource.canEdit && (isOwner || currentRole === "ADMIN"));
+    // The backend evaluates permissions (Uploader, Coordinator, Admin) and returns canEdit = true
+    const canModify = Boolean(resource.canEdit);
 
     const saveEdit = async () => {
         setSaving(true);
@@ -226,19 +226,19 @@ function ResourceItem({ resource, onChanged, selectable, selected, onToggleSelec
 
                         <button
                             onClick={() => setExpanded(!expanded)}
-                            style={{ 
-                                display: "inline-flex", 
-                                alignItems: "center", 
-                                gap: 6, 
-                                fontSize: 12, 
-                                fontWeight: 600, 
-                                color: expanded ? "#047857" : "#10B981", 
-                                background: expanded ? "#D1FAE5" : "#ECFDF5", 
-                                border: expanded ? "1px solid #6EE7B7" : "1px solid #A7F3D0", 
-                                padding: "4px 12px", 
-                                borderRadius: 16, 
-                                cursor: "pointer", 
-                                transition: "all 0.2s ease" 
+                            style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 6,
+                                fontSize: 12,
+                                fontWeight: 600,
+                                color: expanded ? "#047857" : "#10B981",
+                                background: expanded ? "#D1FAE5" : "#ECFDF5",
+                                border: expanded ? "1px solid #6EE7B7" : "1px solid #A7F3D0",
+                                padding: "4px 12px",
+                                borderRadius: 16,
+                                cursor: "pointer",
+                                transition: "all 0.2s ease"
                             }}
                             onMouseEnter={(e) => {
                                 e.currentTarget.style.background = "#D1FAE5";
