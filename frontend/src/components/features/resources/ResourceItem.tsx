@@ -213,6 +213,7 @@ function ResourceItem({ resource, onChanged, selectable, selected, onToggleSelec
                     {/* Embedded Video Player */}
                     {resource.resourceType === "KUPPI_NOTES" && resource.fileUrl && (
                         <div style={{ marginTop: 16, borderRadius: 12, overflow: 'hidden', border: '1px solid #E5E7EB', background: '#000' }}>
+                            {/* @ts-ignore */}
                             <ReactPlayer url={resource.fileUrl} width="100%" height="320px" controls light />
                         </div>
                     )}
