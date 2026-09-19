@@ -54,7 +54,7 @@ function LoginPage() {
                     </p>
                     <h1 style={{ fontFamily: font, fontSize: 42, fontWeight: 800, color: "#0D1B2A", lineHeight: 1.1, marginBottom: 18, letterSpacing: "-0.02em" }}>
                         Every tute, paper<br />
-                        and kuppi{" "}
+                        and kuppi recordings{" "}
                         <span style={{ color: "#10B981" }}>— finally in order.</span>
                     </h1>
                     <p style={{ fontFamily: font, fontSize: 15, color: "#374151", maxWidth: 380, lineHeight: 1.65, fontWeight: 400 }}>

@@ -20,7 +20,7 @@ interface Props {
 }
 
 const RESOURCE_TYPE_STYLE: Record<string, { label: string; className: string }> = {
-    KUPPI_NOTES: { label: "Kuppi", className: "kuppi" },
+    KUPPI_NOTES: { label: "Kuppi Recordings", className: "kuppi" },
     PAST_PAPER: { label: "Past Paper", className: "past-paper" },
     TUTE: { label: "Tute", className: "tute" },
     NOTES: { label: "Notes", className: "" },

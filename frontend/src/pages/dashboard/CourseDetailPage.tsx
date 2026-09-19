@@ -10,7 +10,7 @@ import { latestDate } from "../../utils/dateUtils";
 
 const RESOURCE_TYPES = [
     { key: "ALL", label: "All" },
-    { key: "KUPPI_NOTES", label: "Kuppi" },
+    { key: "KUPPI_NOTES", label: "Kuppi Recordings" },
     { key: "PAST_PAPER", label: "Past Paper" },
     { key: "TUTE", label: "Tute" },
     { key: "NOTES", label: "Notes" },

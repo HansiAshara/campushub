@@ -4,7 +4,7 @@ import { resourceService } from "../../api/resourceService";
 import { ArrowLeft, UploadCloud, Fingerprint, Sparkles, GitMerge, Tag, AlertTriangle } from "lucide-react";
 
 const RESOURCE_TYPES = [
-    { key: "KUPPI_NOTES", label: "Kuppi Video Link" },
+    { key: "KUPPI_NOTES", label: "Kuppi Recordings" },
     { key: "PAST_PAPER", label: "Past Paper" },
     { key: "TUTE", label: "Tute" },
     { key: "NOTES", label: "Lecture Notes" },
@@ -136,7 +136,7 @@ function UploadResourcePage() {
                                     type="text"
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
-                                    placeholder="e.g. B-Tree Indexing Kuppi — Finals Pack"
+                                    placeholder="e.g. B-Tree Indexing Kuppi Recording — Finals Pack"
                                     required
                                     style={{ width: "100%", padding: "11px 16px", border: "1px solid #E5E7EB", borderRadius: 8, fontSize: 14, color: "#0D1B2A", outline: "none", transition: "border-color 0.15s" }}
                                     onFocus={(e) => (e.target.style.borderColor = "#10B981")}

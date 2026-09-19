@@ -2,7 +2,7 @@ const CATEGORIES = [
     { value: "ALL", label: "All" },
     { value: "SLIDES", label: "Slides" },
     { value: "NOTES", label: "Notes" },
-    { value: "KUPPI_NOTES", label: "Kuppi" },
+    { value: "KUPPI_NOTES", label: "Kuppi Recordings" },
     { value: "TUTE", label: "Tutes" },
     { value: "PAST_PAPER", label: "Past Papers" },
 ];

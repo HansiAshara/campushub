@@ -28,7 +28,7 @@ function BatchesPage() {
                         University of Moratuwa · IT
                     </p>
                     <h1 style={{ fontFamily: "var(--font-display)", fontSize: 52, fontWeight: 900, color: "#0D1B2A", lineHeight: 1.1, marginBottom: 20, maxWidth: 700 }}>
-                        Every tute, paper and kuppi{" "}
+                        Every tute, paper and kuppi recording{" "}
                         <span style={{ color: "#10B981" }}>— finally in order.</span>
                     </h1>
                     <p style={{ fontSize: 16, color: "#374151", maxWidth: 520, lineHeight: 1.65, marginBottom: 36 }}>
@@ -119,7 +119,7 @@ function BatchesPage() {
                                     {myBatch.name}
                                 </h3>
                                 <p style={{ fontSize: 13, color: "#065F46", margin: 0 }}>
-                                    {formatBatchSubtitle(myBatch)} · View your semester courses &amp; upload notes, tutes, or kuppi materials
+                                    {formatBatchSubtitle(myBatch)} · View your semester courses &amp; upload notes, tutes, or kuppi recordings
                                 </p>
                             </div>
                         </div>
