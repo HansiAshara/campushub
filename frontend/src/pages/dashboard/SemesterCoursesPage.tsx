@@ -5,6 +5,7 @@ import { batchService } from "../../api/batchService";
 import { type Batch, type Course } from "../../types";
 import { getBatchAcademicYear } from "../../utils/batchUtils";
 import { BatchLeaderBanner } from "../../components/features/batches/BatchLeaderBanner";
+import LeaderBatchInfoBanner from "../../components/features/leader/common/LeaderBatchInfoBanner";
 import { Filter, ChevronRight, BookOpen, ArrowLeft, GraduationCap } from "lucide-react";
 
 //const SEMS = [1, 2];
@@ -43,30 +44,42 @@ function SemesterCoursesPage() {
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "32px 40px 60px" }}>
 
             {/* Breadcrumb */}
-            <Link
-                to="/dashboard/batches"
-                style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    fontSize: 13,
-                    color: "#6B7280",
-                    marginBottom: 28,
-                    transition: "color 0.12s",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#10B981")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#6B7280")}
-            >
-                <ArrowLeft size={14} />
-                Back to Batches
-            </Link>
-
-            {currentBatch?.leaderName && (
-                <BatchLeaderBanner
-                    leaderName={currentBatch.leaderName}
-                    leaderIndexNo={currentBatch.leaderIndexNo}
-                    leaderEmail={currentBatch.leaderEmail}
+            {role === "BATCH_LEADER" && currentBatch ? (
+                <LeaderBatchInfoBanner
+                    batchName={currentBatch.name}
+                    intakeYear={currentBatch.intakeYear}
+                    leaderName={currentBatch.leaderName || ""}
+                    leaderIndexNo={currentBatch.leaderIndexNo || undefined}
+                    onOpenAddCourse={() => {}}
                 />
+            ) : (
+                <>
+                    <Link
+                        to="/dashboard/batches"
+                        style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            fontSize: 13,
+                            color: "#6B7280",
+                            marginBottom: 28,
+                            transition: "color 0.12s",
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = "#10B981")}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = "#6B7280")}
+                    >
+                        <ArrowLeft size={14} />
+                        Back to Batches
+                    </Link>
+
+                    {currentBatch?.leaderName && (
+                        <BatchLeaderBanner
+                            leaderName={currentBatch.leaderName}
+                            leaderIndexNo={currentBatch.leaderIndexNo}
+                            leaderEmail={currentBatch.leaderEmail}
+                        />
+                    )}
+                </>
             )}
 
             <div style={{ display: "flex", gap: 32 }}>
