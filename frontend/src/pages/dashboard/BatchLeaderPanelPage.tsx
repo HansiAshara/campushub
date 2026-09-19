@@ -8,6 +8,7 @@ import {
     Shield,
     Users,
     PlusCircle,
+    MessageSquare
 } from "lucide-react";
 
 // Modular Leader Components
@@ -18,10 +19,11 @@ import LeaderAppointRepSection from "../../components/features/leader/leadership
 import LeaderActiveRepsList from "../../components/features/leader/leadership/LeaderActiveRepsList";
 import LeaderBatchStudentsList from "../../components/features/leader/students/LeaderBatchStudentsList";
 import LeaderAddCourseForm from "../../components/features/leader/forms/LeaderAddCourseForm";
+import { BatchQueriesList } from "../../components/features/leader/queries/BatchQueriesList";
 
 const font = '"DM Sans", system-ui, sans-serif';
 
-type LeaderTab = "courses" | "reps" | "students" | "create";
+type LeaderTab = "courses" | "reps" | "students" | "create" | "queries";
 
 export default function BatchLeaderPanelPage() {
     const [activeTab, setActiveTab] = useState<LeaderTab>("courses");
@@ -172,6 +174,15 @@ export default function BatchLeaderPanelPage() {
                             </button>
 
                             <button
+                                onClick={() => setActiveTab("queries")}
+                                className={`filter-pill${activeTab === "queries" ? " active" : ""}`}
+                                style={{ width: "100%", justifyContent: "flex-start", padding: "9px 12px", fontSize: 13, borderRadius: 8 }}
+                            >
+                                <MessageSquare size={15} style={{ marginRight: 8 }} />
+                                Student Queries
+                            </button>
+
+                            <button
                                 onClick={() => setActiveTab("students")}
                                 className={`filter-pill${activeTab === "students" ? " active" : ""}`}
                                 style={{ width: "100%", justifyContent: "flex-start", padding: "9px 12px", fontSize: 13, borderRadius: 8 }}
@@ -248,6 +259,21 @@ export default function BatchLeaderPanelPage() {
                                         moderators={moderators}
                                         onRefresh={refreshData}
                                     />
+                                </div>
+                            )}
+
+                            {/* TAB: Student Queries */}
+                            {activeTab === "queries" && (
+                                <div className="fade-in">
+                                    <div style={{ marginBottom: 18 }}>
+                                        <h2 style={{ fontSize: 20, fontWeight: 800, color: "#0D1B2A", margin: "0 0 4px 0" }}>
+                                            Student Queries
+                                        </h2>
+                                        <p style={{ fontSize: 13, color: "#6B7280", margin: 0 }}>
+                                            Manage and resolve messages and requests from students in your batch.
+                                        </p>
+                                    </div>
+                                    <BatchQueriesList batchId={effectiveBatchId as number} />
                                 </div>
                             )}
 

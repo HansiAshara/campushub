@@ -74,6 +74,8 @@ function SemesterCoursesPage() {
 
                     {currentBatch?.leaderName && (
                         <BatchLeaderBanner
+                            batchId={currentBatch.id}
+                            batchName={currentBatch.name}
                             leaderName={currentBatch.leaderName}
                             leaderIndexNo={currentBatch.leaderIndexNo}
                             leaderEmail={currentBatch.leaderEmail}
