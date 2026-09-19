@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { type Resource } from "../../../types";
-import VoteButtons from "./VoteButtons";
+import StarRating from "./StarRating";
 import CommentSection from "./CommentSection";
 import Modal from "../../ui/Modal";
 import Button from "../../ui/Button";
@@ -135,10 +135,7 @@ function ResourceItem({ resource, onChanged, selectable, selected, onToggleSelec
                     </div>
                 )}
 
-                {/* Vote column */}
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px 0", width: selectable ? 46 : 56, flexShrink: 0, borderRight: "1px solid #F3F4F6" }}>
-                    <VoteButtons resourceId={resource.id} />
-                </div>
+
 
                 {/* Main content */}
                 <div style={{ flex: 1, padding: "18px 22px" }}>
@@ -186,19 +183,22 @@ function ResourceItem({ resource, onChanged, selectable, selected, onToggleSelec
                         )}
                     </div>
 
-                    {/* Title */}
-                    <a
-                        href={resource.fileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 700, fontSize: 16, color: "#0D1B2A", transition: "color 0.12s", textDecoration: "none", fontFamily: "var(--font-display)" }}
-                        onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#10B981")}
-                        onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "#0D1B2A")}
-                        title="Open resource"
-                    >
-                        {resource.title}
-                        <ExternalLink size={13} color="#9CA3AF" />
-                    </a>
+                    {/* Title and Rating */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", marginTop: 4 }}>
+                        <a
+                            href={resource.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 700, fontSize: 16, color: "#0D1B2A", transition: "color 0.12s", textDecoration: "none", fontFamily: "var(--font-display)" }}
+                            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#10B981")}
+                            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "#0D1B2A")}
+                            title="Open resource"
+                        >
+                            {resource.title}
+                            <ExternalLink size={13} color="#9CA3AF" />
+                        </a>
+                        <StarRating resourceId={resource.id} />
+                    </div>
 
                     {/* AI Summary */}
                     {resource.summary && (

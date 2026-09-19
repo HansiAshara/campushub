@@ -194,48 +194,48 @@
 }
 
 /* ===================== */
-/*    VOTE COLUMN        */
+/*    STAR RATING        */
 /* ===================== */
-.vote-col {
-  display: flex;
-  flex-direction: column;
+.star-rating {
+  display: inline-flex;
   align-items: center;
-  gap: 2px;
-  width: 40px;
-  flex-shrink: 0;
+  gap: 8px;
 }
 
-.vote-btn {
+.stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.star-btn {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px;
-  color: var(--color-text-muted);
-  border-radius: 4px;
-  transition: color 0.1s, background 0.1s;
+  padding: 2px;
+  color: #D1D5DB; /* Unfilled star color - gray */
+  transition: all 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.vote-btn:hover {
-  background: #F3F4F6;
-  color: var(--color-text);
+.star-btn:hover {
+  transform: scale(1.1);
 }
 
-.vote-btn.up.voted {
-  color: var(--color-primary);
+.star-btn.filled {
+  color: #FBBF24; /* Filled star color - gold */
 }
 
-.vote-btn.down.voted {
-  color: var(--color-error);
-}
-
-.vote-score {
+.rating-text {
   font-size: 13px;
-  font-weight: 700;
   color: var(--color-text);
-  line-height: 1;
+}
+
+.rating-text .text-muted {
+  color: var(--color-text-muted);
+  font-weight: normal;
 }
 
 /* ===================== */

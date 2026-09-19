@@ -5,7 +5,7 @@ import ResourceItem from "../../components/features/resources/ResourceItem";
 import { resourceService } from "../../api/resourceService";
 import { CoordinatorOwnBanner, StudentCoordinatorInfo } from "../../components/features/courses/CoordinatorBanner";
 import { CourseQueriesList } from "../../components/features/courses/CourseQueriesList";
-import { Filter, Upload, ArrowLeft, FileText, Users, Clock, TrendingUp, CheckSquare, Square, Trash2, ListChecks, Database, MessageSquare } from "lucide-react";
+import { Filter, Upload, ArrowLeft, FileText, Users, Clock, CheckSquare, Square, Trash2, ListChecks, Database, MessageSquare } from "lucide-react";
 import { latestDate } from "../../utils/dateUtils";
 
 const RESOURCE_TYPES = [
@@ -150,162 +150,159 @@ function CourseDetailPage() {
                 <div style={{ display: "flex", gap: 32 }}>
                     {/* ── LEFT FILTER SIDEBAR ── */}
                     <aside style={{ width: 220, flexShrink: 0 }}>
-                    <div style={{ background: "white", border: "1px solid #E5E7EB", borderRadius: 14, padding: 20, position: "sticky", top: 80 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-                            <Filter size={15} color="#10B981" />
-                            <span style={{ fontSize: 14, fontWeight: 700, color: "#0D1B2A" }}>Scope</span>
-                        </div>
-
-                        <div style={{ marginBottom: 20 }}>
-                            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "#9CA3AF", textTransform: "uppercase", marginBottom: 10 }}>
-                                Resource Type
+                        <div style={{ background: "white", border: "1px solid #E5E7EB", borderRadius: 14, padding: 20, position: "sticky", top: 80 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
+                                <Filter size={15} color="#10B981" />
+                                <span style={{ fontSize: 14, fontWeight: 700, color: "#0D1B2A" }}>Scope</span>
                             </div>
-                            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                                {RESOURCE_TYPES.map(({ key, label }) => (
-                                    <button
-                                        key={key}
-                                        onClick={() => setCategory(key)}
-                                        className={`filter-pill${category === key ? " active" : ""}`}
-                                    >
-                                        {label}
-                                    </button>
+
+                            <div style={{ marginBottom: 20 }}>
+                                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "#9CA3AF", textTransform: "uppercase", marginBottom: 10 }}>
+                                    Resource Type
+                                </div>
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                                    {RESOURCE_TYPES.map(({ key, label }) => (
+                                        <button
+                                            key={key}
+                                            onClick={() => setCategory(key)}
+                                            className={`filter-pill${category === key ? " active" : ""}`}
+                                        >
+                                            {label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Stats */}
+                            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 20, paddingTop: 16, borderTop: "1px solid #F3F4F6" }}>
+                                {[
+                                    { Icon: FileText, label: "Resources", value: resources.length },
+                                    { Icon: Users, label: "Contributors", value: contributors },
+                                    { Icon: Clock, label: "Latest", value: latestDate(resources) },
+                                ].map(({ Icon, label, value }) => (
+                                    <div key={label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                        <Icon size={13} color="#10B981" />
+                                        <span style={{ fontSize: 12, color: "#6B7280" }}>{label}</span>
+                                        <span style={{ fontSize: 12, fontWeight: 700, color: "#0D1B2A", marginLeft: "auto" }}>{value}</span>
+                                    </div>
                                 ))}
                             </div>
+
+                            {/* Role badge */}
+                            {(role === "BATCH_LEADER" || role === "MODULE_COORDINATOR") && (
+                                <div style={{ marginTop: 16, background: "#FEF3C7", border: "1px solid #FDE68A", borderRadius: 10, padding: "10px 14px" }}>
+                                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "#92400E", textTransform: "uppercase" }}>
+                                        Your Role
+                                    </div>
+                                    <div style={{ fontSize: 13, fontWeight: 600, color: "#78350F", marginTop: 2 }}>
+                                        {role === "BATCH_LEADER" ? "Batch Leader" : "Module Coordinator"}
+                                    </div>
+                                    <div style={{ fontSize: 11, color: "#92400E", marginTop: 1 }}>
+                                        {role === "BATCH_LEADER" ? "Batch curriculum & leadership enabled" : "Course moderator privileges"}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </aside>
+
+                    {/* ── RESOURCE LIST ── */}
+                    <div style={{ flex: 1 }}>
+                        {/* Header */}
+                        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
+                            <div>
+                                <h1 style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 800, color: "#0D1B2A", marginBottom: 4 }}>
+                                    {courseName}
+                                </h1>
+                                <p style={{ fontSize: 13, color: "#9CA3AF" }}>
+                                    {loading ? "Loading..." : `${filtered.length} resource${filtered.length !== 1 ? "s" : ""}`}
+                                    {category !== "ALL" && ` · ${RESOURCE_TYPES.find(t => t.key === category)?.label}`}
+                                </p>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+
+                                {canManageResources && (
+                                    <button
+                                        onClick={() => setIsSelectionMode(!isSelectionMode)}
+                                        style={{
+                                            display: "inline-flex", alignItems: "center", gap: 6,
+                                            padding: "8px 12px", fontSize: 13, fontWeight: 600, borderRadius: 8,
+                                            border: "1px solid #E5E7EB", background: isSelectionMode ? "#F3F4F6" : "white",
+                                            color: "#4B5563", cursor: "pointer"
+                                        }}
+                                    >
+                                        <ListChecks size={14} />
+                                        {isSelectionMode ? "Cancel Selection" : "Bulk Select"}
+                                    </button>
+                                )}
+                                <Link to={`/dashboard/courses/${courseId}/upload`}>
+                                    <button className="btn-primary" style={{ fontSize: 13, padding: "8px 16px" }}>
+                                        <Upload size={14} />
+                                        Upload
+                                    </button>
+                                </Link>
+                            </div>
                         </div>
 
-                        {/* Stats */}
-                        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 20, paddingTop: 16, borderTop: "1px solid #F3F4F6" }}>
-                            {[
-                                { Icon: FileText, label: "Resources", value: resources.length },
-                                { Icon: Users, label: "Contributors", value: contributors },
-                                { Icon: Clock, label: "Latest", value: latestDate(resources) },
-                            ].map(({ Icon, label, value }) => (
-                                <div key={label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                    <Icon size={13} color="#10B981" />
-                                    <span style={{ fontSize: 12, color: "#6B7280" }}>{label}</span>
-                                    <span style={{ fontSize: 12, fontWeight: 700, color: "#0D1B2A", marginLeft: "auto" }}>{value}</span>
+                        {isSelectionMode && filtered.length > 0 && (
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 10, padding: "12px 16px", marginBottom: 16 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                    <button
+                                        onClick={toggleSelectAll}
+                                        style={{ display: "flex", alignItems: "center", gap: 6, background: "transparent", border: "none", cursor: "pointer", color: "#1D4ED8", fontSize: 13, fontWeight: 600 }}
+                                    >
+                                        {selectedIds.size === filtered.length ? <CheckSquare size={16} /> : <Square size={16} />}
+                                        Select All
+                                    </button>
+                                    <span style={{ fontSize: 13, color: "#1E40AF" }}>
+                                        {selectedIds.size} selected
+                                    </span>
                                 </div>
-                            ))}
-                        </div>
+                                {selectedIds.size > 0 && (
+                                    <button
+                                        onClick={handleBulkDelete}
+                                        disabled={bulkDeleting}
+                                        style={{
+                                            display: "flex", alignItems: "center", gap: 6, background: "#DC2626", color: "white",
+                                            border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 13, fontWeight: 600,
+                                            cursor: bulkDeleting ? "not-allowed" : "pointer", opacity: bulkDeleting ? 0.7 : 1
+                                        }}
+                                    >
+                                        <Trash2 size={14} />
+                                        {bulkDeleting ? "Deleting..." : "Delete Selected"}
+                                    </button>
+                                )}
+                            </div>
+                        )}
 
-                        {/* Role badge */}
-                        {(role === "BATCH_LEADER" || role === "MODULE_COORDINATOR") && (
-                            <div style={{ marginTop: 16, background: "#FEF3C7", border: "1px solid #FDE68A", borderRadius: 10, padding: "10px 14px" }}>
-                                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "#92400E", textTransform: "uppercase" }}>
-                                    Your Role
-                                </div>
-                                <div style={{ fontSize: 13, fontWeight: 600, color: "#78350F", marginTop: 2 }}>
-                                    {role === "BATCH_LEADER" ? "Batch Leader" : "Module Coordinator"}
-                                </div>
-                                <div style={{ fontSize: 11, color: "#92400E", marginTop: 1 }}>
-                                    {role === "BATCH_LEADER" ? "Batch curriculum & leadership enabled" : "Course moderator privileges"}
-                                </div>
+                        {/* Resources */}
+                        {loading ? (
+                            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                                {[1, 2, 3].map((i) => (
+                                    <div key={i} style={{ height: 110, background: "white", border: "1px solid #E5E7EB", borderRadius: 12 }} />
+                                ))}
+                            </div>
+                        ) : filtered.length === 0 ? (
+                            <div style={{ textAlign: "center", padding: "60px 20px", background: "white", borderRadius: 14, border: "1.5px dashed #E5E7EB" }}>
+                                <FileText size={32} color="#D1D5DB" style={{ margin: "0 auto 12px" }} />
+                                <p style={{ fontSize: 14, color: "#9CA3AF", fontWeight: 500 }}>Nothing here yet — be the first to share.</p>
+                            </div>
+                        ) : (
+                            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                                {filtered.map((r, i) => (
+                                    <div key={r.id} style={{ animationDelay: `${i * 0.04}s` }}>
+                                        <ResourceItem
+                                            resource={r}
+                                            onChanged={refetch}
+                                            selectable={isSelectionMode}
+                                            selected={selectedIds.has(r.id)}
+                                            onToggleSelect={() => toggleSelect(r.id)}
+                                        />
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>
-                </aside>
-
-                {/* ── RESOURCE LIST ── */}
-                <div style={{ flex: 1 }}>
-                    {/* Header */}
-                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
-                        <div>
-                            <h1 style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 800, color: "#0D1B2A", marginBottom: 4 }}>
-                                {courseName}
-                            </h1>
-                            <p style={{ fontSize: 13, color: "#9CA3AF" }}>
-                                {loading ? "Loading..." : `${filtered.length} resource${filtered.length !== 1 ? "s" : ""}`}
-                                {category !== "ALL" && ` · ${RESOURCE_TYPES.find(t => t.key === category)?.label}`}
-                            </p>
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#9CA3AF" }}>
-                                <TrendingUp size={13} color="#10B981" />
-                                Sorted by community score
-                            </div>
-                            {canManageResources && (
-                                <button
-                                    onClick={() => setIsSelectionMode(!isSelectionMode)}
-                                    style={{
-                                        display: "inline-flex", alignItems: "center", gap: 6,
-                                        padding: "8px 12px", fontSize: 13, fontWeight: 600, borderRadius: 8,
-                                        border: "1px solid #E5E7EB", background: isSelectionMode ? "#F3F4F6" : "white",
-                                        color: "#4B5563", cursor: "pointer"
-                                    }}
-                                >
-                                    <ListChecks size={14} />
-                                    {isSelectionMode ? "Cancel Selection" : "Bulk Select"}
-                                </button>
-                            )}
-                            <Link to={`/dashboard/courses/${courseId}/upload`}>
-                                <button className="btn-primary" style={{ fontSize: 13, padding: "8px 16px" }}>
-                                    <Upload size={14} />
-                                    Upload
-                                </button>
-                            </Link>
-                        </div>
-                    </div>
-
-                    {isSelectionMode && filtered.length > 0 && (
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 10, padding: "12px 16px", marginBottom: 16 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                                <button
-                                    onClick={toggleSelectAll}
-                                    style={{ display: "flex", alignItems: "center", gap: 6, background: "transparent", border: "none", cursor: "pointer", color: "#1D4ED8", fontSize: 13, fontWeight: 600 }}
-                                >
-                                    {selectedIds.size === filtered.length ? <CheckSquare size={16} /> : <Square size={16} />}
-                                    Select All
-                                </button>
-                                <span style={{ fontSize: 13, color: "#1E40AF" }}>
-                                    {selectedIds.size} selected
-                                </span>
-                            </div>
-                            {selectedIds.size > 0 && (
-                                <button
-                                    onClick={handleBulkDelete}
-                                    disabled={bulkDeleting}
-                                    style={{
-                                        display: "flex", alignItems: "center", gap: 6, background: "#DC2626", color: "white",
-                                        border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 13, fontWeight: 600,
-                                        cursor: bulkDeleting ? "not-allowed" : "pointer", opacity: bulkDeleting ? 0.7 : 1
-                                    }}
-                                >
-                                    <Trash2 size={14} />
-                                    {bulkDeleting ? "Deleting..." : "Delete Selected"}
-                                </button>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Resources */}
-                    {loading ? (
-                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                            {[1, 2, 3].map((i) => (
-                                <div key={i} style={{ height: 110, background: "white", border: "1px solid #E5E7EB", borderRadius: 12 }} />
-                            ))}
-                        </div>
-                    ) : filtered.length === 0 ? (
-                        <div style={{ textAlign: "center", padding: "60px 20px", background: "white", borderRadius: 14, border: "1.5px dashed #E5E7EB" }}>
-                            <FileText size={32} color="#D1D5DB" style={{ margin: "0 auto 12px" }} />
-                            <p style={{ fontSize: 14, color: "#9CA3AF", fontWeight: 500 }}>Nothing here yet — be the first to share.</p>
-                        </div>
-                    ) : (
-                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                            {filtered.map((r, i) => (
-                                <div key={r.id} style={{ animationDelay: `${i * 0.04}s` }}>
-                                    <ResourceItem 
-                                        resource={r} 
-                                        onChanged={refetch} 
-                                        selectable={isSelectionMode}
-                                        selected={selectedIds.has(r.id)}
-                                        onToggleSelect={() => toggleSelect(r.id)}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    )}
                 </div>
-            </div>
             )}
         </div>
     );

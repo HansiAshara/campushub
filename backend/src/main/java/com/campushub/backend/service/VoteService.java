@@ -36,9 +36,7 @@ public class VoteService {
 
         Vote existing = voteRepository.findByUserIdAndResourceId(user.getId(), resourceId).orElse(null);
 
-        if (existing != null && existing.getValue() == value) {
-            voteRepository.delete(existing); // clicking the same vote again removes it
-        } else if (existing != null) {
+        if (existing != null) {
             existing.setValue(value);
             voteRepository.save(existing);
         } else {
@@ -56,13 +54,17 @@ public class VoteService {
         User user = currentUser();
         List<Vote> votes = voteRepository.findByResourceId(resourceId);
 
-        long upvotes = votes.stream().filter(v -> v.getValue() == 1).count();
-        long downvotes = votes.stream().filter(v -> v.getValue() == -1).count();
+        long totalRatings = votes.size();
+        double averageRating = totalRatings > 0 
+                ? votes.stream().mapToInt(Vote::getValue).average().orElse(0.0) 
+                : 0.0;
+        averageRating = Math.round(averageRating * 10.0) / 10.0;
+
         Integer userVote = votes.stream()
                 .filter(v -> v.getUser().getId().equals(user.getId()))
                 .map(Vote::getValue)
                 .findFirst().orElse(null);
 
-        return new VoteSummaryResponse(upvotes, downvotes, userVote);
+        return new VoteSummaryResponse(averageRating, totalRatings, userVote);
     }
 }

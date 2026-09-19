@@ -50,8 +50,8 @@ export interface Resource {
 }
 
 export interface VoteSummary {
-    upvotes: number;
-    downvotes: number;
+    averageRating: number;
+    totalRatings: number;
     userVote: number | null;
 }
 
