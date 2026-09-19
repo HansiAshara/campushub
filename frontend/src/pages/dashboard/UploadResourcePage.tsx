@@ -4,7 +4,7 @@ import { resourceService } from "../../api/resourceService";
 import { ArrowLeft, UploadCloud, Fingerprint, Sparkles, GitMerge, Tag, AlertTriangle } from "lucide-react";
 
 const RESOURCE_TYPES = [
-    { key: "KUPPI_NOTES", label: "Kuppi" },
+    { key: "KUPPI_NOTES", label: "Kuppi Video Link" },
     { key: "PAST_PAPER", label: "Past Paper" },
     { key: "TUTE", label: "Tute" },
     { key: "NOTES", label: "Lecture Notes" },
@@ -18,27 +18,37 @@ function UploadResourcePage() {
     const [title, setTitle] = useState("");
     const [resourceType, setResourceType] = useState("KUPPI_NOTES");
     const [file, setFile] = useState<File | null>(null);
+    const [linkUrl, setLinkUrl] = useState("");
     const [dragActive, setDragActive] = useState(false);
     const [error, setError] = useState("");
     const [uploading, setUploading] = useState(false);
 
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!file) { setError("Attach a file to continue."); return; }
+        
+        if (resourceType === "KUPPI_NOTES") {
+            if (!linkUrl.trim()) { setError("Please enter a valid video link."); return; }
+        } else {
+            if (!file) { setError("Attach a file to continue."); return; }
+        }
+        
         setError("");
         setUploading(true);
 
-        const formData = new FormData();
-        formData.append("title", title);
-        formData.append("resourceType", resourceType);
-        formData.append("courseId", courseId!);
-        formData.append("file", file);
-
         try {
-            await resourceService.upload(formData);
+            if (resourceType === "KUPPI_NOTES") {
+                await resourceService.uploadLink(title, resourceType, courseId!, linkUrl.trim());
+            } else {
+                const formData = new FormData();
+                formData.append("title", title);
+                formData.append("resourceType", resourceType);
+                formData.append("courseId", courseId!);
+                formData.append("file", file!);
+                await resourceService.upload(formData);
+            }
             navigate(`/dashboard/courses/${courseId}`);
         } catch (err: any) {
-            setError(err.response?.data?.message || "This file has already been shared for this course.");
+            setError(err.response?.data?.message || "This resource has already been shared for this course.");
         } finally {
             setUploading(false);
         }
@@ -80,24 +90,42 @@ function UploadResourcePage() {
                     <div style={{ background: "white", border: "1px solid #E5E7EB", borderRadius: 14, padding: 28 }}>
                         <form onSubmit={handleUpload}>
                             {/* Drop zone */}
-                            <div style={{ marginBottom: 24 }}>
-                                <label
-                                    className={`drop-zone${dragActive ? " active" : ""}`}
-                                    style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "44px 24px", cursor: "pointer" }}
-                                    onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
-                                    onDragLeave={() => setDragActive(false)}
-                                    onDrop={(e) => { e.preventDefault(); setDragActive(false); if (e.dataTransfer.files?.[0]) setFile(e.dataTransfer.files[0]); }}
-                                >
-                                    <input type="file" accept=".pdf,.docx,.pptx,.jpg,.png" onChange={(e) => setFile(e.target.files?.[0] || null)} style={{ display: "none" }} />
-                                    <UploadCloud size={32} color={file ? "#10B981" : dragActive ? "#10B981" : "#9CA3AF"} style={{ marginBottom: 12, transition: "color 0.15s" }} />
-                                    <span style={{ fontWeight: 600, fontSize: 14, color: file ? "#10B981" : "#0D1B2A" }}>
-                                        {file ? file.name : "Drop a PDF here, or click to browse"}
-                                    </span>
-                                    <span style={{ fontSize: 12, color: "#9CA3AF", marginTop: 4 }}>
-                                        {file ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : "Max 50 MB · stored with signed URLs"}
-                                    </span>
-                                </label>
-                            </div>
+                            {resourceType === "KUPPI_NOTES" ? (
+                                <div style={{ marginBottom: 24 }}>
+                                    <label style={{ display: "block", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", color: "#9CA3AF", textTransform: "uppercase", marginBottom: 8 }}>
+                                        Video Link (YouTube, Google Drive, etc.)
+                                    </label>
+                                    <input
+                                        type="url"
+                                        value={linkUrl}
+                                        onChange={(e) => setLinkUrl(e.target.value)}
+                                        placeholder="https://youtube.com/watch?v=..."
+                                        required
+                                        style={{ width: "100%", padding: "11px 16px", border: "1px solid #E5E7EB", borderRadius: 8, fontSize: 14, color: "#0D1B2A", outline: "none", transition: "border-color 0.15s" }}
+                                        onFocus={(e) => (e.target.style.borderColor = "#10B981")}
+                                        onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
+                                    />
+                                </div>
+                            ) : (
+                                <div style={{ marginBottom: 24 }}>
+                                    <label
+                                        className={`drop-zone${dragActive ? " active" : ""}`}
+                                        style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "44px 24px", cursor: "pointer" }}
+                                        onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+                                        onDragLeave={() => setDragActive(false)}
+                                        onDrop={(e) => { e.preventDefault(); setDragActive(false); if (e.dataTransfer.files?.[0]) setFile(e.dataTransfer.files[0]); }}
+                                    >
+                                        <input type="file" accept=".pdf,.docx,.pptx,.jpg,.png" onChange={(e) => setFile(e.target.files?.[0] || null)} style={{ display: "none" }} />
+                                        <UploadCloud size={32} color={file ? "#10B981" : dragActive ? "#10B981" : "#9CA3AF"} style={{ marginBottom: 12, transition: "color 0.15s" }} />
+                                        <span style={{ fontWeight: 600, fontSize: 14, color: file ? "#10B981" : "#0D1B2A" }}>
+                                            {file ? file.name : "Drop a PDF here, or click to browse"}
+                                        </span>
+                                        <span style={{ fontSize: 12, color: "#9CA3AF", marginTop: 4 }}>
+                                            {file ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : "Max 50 MB · stored with signed URLs"}
+                                        </span>
+                                    </label>
+                                </div>
+                            )}
 
                             {/* Title */}
                             <div style={{ marginBottom: 20 }}>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ReactPlayer from "react-player";
 import { type Resource } from "../../../types";
 import StarRating from "./StarRating";
 import CommentSection from "./CommentSection";
@@ -160,25 +161,27 @@ function ResourceItem({ resource, onChanged, selectable, selected, onToggleSelec
                                     <Eye size={15} />
                                     <span>View</span>
                                 </a>
-                                <button
-                                    type="button"
-                                    onClick={handleDownload}
-                                    disabled={downloading}
-                                    className="btn-download-resource"
-                                    title="Download resource file"
-                                >
-                                    {downloading ? (
-                                        <>
-                                            <Loader2 size={15} className="spin-animation" />
-                                            <span>Downloading...</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Download size={15} />
-                                            <span>Download</span>
-                                        </>
-                                    )}
-                                </button>
+                                {resource.resourceType !== "KUPPI_NOTES" && (
+                                    <button
+                                        type="button"
+                                        onClick={handleDownload}
+                                        disabled={downloading}
+                                        className="btn-download-resource"
+                                        title="Download resource file"
+                                    >
+                                        {downloading ? (
+                                            <>
+                                                <Loader2 size={15} className="spin-animation" />
+                                                <span>Downloading...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Download size={15} />
+                                                <span>Download</span>
+                                            </>
+                                        )}
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>
@@ -205,6 +208,13 @@ function ResourceItem({ resource, onChanged, selectable, selected, onToggleSelec
                         <p style={{ fontSize: 13, color: "#4B5563", lineHeight: 1.6, marginTop: 8, maxWidth: 680 }}>
                             ✨ {resource.summary}
                         </p>
+                    )}
+
+                    {/* Embedded Video Player */}
+                    {resource.resourceType === "KUPPI_NOTES" && resource.fileUrl && (
+                        <div style={{ marginTop: 16, borderRadius: 12, overflow: 'hidden', border: '1px solid #E5E7EB', background: '#000' }}>
+                            <ReactPlayer url={resource.fileUrl} width="100%" height="320px" controls light />
+                        </div>
                     )}
 
                     {/* Meta row */}
@@ -332,7 +342,7 @@ function ResourceItem({ resource, onChanged, selectable, selected, onToggleSelec
                             <option value="NOTES">Notes</option>
                             <option value="PAST_PAPER">Past Paper</option>
                             <option value="TUTE">Tute</option>
-                            <option value="KUPPI_NOTES">Kuppi</option>
+                            <option value="KUPPI_NOTES">Kuppi Recordings</option>
                             <option value="SLIDES">Slides</option>
                         </select>
                     </div>

@@ -29,6 +29,15 @@ public class ResourceController {
         return ResponseEntity.ok(resourceService.uploadResource(title, resourceType, courseId, file));
     }
 
+    @PostMapping("/link")
+    public ResponseEntity<ResourceResponse> uploadLink(
+            @RequestParam String title,
+            @RequestParam String resourceType,
+            @RequestParam Long courseId,
+            @RequestParam String linkUrl) {
+        return ResponseEntity.ok(resourceService.uploadLinkResource(title, resourceType, courseId, linkUrl));
+    }
+
     @GetMapping("/course/{courseId}")
     public ResponseEntity<List<ResourceResponse>> getByCourse(@PathVariable Long courseId) {
         return ResponseEntity.ok(resourceService.getByCourse(courseId));

@@ -10,6 +10,15 @@ export const resourceService = {
     upload: (formData: FormData) =>
         client.post<Resource>("/resources", formData, { headers: { "Content-Type": "multipart/form-data" } }),
 
+    uploadLink: (title: string, resourceType: string, courseId: string, linkUrl: string) => {
+        const formData = new FormData();
+        formData.append("title", title);
+        formData.append("resourceType", resourceType);
+        formData.append("courseId", courseId);
+        formData.append("linkUrl", linkUrl);
+        return client.post<Resource>("/resources/link", formData);
+    },
+
     update: (id: number, title: string, resourceType: string) =>
         client.put<Resource>(`/resources/${id}`, { title, resourceType }),
 

@@ -63,6 +63,29 @@ public class ResourceService {
         return toResponse(saved, uploader);
     }
 
+    public ResourceResponse uploadLinkResource(String title, String resourceType, Long courseId, String linkUrl) {
+        User uploader = currentUser();
+        Course course = courseRepository.findById(courseId).orElseThrow(() -> new IllegalArgumentException("Course not found"));
+
+        String fileHash = "link:" + linkUrl.hashCode();
+        Resource.ResourceType typeEnum = Resource.ResourceType.valueOf(resourceType);
+        
+        resourceRepository.findByFileHashAndCourseIdAndResourceType(fileHash, courseId, typeEnum).ifPresent(existing -> {
+            throw new IllegalArgumentException("This exact link has already been shared in this module.");
+        });
+
+        Resource resource = new Resource();
+        resource.setTitle(title);
+        resource.setFileUrl(linkUrl);
+        resource.setFileHash(fileHash);
+        resource.setResourceType(typeEnum);
+        resource.setCourse(course);
+        resource.setUploadedBy(uploader);
+
+        Resource saved = resourceRepository.save(resource);
+        return toResponse(saved, uploader);
+    }
+
     public List<ResourceResponse> getByCourse(Long courseId) {
         User user = currentUser();
         return resourceRepository.findByCourseId(courseId).stream().map(r -> toResponse(r, user)).toList();
