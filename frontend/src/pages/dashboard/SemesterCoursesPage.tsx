@@ -4,6 +4,7 @@ import { useCoursesByBatch } from "../../hooks/useCourses";
 import { batchService } from "../../api/batchService";
 import { type Batch, type Course } from "../../types";
 import { getBatchAcademicYear } from "../../utils/batchUtils";
+import { BatchLeaderBanner } from "../../components/features/batches/BatchLeaderBanner";
 import { Filter, ChevronRight, BookOpen, ArrowLeft, GraduationCap } from "lucide-react";
 
 //const SEMS = [1, 2];
@@ -59,6 +60,14 @@ function SemesterCoursesPage() {
                 <ArrowLeft size={14} />
                 Back to Batches
             </Link>
+
+            {currentBatch?.leaderName && (
+                <BatchLeaderBanner
+                    leaderName={currentBatch.leaderName}
+                    leaderIndexNo={currentBatch.leaderIndexNo}
+                    leaderEmail={currentBatch.leaderEmail}
+                />
+            )}
 
             <div style={{ display: "flex", gap: 32 }}>
                 {/* ── LEFT FILTER PANEL ── */}
