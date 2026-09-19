@@ -46,7 +46,12 @@ function StarRating({ resourceId }: { resourceId: number }) {
             </div>
             <span className="rating-text">
                 {summary.averageRating > 0 ? (
-                    <><strong>{summary.averageRating}</strong> <span className="text-muted">({summary.totalRatings})</span></>
+                    <>
+                        <strong>{summary.averageRating.toFixed(1)}</strong>{" "}
+                        <span className="text-muted">
+                            ({summary.totalRatings} {summary.totalRatings === 1 ? "rating" : "ratings"})
+                        </span>
+                    </>
                 ) : (
                     <span className="text-muted">No ratings</span>
                 )}
