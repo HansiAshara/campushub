@@ -1,7 +1,21 @@
-$processId = (Get-NetTCPConnection -LocalPort 8080 -ErrorAction SilentlyContinue).OwningProcess
-if ($processId) {
-    Stop-Process -Id $processId -Force
-    Write-Host "Killed process $processId on port 8080"
+param(
+    [int]$Port = 8081
+)
+
+$connections = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue
+if ($connections) {
+    foreach ($conn in $connections) {
+        $pId = $conn.OwningProcess
+        if ($pId) {
+            try {
+                $p = Get-Process -Id $pId -ErrorAction Stop
+                Stop-Process -Id $pId -Force -ErrorAction Stop
+                Write-Host "Killed process $($p.ProcessName) (PID: $pId) on port $Port"
+            } catch {
+                Write-Warning "Could not stop process PID $pId on port ${Port}: $_"
+            }
+        }
+    }
 } else {
-    Write-Host "No process found on port 8080"
+    Write-Host "No process found on port $Port"
 }
