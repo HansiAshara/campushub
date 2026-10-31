@@ -3,6 +3,7 @@ package com.campushub.backend.service;
 import com.campushub.backend.dto.ResourceResponse;
 import com.campushub.backend.entity.Course;
 import com.campushub.backend.entity.Resource;
+import com.campushub.backend.entity.Tag;
 import com.campushub.backend.entity.User;
 import com.campushub.backend.repository.CourseRepository;
 import com.campushub.backend.repository.ResourceRepository;
@@ -32,13 +33,15 @@ public class ResourceService {
     private final DocumentTextExtractorService documentTextExtractorService;
     private final TextPreprocessorService textPreprocessorService;
     private final AiService aiService;
+    private final TagService tagService;
 
     public ResourceService(ResourceRepository resourceRepository, CourseRepository courseRepository,
                             UserRepository userRepository, FileStorageService fileStorageService,
                             PermissionService permissionService,
                             DocumentTextExtractorService documentTextExtractorService,
                             TextPreprocessorService textPreprocessorService,
-                            AiService aiService) {
+                            AiService aiService,
+                            TagService tagService) {
         this.resourceRepository = resourceRepository;
         this.courseRepository = courseRepository;
         this.userRepository = userRepository;
@@ -47,6 +50,7 @@ public class ResourceService {
         this.documentTextExtractorService = documentTextExtractorService;
         this.textPreprocessorService = textPreprocessorService;
         this.aiService = aiService;
+        this.tagService = tagService;
     }
 
     private User currentUser() {
@@ -74,6 +78,7 @@ public class ResourceService {
         resource.setResourceType(Resource.ResourceType.valueOf(resourceType));
         resource.setCourse(course);
         resource.setUploadedBy(uploader);
+        resource.setAiStatus(Resource.AiStatus.PENDING);
 
         Resource saved = resourceRepository.save(resource);
         return toResponse(saved, uploader);
@@ -97,6 +102,7 @@ public class ResourceService {
         resource.setResourceType(typeEnum);
         resource.setCourse(course);
         resource.setUploadedBy(uploader);
+        resource.setAiStatus(Resource.AiStatus.SKIPPED); // Link resources skip document AI
 
         Resource saved = resourceRepository.save(resource);
         return toResponse(saved, uploader);
@@ -172,11 +178,17 @@ public class ResourceService {
     private ResourceResponse toResponse(Resource resource, User currentUser) {
         boolean canEdit = permissionService.canEditResource(currentUser, resource);
         String courseDisplayName = resource.getCourse().getCode() + " - " + resource.getCourse().getName();
+        List<String> tagNames = resource.getTags() != null
+                ? resource.getTags().stream().map(Tag::getName).sorted().toList()
+                : List.of();
+        String aiStatusStr = resource.getAiStatus() != null ? resource.getAiStatus().name() : "PENDING";
+
         return new ResourceResponse(
                 resource.getId(), resource.getTitle(), resource.getFileUrl(),
                 resource.getResourceType().name(), resource.getSummary(),
                 courseDisplayName, resource.getUploadedBy().getName(),
-                resource.getUploadedBy().getId(), resource.getCreatedAt(), canEdit
+                resource.getUploadedBy().getId(), resource.getCreatedAt(), canEdit,
+                aiStatusStr, tagNames
         );
     }
 }

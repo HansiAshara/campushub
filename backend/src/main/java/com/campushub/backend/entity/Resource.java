@@ -3,6 +3,8 @@ package com.campushub.backend.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "resources")
@@ -26,7 +28,19 @@ public class Resource {
     private ResourceType resourceType;
 
     @Column(columnDefinition = "TEXT")
-    private String summary; // AI-generated, added later
+    private String summary; // AI-generated summary
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private AiStatus aiStatus = AiStatus.PENDING;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "resource_tags",
+        joinColumns = @JoinColumn(name = "resource_id"),
+        inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    private Set<Tag> tags = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name = "course_id", nullable = false)
@@ -40,5 +54,9 @@ public class Resource {
 
     public enum ResourceType {
         PAST_PAPER, TUTE, KUPPI_NOTES, SLIDES, NOTES
+    }
+
+    public enum AiStatus {
+        PENDING, PROCESSING, COMPLETED, FAILED, SKIPPED
     }
 }

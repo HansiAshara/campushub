@@ -47,6 +47,8 @@ export interface Resource {
     uploadedById: number;
     createdAt: string;
     canEdit: boolean;
+    aiStatus?: string;
+    tags?: string[];
 }
 
 export interface TextChunk {
