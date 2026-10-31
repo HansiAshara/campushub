@@ -3,6 +3,7 @@ package com.campushub.backend.controller;
 import com.campushub.backend.dto.ResourceResponse;
 import com.campushub.backend.dto.ResourceUpdateRequest;
 import com.campushub.backend.service.ResourceService;
+import com.campushub.backend.service.ai.CleanedDocument;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,6 +37,11 @@ public class ResourceController {
             @RequestParam Long courseId,
             @RequestParam String linkUrl) {
         return ResponseEntity.ok(resourceService.uploadLinkResource(title, resourceType, courseId, linkUrl));
+    }
+
+    @PostMapping(value = "/preview-preprocess", consumes = "multipart/form-data")
+    public ResponseEntity<CleanedDocument> previewPreprocess(@RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(resourceService.previewPreprocess(file));
     }
 
     @GetMapping("/course/{courseId}")

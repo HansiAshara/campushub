@@ -49,6 +49,24 @@ export interface Resource {
     canEdit: boolean;
 }
 
+export interface TextChunk {
+    index: number;
+    text: string;
+    characterCount: number;
+    wordCount: number;
+}
+
+export interface CleanedDocument {
+    cleanedText: string;
+    originalCharacterCount: number;
+    cleanedCharacterCount: number;
+    wordCount: number;
+    pageCount: number;
+    chunks: TextChunk[];
+    hasSufficientContent: boolean;
+    statusMessage: string;
+}
+
 export interface VoteSummary {
     averageRating: number;
     totalRatings: number;

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { resourceService } from "../../api/resourceService";
-import { ArrowLeft, UploadCloud, Fingerprint, Sparkles, GitMerge, Tag, AlertTriangle } from "lucide-react";
+import { type CleanedDocument } from "../../types";
+import { ArrowLeft, UploadCloud, Fingerprint, Sparkles, Tag, AlertTriangle, Info } from "lucide-react";
 
 const RESOURCE_TYPES = [
     { key: "KUPPI_NOTES", label: "Kuppi Recordings" },
@@ -23,15 +24,40 @@ function UploadResourcePage() {
     const [error, setError] = useState("");
     const [uploading, setUploading] = useState(false);
 
+    // AI Preprocessing Preview State (Step 1 & 2 Verification)
+    const [previewLoading, setPreviewLoading] = useState(false);
+    const [previewData, setPreviewData] = useState<CleanedDocument | null>(null);
+    const [showPreviewSnippet, setShowPreviewSnippet] = useState(false);
+
+    const handleFileChange = (newFile: File | null) => {
+        setFile(newFile);
+        setPreviewData(null);
+        setShowPreviewSnippet(false);
+    };
+
+    const handlePreviewExtraction = async () => {
+        if (!file) return;
+        setPreviewLoading(true);
+        try {
+            const res = await resourceService.previewPreprocess(file);
+            setPreviewData(res.data);
+        } catch (err: any) {
+            console.error("Preview extraction failed", err);
+            setError(err.response?.data?.message || "Failed to analyze document text.");
+        } finally {
+            setPreviewLoading(false);
+        }
+    };
+
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (resourceType === "KUPPI_NOTES") {
             if (!linkUrl.trim()) { setError("Please enter a valid video link."); return; }
         } else {
             if (!file) { setError("Attach a file to continue."); return; }
         }
-        
+
         setError("");
         setUploading(true);
 
@@ -113,17 +139,110 @@ function UploadResourcePage() {
                                         style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "44px 24px", cursor: "pointer" }}
                                         onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
                                         onDragLeave={() => setDragActive(false)}
-                                        onDrop={(e) => { e.preventDefault(); setDragActive(false); if (e.dataTransfer.files?.[0]) setFile(e.dataTransfer.files[0]); }}
+                                        onDrop={(e) => { e.preventDefault(); setDragActive(false); if (e.dataTransfer.files?.[0]) handleFileChange(e.dataTransfer.files[0]); }}
                                     >
-                                        <input type="file" accept=".pdf,.docx,.pptx,.jpg,.png" onChange={(e) => setFile(e.target.files?.[0] || null)} style={{ display: "none" }} />
+                                        <input type="file" accept=".pdf,.docx,.pptx,.txt" onChange={(e) => handleFileChange(e.target.files?.[0] || null)} style={{ display: "none" }} />
                                         <UploadCloud size={32} color={file ? "#10B981" : dragActive ? "#10B981" : "#9CA3AF"} style={{ marginBottom: 12, transition: "color 0.15s" }} />
                                         <span style={{ fontWeight: 600, fontSize: 14, color: file ? "#10B981" : "#0D1B2A" }}>
-                                            {file ? file.name : "Drop a PDF here, or click to browse"}
+                                            {file ? file.name : "Drop a PDF, DOCX, PPTX, or TXT here, or click to browse"}
                                         </span>
                                         <span style={{ fontSize: 12, color: "#9CA3AF", marginTop: 4 }}>
-                                            {file ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : "Max 50 MB · stored with signed URLs"}
+                                            {file ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : "Max 50 MB · Supported: PDF, DOCX, PPTX, TXT"}
                                         </span>
                                     </label>
+                                </div>
+                            )}
+
+                            {/* AI Extraction & Preprocessing Verification Card */}
+                            {file && resourceType !== "KUPPI_NOTES" && (
+                                <div style={{ marginTop: -12, marginBottom: 24, background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 10, padding: 14 }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                            <Sparkles size={16} color="#10B981" />
+                                            <div>
+                                                <div style={{ fontSize: 13, fontWeight: 600, color: "#0D1B2A" }}>
+                                                    AI Text Extraction & Preprocessing Check
+                                                </div>
+                                                <div style={{ fontSize: 11, color: "#64748B" }}>
+                                                    Test deterministic parsing, cleaning, and chunking (Steps 1 & 2)
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={handlePreviewExtraction}
+                                            disabled={previewLoading}
+                                            style={{
+                                                background: previewLoading ? "#9CA3AF" : "#0D1B2A",
+                                                color: "white",
+                                                border: "none",
+                                                borderRadius: 6,
+                                                padding: "7px 14px",
+                                                fontSize: 12,
+                                                fontWeight: 600,
+                                                cursor: previewLoading ? "not-allowed" : "pointer",
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                                gap: 6,
+                                                transition: "background 0.15s ease"
+                                            }}
+                                            onMouseEnter={(e) => { if (!previewLoading) e.currentTarget.style.background = "#10B981"; }}
+                                            onMouseLeave={(e) => { if (!previewLoading) e.currentTarget.style.background = "#0D1B2A"; }}
+                                        >
+                                            <Sparkles size={13} color="white" />
+                                            {previewLoading ? "Extracting & Cleaning..." : "Test Document Preprocessor"}
+                                        </button>
+                                    </div>
+
+                                    {previewData && (
+                                        <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #E2E8F0", fontSize: 12 }}>
+                                            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
+                                                <span style={{
+                                                    background: previewData.hasSufficientContent ? "#ECFDF5" : "#FEF2F2",
+                                                    color: previewData.hasSufficientContent ? "#059669" : "#DC2626",
+                                                    border: `1px solid ${previewData.hasSufficientContent ? "#A7F3D0" : "#FECACA"}`,
+                                                    padding: "3px 8px",
+                                                    borderRadius: 6,
+                                                    fontWeight: 600
+                                                }}>
+                                                    {previewData.hasSufficientContent ? "✓ Quality: Sufficient" : "⚠ Quality: Insufficient"}
+                                                </span>
+                                                <span style={{ background: "#F1F5F9", color: "#475569", padding: "3px 8px", borderRadius: 6 }}>
+                                                    Pages/Slides: {previewData.pageCount}
+                                                </span>
+                                                <span style={{ background: "#F1F5F9", color: "#475569", padding: "3px 8px", borderRadius: 6 }}>
+                                                    Cleaned Chars: {previewData.cleanedCharacterCount.toLocaleString()}
+                                                </span>
+                                                <span style={{ background: "#F1F5F9", color: "#475569", padding: "3px 8px", borderRadius: 6 }}>
+                                                    Words: {previewData.wordCount.toLocaleString()}
+                                                </span>
+                                                <span style={{ background: "#F1F5F9", color: "#475569", padding: "3px 8px", borderRadius: 6 }}>
+                                                    Chunks: {previewData.chunks.length}
+                                                </span>
+                                            </div>
+                                            <div style={{ color: "#64748B", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+                                                <Info size={14} color="#64748B" />
+                                                <span><strong>Status:</strong> {previewData.statusMessage}</span>
+                                            </div>
+                                            {previewData.cleanedText && (
+                                                <div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowPreviewSnippet(!showPreviewSnippet)}
+                                                        style={{ background: "none", border: "none", color: "#10B981", fontSize: 12, fontWeight: 600, padding: 0, cursor: "pointer", textDecoration: "underline" }}
+                                                    >
+                                                        {showPreviewSnippet ? "Hide Cleaned Text Preview" : "View Cleaned Text Preview"}
+                                                    </button>
+                                                    {showPreviewSnippet && (
+                                                        <div style={{ marginTop: 8, padding: 10, background: "#FFFFFF", border: "1px solid #CBD5E1", borderRadius: 6, maxHeight: 180, overflowY: "auto", fontFamily: "monospace", fontSize: 11, whiteSpace: "pre-wrap", color: "#334155" }}>
+                                                            {previewData.cleanedText.slice(0, 1000)}
+                                                            {previewData.cleanedText.length > 1000 ? "\n\n[... truncated preview ...]" : ""}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
@@ -171,57 +290,46 @@ function UploadResourcePage() {
                                 </div>
                             )}
 
-                            {/* Actions */}
-                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                                <button type="submit" className="btn-primary" disabled={uploading} style={{ padding: "11px 28px", fontSize: 14 }}>
-                                    {uploading ? "Uploading..." : "Publish resource"}
-                                </button>
-                                <button type="button" className="btn-secondary" onClick={() => navigate(`/dashboard/courses/${courseId}`)}>
-                                    Cancel
-                                </button>
-                            </div>
+                            <button
+                                type="submit"
+                                disabled={uploading}
+                                className="btn-primary"
+                                style={{ width: "100%", padding: "14px 20px", fontSize: 15, justifyContent: "center" }}
+                            >
+                                {uploading ? "Publishing resource..." : "Add Resource"}
+                            </button>
                         </form>
                     </div>
                 </div>
 
                 {/* ── RIGHT — PROCESSING PIPELINE ── */}
-                <div style={{ width: 320, flexShrink: 0 }}>
+                <div style={{ width: 340 }}>
                     <div style={{ background: "white", border: "1px solid #E5E7EB", borderRadius: 14, padding: 24 }}>
-                        <div style={{ fontWeight: 700, fontSize: 15, color: "#0D1B2A", marginBottom: 4 }}>Processing pipeline</div>
-                        <div style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 20 }}>
-                            Runs server-side the moment the file stream arrives.
-                        </div>
+                        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", color: "#9CA3AF", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
+                            Automated Processing
+                        </span>
+                        <h2 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 700, color: "#0D1B2A", marginBottom: 6 }}>
+                            What happens next
+                        </h2>
+                        <p style={{ fontSize: 13, color: "#6B7280", lineHeight: 1.5, marginBottom: 24 }}>
+                            Every resource passes through four steps before becoming discoverable.
+                        </p>
 
-                        {pipelineSteps.map(({ Icon, color, bg, title: stepTitle, desc }) => (
-                            <div key={stepTitle} className="pipeline-step">
-                                <div className="pipeline-icon" style={{ background: bg }}>
-                                    <Icon size={15} color={color} />
+                        <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+                            {pipelineSteps.map(({ Icon, color, bg, title: stepTitle, desc }, i) => (
+                                <div key={i} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+                                    <div style={{ width: 36, height: 36, borderRadius: 10, background: bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>
+                                        <Icon size={18} color={color} />
+                                    </div>
+                                    <div>
+                                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                                            <span style={{ fontSize: 11, fontWeight: 700, color: "#9CA3AF" }}>0{i + 1}</span>
+                                            <span style={{ fontSize: 13, fontWeight: 600, color: "#0D1B2A" }}>{stepTitle}</span>
+                                        </div>
+                                        <p style={{ fontSize: 12, color: "#6B7280", lineHeight: 1.4 }}>{desc}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <div style={{ fontWeight: 600, fontSize: 13, color: "#0D1B2A" }}>{stepTitle}</div>
-                                    <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2, lineHeight: 1.5 }}>{desc}</div>
-                                </div>
-                            </div>
-                        ))}
-
-                        {/* Is this an updated version? card */}
-                        <div style={{ marginTop: 20, background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 10, padding: 16 }}>
-                            <div style={{ fontWeight: 700, fontSize: 13, color: "#0D1B2A", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
-                                <GitMerge size={14} color="#F59E0B" />
-                                Is this an updated version?
-                            </div>
-                            <p style={{ fontSize: 12, color: "#78350F", lineHeight: 1.5, marginBottom: 14 }}>
-                                Linking attaches your file to an existing version thread instead of creating a disconnected entry.
-                            </p>
-                            <div style={{ display: "flex", gap: 8 }}>
-                                <button className="btn-primary" style={{ fontSize: 12, padding: "7px 14px" }}>
-                                    <GitMerge size={12} />
-                                    Link as v3
-                                </button>
-                                <button className="btn-secondary" style={{ fontSize: 12, padding: "7px 14px" }}>
-                                    Keep separate
-                                </button>
-                            </div>
+                            ))}
                         </div>
                     </div>
                 </div>

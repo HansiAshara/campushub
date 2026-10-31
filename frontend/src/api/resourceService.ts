@@ -1,5 +1,5 @@
 import client from "./client";
-import { type Resource, type VoteSummary } from "../types";
+import { type Resource, type VoteSummary, type CleanedDocument } from "../types";
 
 export const resourceService = {
     getByCourse: (courseId: string | number) =>
@@ -17,6 +17,14 @@ export const resourceService = {
         formData.append("courseId", courseId);
         formData.append("linkUrl", linkUrl);
         return client.post<Resource>("/resources/link", formData);
+    },
+
+    previewPreprocess: (file: File) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        return client.post<CleanedDocument>("/resources/preview-preprocess", formData, {
+            headers: { "Content-Type": "multipart/form-data" }
+        });
     },
 
     update: (id: number, title: string, resourceType: string) =>
