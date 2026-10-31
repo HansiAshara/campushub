@@ -7,9 +7,11 @@ import com.campushub.backend.entity.User;
 import com.campushub.backend.repository.CourseRepository;
 import com.campushub.backend.repository.ResourceRepository;
 import com.campushub.backend.repository.UserRepository;
+import com.campushub.backend.service.ai.AiService;
 import com.campushub.backend.service.ai.CleanedDocument;
 import com.campushub.backend.service.ai.DocumentTextExtractorService;
 import com.campushub.backend.service.ai.ExtractedDocument;
+import com.campushub.backend.service.ai.ResourceAiResult;
 import com.campushub.backend.service.ai.TextPreprocessorService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,12 +31,14 @@ public class ResourceService {
     private final PermissionService permissionService;
     private final DocumentTextExtractorService documentTextExtractorService;
     private final TextPreprocessorService textPreprocessorService;
+    private final AiService aiService;
 
     public ResourceService(ResourceRepository resourceRepository, CourseRepository courseRepository,
                             UserRepository userRepository, FileStorageService fileStorageService,
                             PermissionService permissionService,
                             DocumentTextExtractorService documentTextExtractorService,
-                            TextPreprocessorService textPreprocessorService) {
+                            TextPreprocessorService textPreprocessorService,
+                            AiService aiService) {
         this.resourceRepository = resourceRepository;
         this.courseRepository = courseRepository;
         this.userRepository = userRepository;
@@ -42,6 +46,7 @@ public class ResourceService {
         this.permissionService = permissionService;
         this.documentTextExtractorService = documentTextExtractorService;
         this.textPreprocessorService = textPreprocessorService;
+        this.aiService = aiService;
     }
 
     private User currentUser() {
@@ -133,8 +138,8 @@ public class ResourceService {
     }
 
     /**
-     * Previews document text extraction and preprocessing for any uploaded file
-     * without modifying database state. Useful for validation, testing, and UI preview.
+     * Previews document text extraction, preprocessing, and AI summary/tags generation
+     * for any uploaded file without modifying database state. Useful for validation and testing.
      */
     public CleanedDocument previewPreprocess(MultipartFile file) {
         if (file == null || file.isEmpty()) {
@@ -143,7 +148,22 @@ public class ResourceService {
         String filename = file.getOriginalFilename();
         try {
             ExtractedDocument extracted = documentTextExtractorService.extract(filename, file.getBytes());
-            return textPreprocessorService.preprocess(extracted);
+            CleanedDocument cleaned = textPreprocessorService.preprocess(extracted);
+            if (cleaned.hasSufficientContent()) {
+                ResourceAiResult aiResult = aiService.generateSummaryAndTags(cleaned, filename, "");
+                return new CleanedDocument(
+                        cleaned.cleanedText(),
+                        cleaned.originalCharacterCount(),
+                        cleaned.cleanedCharacterCount(),
+                        cleaned.wordCount(),
+                        cleaned.pageCount(),
+                        cleaned.chunks(),
+                        cleaned.hasSufficientContent(),
+                        cleaned.statusMessage(),
+                        aiResult
+                );
+            }
+            return cleaned;
         } catch (IOException e) {
             return CleanedDocument.empty("Failed to read file: " + e.getMessage());
         }

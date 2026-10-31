@@ -56,6 +56,11 @@ export interface TextChunk {
     wordCount: number;
 }
 
+export interface ResourceAiResult {
+    summary: string;
+    tags: string[];
+}
+
 export interface CleanedDocument {
     cleanedText: string;
     originalCharacterCount: number;
@@ -65,6 +70,7 @@ export interface CleanedDocument {
     chunks: TextChunk[];
     hasSufficientContent: boolean;
     statusMessage: string;
+    aiResult?: ResourceAiResult;
 }
 
 export interface VoteSummary {

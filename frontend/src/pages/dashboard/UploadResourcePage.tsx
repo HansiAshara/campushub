@@ -224,6 +224,28 @@ function UploadResourcePage() {
                                                 <Info size={14} color="#64748B" />
                                                 <span><strong>Status:</strong> {previewData.statusMessage}</span>
                                             </div>
+
+                                            {/* AI Summary & Topics Preview */}
+                                            {previewData.aiResult && previewData.aiResult.summary && (
+                                                <div style={{ marginTop: 12, marginBottom: 12, padding: 12, background: "#FFFFFF", border: "1px solid #D1FAE5", borderRadius: 8 }}>
+                                                    <div style={{ fontSize: 11, fontWeight: 700, color: "#059669", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
+                                                        Generated AI Summary
+                                                    </div>
+                                                    <p style={{ fontSize: 13, color: "#1F2937", lineHeight: 1.5, margin: 0 }}>
+                                                        {previewData.aiResult.summary}
+                                                    </p>
+                                                    {previewData.aiResult.tags && previewData.aiResult.tags.length > 0 && (
+                                                        <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                                                            <span style={{ fontSize: 11, fontWeight: 600, color: "#6B7280" }}>Tags:</span>
+                                                            {previewData.aiResult.tags.map((t, idx) => (
+                                                                <span key={idx} style={{ background: "#ECFDF5", color: "#047857", border: "1px solid #A7F3D0", padding: "2px 8px", borderRadius: 4, fontSize: 11, fontWeight: 500 }}>
+                                                                    #{t}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
                                             {previewData.cleanedText && (
                                                 <div>
                                                     <button

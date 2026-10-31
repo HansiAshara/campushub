@@ -14,6 +14,7 @@ import java.util.List;
  * @param chunks                 Intelligently split chunks respecting natural paragraph boundaries.
  * @param hasSufficientContent   Whether the text meets the minimum threshold for meaningful AI analysis.
  * @param statusMessage          Diagnostic or warning message regarding document quality.
+ * @param aiResult               Optional preview AI analysis result (summary + tags).
  */
 public record CleanedDocument(
         String cleanedText,
@@ -23,10 +24,23 @@ public record CleanedDocument(
         int pageCount,
         List<TextChunk> chunks,
         boolean hasSufficientContent,
-        String statusMessage
+        String statusMessage,
+        ResourceAiResult aiResult
 ) {
     public static CleanedDocument empty(String reason) {
-        return new CleanedDocument("", 0, 0, 0, 0, List.of(), false, reason);
+        return new CleanedDocument("", 0, 0, 0, 0, List.of(), false, reason, ResourceAiResult.empty());
+    }
+
+    public CleanedDocument(
+            String cleanedText,
+            int originalCharacterCount,
+            int cleanedCharacterCount,
+            int wordCount,
+            int pageCount,
+            List<TextChunk> chunks,
+            boolean hasSufficientContent,
+            String statusMessage
+    ) {
+        this(cleanedText, originalCharacterCount, cleanedCharacterCount, wordCount, pageCount, chunks, hasSufficientContent, statusMessage, ResourceAiResult.empty());
     }
 }
-

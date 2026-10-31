@@ -5,14 +5,14 @@ param(
 $connections = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue
 if ($connections) {
     foreach ($conn in $connections) {
-        $pId = $conn.OwningProcess
-        if ($pId) {
+        $procId = $conn.OwningProcess
+        if ($procId) {
             try {
-                $p = Get-Process -Id $pId -ErrorAction Stop
-                Stop-Process -Id $pId -Force -ErrorAction Stop
-                Write-Host "Killed process $($p.ProcessName) (PID: $pId) on port $Port"
+                $p = Get-Process -Id $procId -ErrorAction Stop
+                Stop-Process -Id $procId -Force -ErrorAction Stop
+                Write-Host "Killed process $($p.ProcessName) (PID: $procId) on port $Port"
             } catch {
-                Write-Warning "Could not stop process PID $pId on port ${Port}: $_"
+                Write-Warning "Could not stop process PID ${procId} on port ${Port}: $_"
             }
         }
     }
