@@ -2,10 +2,19 @@ import client from "./client";
 import { type Resource, type VoteSummary, type CleanedDocument } from "../types";
 
 export const resourceService = {
+    getById: (id: number | string) =>
+        client.get<Resource>(`/resources/${id}`),
+
     getByCourse: (courseId: string | number) =>
         client.get<Resource[]>(`/resources/course/${courseId}`),
 
     getMine: () => client.get<Resource[]>("/resources/mine"),
+
+    getByTag: (tag: string) =>
+        client.get<Resource[]>(`/resources/by-tag?tag=${encodeURIComponent(tag)}`),
+
+    reprocessAi: (id: number | string) =>
+        client.post<Resource>(`/resources/${id}/reprocess-ai`),
 
     upload: (formData: FormData) =>
         client.post<Resource>("/resources", formData, { headers: { "Content-Type": "multipart/form-data" } }),

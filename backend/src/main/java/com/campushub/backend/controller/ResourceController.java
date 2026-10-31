@@ -44,6 +44,16 @@ public class ResourceController {
         return ResponseEntity.ok(resourceService.previewPreprocess(file));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ResourceResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(resourceService.getById(id));
+    }
+
+    @PostMapping("/{id}/reprocess-ai")
+    public ResponseEntity<ResourceResponse> reprocessResourceAi(@PathVariable Long id) {
+        return ResponseEntity.ok(resourceService.reprocessResourceAi(id));
+    }
+
     @GetMapping("/course/{courseId}")
     public ResponseEntity<List<ResourceResponse>> getByCourse(@PathVariable Long courseId) {
         return ResponseEntity.ok(resourceService.getByCourse(courseId));
@@ -52,6 +62,11 @@ public class ResourceController {
     @GetMapping("/mine")
     public ResponseEntity<List<ResourceResponse>> getMine() {
         return ResponseEntity.ok(resourceService.getMine());
+    }
+
+    @GetMapping("/by-tag")
+    public ResponseEntity<List<ResourceResponse>> getByTag(@RequestParam("tag") String tag) {
+        return ResponseEntity.ok(resourceService.getByTag(tag));
     }
 
     @PutMapping("/{id}")

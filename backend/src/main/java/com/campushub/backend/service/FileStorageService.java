@@ -2,6 +2,8 @@ package com.campushub.backend.service;
 
 import com.campushub.backend.config.SupabaseConfig;
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -16,6 +18,8 @@ import java.util.UUID;
 
 @Service
 public class FileStorageService {
+
+    private static final Logger log = LoggerFactory.getLogger(FileStorageService.class);
 
     private final SupabaseConfig supabaseConfig;
     private final RestClient restClient;
@@ -40,7 +44,7 @@ public class FileStorageService {
                     .body(Map.of("public", true))
                     .retrieve()
                     .toBodilessEntity();
-            System.out.println("Supabase storage bucket '" + supabaseConfig.getBucket() + "' verified as public.");
+            log.info("Supabase storage bucket '{}' verified as public.", supabaseConfig.getBucket());
         } catch (Exception e) {
             try {
                 // If bucket does not exist, create it with public: true
@@ -53,9 +57,9 @@ public class FileStorageService {
                         .body(Map.of("id", supabaseConfig.getBucket(), "name", supabaseConfig.getBucket(), "public", true))
                         .retrieve()
                         .toBodilessEntity();
-                System.out.println("Supabase storage bucket '" + supabaseConfig.getBucket() + "' created as public.");
+                log.info("Supabase storage bucket '{}' created as public.", supabaseConfig.getBucket());
             } catch (Exception ex) {
-                System.err.println("Warning: Could not initialize Supabase storage bucket: " + ex.getMessage());
+                log.warn("Could not initialize Supabase storage bucket: {}", ex.getMessage());
             }
         }
     }
@@ -98,6 +102,24 @@ public class FileStorageService {
 
         } catch (IOException e) {
             throw new RuntimeException("Failed to read file bytes", e);
+        }
+    }
+
+    /**
+     * Downloads raw file bytes from storage for background AI reprocessing.
+     */
+    public byte[] downloadFileBytes(String fileUrl) {
+        if (fileUrl == null || fileUrl.isBlank()) {
+            return null;
+        }
+        try {
+            return restClient.get()
+                    .uri(fileUrl)
+                    .retrieve()
+                    .body(byte[].class);
+        } catch (Exception e) {
+            log.error("Failed to download file bytes from URL '{}': {}", fileUrl, e.getMessage());
+            return null;
         }
     }
 }

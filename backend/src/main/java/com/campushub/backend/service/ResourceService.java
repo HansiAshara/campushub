@@ -123,6 +123,13 @@ public class ResourceService {
         return toResponse(saved, uploader);
     }
 
+    public ResourceResponse getById(Long id) {
+        User user = currentUser();
+        Resource resource = resourceRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Resource not found"));
+        return toResponse(resource, user);
+    }
+
     public List<ResourceResponse> getByCourse(Long courseId) {
         User user = currentUser();
         return resourceRepository.findByCourseId(courseId).stream().map(r -> toResponse(r, user)).toList();
@@ -131,6 +138,16 @@ public class ResourceService {
     public List<ResourceResponse> getMine() {
         User user = currentUser();
         return resourceRepository.findByUploadedById(user.getId()).stream().map(r -> toResponse(r, user)).toList();
+    }
+
+    public List<ResourceResponse> getByTag(String tagName) {
+        User user = currentUser();
+        if (tagName == null || tagName.isBlank()) {
+            return List.of();
+        }
+        String normalized = tagName.trim().toLowerCase();
+        return resourceRepository.findByTagNormalizedName(normalized)
+                .stream().map(r -> toResponse(r, user)).toList();
     }
 
     public ResourceResponse updateResource(Long resourceId, String title, String resourceType) {
@@ -156,6 +173,40 @@ public class ResourceService {
         }
 
         resourceRepository.delete(resource);
+    }
+
+    /**
+     * Re-triggers asynchronous AI processing for an existing resource (e.g. if previous attempt failed).
+     */
+    public ResourceResponse reprocessResourceAi(Long resourceId) {
+        User user = currentUser();
+        Resource resource = resourceRepository.findById(resourceId)
+                .orElseThrow(() -> new IllegalArgumentException("Resource not found"));
+
+        if (!permissionService.canEditResource(user, resource)) {
+            throw new AccessDeniedException("You don't have permission to reprocess this resource");
+        }
+
+        if (resource.getFileUrl() == null || resource.getFileUrl().contains("youtube.com") || resource.getFileUrl().contains("youtu.be")) {
+            throw new IllegalArgumentException("Link resources cannot be processed with document AI");
+        }
+
+        byte[] fileBytes = fileStorageService.downloadFileBytes(resource.getFileUrl());
+        if (fileBytes == null || fileBytes.length == 0) {
+            throw new IllegalStateException("Failed to download file content from storage for AI reprocessing");
+        }
+
+        String fileName = resource.getTitle();
+        if (!fileName.contains(".")) {
+            fileName = resource.getFileUrl();
+        }
+
+        resource.setAiStatus(Resource.AiStatus.PENDING);
+        resourceRepository.save(resource);
+
+        resourceAiProcessorService.processResourceAsync(resource.getId(), fileName, fileBytes);
+
+        return toResponse(resource, user);
     }
 
     /**
