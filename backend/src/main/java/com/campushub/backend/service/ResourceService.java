@@ -12,6 +12,7 @@ import com.campushub.backend.service.ai.AiService;
 import com.campushub.backend.service.ai.CleanedDocument;
 import com.campushub.backend.service.ai.DocumentTextExtractorService;
 import com.campushub.backend.service.ai.ExtractedDocument;
+import com.campushub.backend.service.ai.ResourceAiProcessorService;
 import com.campushub.backend.service.ai.ResourceAiResult;
 import com.campushub.backend.service.ai.TextPreprocessorService;
 import org.springframework.security.access.AccessDeniedException;
@@ -34,6 +35,7 @@ public class ResourceService {
     private final TextPreprocessorService textPreprocessorService;
     private final AiService aiService;
     private final TagService tagService;
+    private final ResourceAiProcessorService resourceAiProcessorService;
 
     public ResourceService(ResourceRepository resourceRepository, CourseRepository courseRepository,
                             UserRepository userRepository, FileStorageService fileStorageService,
@@ -41,7 +43,8 @@ public class ResourceService {
                             DocumentTextExtractorService documentTextExtractorService,
                             TextPreprocessorService textPreprocessorService,
                             AiService aiService,
-                            TagService tagService) {
+                            TagService tagService,
+                            ResourceAiProcessorService resourceAiProcessorService) {
         this.resourceRepository = resourceRepository;
         this.courseRepository = courseRepository;
         this.userRepository = userRepository;
@@ -51,6 +54,7 @@ public class ResourceService {
         this.textPreprocessorService = textPreprocessorService;
         this.aiService = aiService;
         this.tagService = tagService;
+        this.resourceAiProcessorService = resourceAiProcessorService;
     }
 
     private User currentUser() {
@@ -69,18 +73,29 @@ public class ResourceService {
             throw new IllegalArgumentException("This exact file has already been uploaded in this module under this category: \"" + existing.getTitle() + "\"");
         });
 
+        byte[] fileBytes;
+        try {
+            fileBytes = file.getBytes();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read file data", e);
+        }
+
         String fileUrl = fileStorageService.uploadFile(file);
 
         Resource resource = new Resource();
         resource.setTitle(title);
         resource.setFileUrl(fileUrl);
         resource.setFileHash(fileHash);
-        resource.setResourceType(Resource.ResourceType.valueOf(resourceType));
+        resource.setResourceType(typeEnum);
         resource.setCourse(course);
         resource.setUploadedBy(uploader);
         resource.setAiStatus(Resource.AiStatus.PENDING);
 
         Resource saved = resourceRepository.save(resource);
+
+        // Non-blocking background AI processing
+        resourceAiProcessorService.processResourceAsync(saved.getId(), file.getOriginalFilename(), fileBytes);
+
         return toResponse(saved, uploader);
     }
 
