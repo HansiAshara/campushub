@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ReactPlayer from "react-player";
 import { type Resource } from "../../../types";
 import StarRating from "./StarRating";
@@ -9,7 +9,22 @@ import Input from "../../ui/Input";
 import { resourceService } from "../../../api/resourceService";
 import { formatDate } from "../../../utils/dateUtils";
 import { formatCategory } from "../../../utils/formatUtils";
-import { FileText, MessageCircle, Edit2, Trash2, ExternalLink, Eye, Download, Loader2 } from "lucide-react";
+import {
+    FileText,
+    MessageCircle,
+    Edit2,
+    Trash2,
+    ExternalLink,
+    Eye,
+    Download,
+    Loader2,
+    Sparkles,
+    RefreshCw,
+    AlertCircle,
+    Tag as TagIcon,
+    ChevronDown,
+    ChevronUp
+} from "lucide-react";
 
 interface Props {
     resource: Resource;
@@ -17,6 +32,8 @@ interface Props {
     selectable?: boolean;
     selected?: boolean;
     onToggleSelect?: () => void;
+    onTagClick?: (tag: string) => void;
+    activeTag?: string | null;
 }
 
 const RESOURCE_TYPE_STYLE: Record<string, { label: string; className: string }> = {
@@ -41,7 +58,8 @@ function getResourceFileName(fileUrl?: string, title?: string): string {
     }
 }
 
-function ResourceItem({ resource, onChanged, selectable, selected, onToggleSelect }: Props) {
+function ResourceItem({ resource, onChanged, selectable, selected, onToggleSelect, onTagClick, activeTag }: Props) {
+    const [item, setItem] = useState<Resource>(resource);
     const [expanded, setExpanded] = useState(false);
     const [editing, setEditing] = useState(false);
     const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -49,28 +67,73 @@ function ResourceItem({ resource, onChanged, selectable, selected, onToggleSelec
     const [resourceType, setResourceType] = useState(resource.resourceType);
     const [saving, setSaving] = useState(false);
     const [downloading, setDownloading] = useState(false);
+    const [retryingAi, setRetryingAi] = useState(false);
+    const [showFullSummary, setShowFullSummary] = useState(false);
+
+    // Keep item in sync with incoming props
+    useEffect(() => {
+        setItem(resource);
+        setTitle(resource.title);
+        setResourceType(resource.resourceType);
+    }, [resource]);
+
+    // Polling when AI status is PENDING or PROCESSING
+    useEffect(() => {
+        if (item.aiStatus !== "PENDING" && item.aiStatus !== "PROCESSING") return;
+
+        const interval = setInterval(async () => {
+            try {
+                const res = await resourceService.getById(item.id);
+                if (res.data) {
+                    setItem(res.data);
+                    if (res.data.aiStatus !== "PENDING" && res.data.aiStatus !== "PROCESSING") {
+                        onChanged();
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to poll AI status:", err);
+            }
+        }, 3500);
+
+        return () => clearInterval(interval);
+    }, [item.id, item.aiStatus, onChanged]);
+
+    const handleRetryAi = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setRetryingAi(true);
+        try {
+            const res = await resourceService.reprocessAi(item.id);
+            if (res.data) {
+                setItem(res.data);
+            }
+        } catch (err) {
+            console.error("Failed to retry AI processing:", err);
+        } finally {
+            setRetryingAi(false);
+        }
+    };
 
     const currentUserId = localStorage.getItem("userId");
     const currentUserName = localStorage.getItem("userName");
-    //const currentRole = localStorage.getItem("role");
 
     // Match ownership by userId or userName
     const isOwner = Boolean(
-        (currentUserId && String(resource.uploadedById) === String(currentUserId)) ||
-        (currentUserName && resource.uploadedByName && (
-            resource.uploadedByName.trim().toLowerCase() === currentUserName.trim().toLowerCase() ||
-            resource.uploadedByName.trim().toLowerCase().startsWith(currentUserName.trim().toLowerCase()) ||
-            currentUserName.trim().toLowerCase().startsWith(resource.uploadedByName.trim().toLowerCase())
+        (currentUserId && String(item.uploadedById) === String(currentUserId)) ||
+        (currentUserName && item.uploadedByName && (
+            item.uploadedByName.trim().toLowerCase() === currentUserName.trim().toLowerCase() ||
+            item.uploadedByName.trim().toLowerCase().startsWith(currentUserName.trim().toLowerCase()) ||
+            currentUserName.trim().toLowerCase().startsWith(item.uploadedByName.trim().toLowerCase())
         ))
     );
 
     // The backend evaluates permissions (Uploader, Coordinator, Admin) and returns canEdit = true
-    const canModify = Boolean(resource.canEdit);
+    const canModify = Boolean(item.canEdit);
 
     const saveEdit = async () => {
         setSaving(true);
         try {
-            await resourceService.update(resource.id, title, resourceType);
+            await resourceService.update(item.id, title, resourceType);
             setEditing(false);
             onChanged();
         } finally {
@@ -79,21 +142,21 @@ function ResourceItem({ resource, onChanged, selectable, selected, onToggleSelec
     };
 
     const confirmDelete = async () => {
-        await resourceService.remove(resource.id);
+        await resourceService.remove(item.id);
         setConfirmingDelete(false);
         onChanged();
     };
 
-    const fileName = getResourceFileName(resource.fileUrl, resource.title);
+    const fileName = getResourceFileName(item.fileUrl, item.title);
 
     const handleDownload = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        if (!resource.fileUrl) return;
+        if (!item.fileUrl) return;
 
         setDownloading(true);
         try {
-            const response = await fetch(resource.fileUrl);
+            const response = await fetch(item.fileUrl);
             if (!response.ok) throw new Error(`Fetch error: ${response.status}`);
             const blob = await response.blob();
             const blobUrl = window.URL.createObjectURL(blob);
@@ -107,7 +170,7 @@ function ResourceItem({ resource, onChanged, selectable, selected, onToggleSelec
         } catch (err) {
             console.warn("Direct blob download failed, falling back to anchor trigger:", err);
             const link = document.createElement("a");
-            link.href = resource.fileUrl;
+            link.href = item.fileUrl;
             link.download = fileName;
             link.target = "_blank";
             link.rel = "noopener noreferrer";
@@ -119,7 +182,7 @@ function ResourceItem({ resource, onChanged, selectable, selected, onToggleSelec
         }
     };
 
-    const typeInfo = RESOURCE_TYPE_STYLE[resource.resourceType] || { label: formatCategory(resource.resourceType), className: "" };
+    const typeInfo = RESOURCE_TYPE_STYLE[item.resourceType] || { label: formatCategory(item.resourceType), className: "" };
 
     return (
         <div className="resource-card fade-in" style={{ padding: 0, overflow: "hidden" }}>
@@ -136,23 +199,48 @@ function ResourceItem({ resource, onChanged, selectable, selected, onToggleSelec
                     </div>
                 )}
 
-
-
                 {/* Main content */}
                 <div style={{ flex: 1, padding: "18px 22px" }}>
                     {/* Header Row: Badges & Action Buttons */}
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 10, flexWrap: "wrap" }}>
                         {/* Badge row */}
                         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                            <span className="course-badge">{resource.courseName?.split(" ")[0] || "COURSE"}</span>
+                            <span className="course-badge">{item.courseName?.split(" ")[0] || "COURSE"}</span>
                             <span className={`type-badge ${typeInfo.className}`}>{typeInfo.label.toUpperCase()}</span>
+
+                            {/* AI Processing Status Badges */}
+                            {(item.aiStatus === "PENDING" || item.aiStatus === "PROCESSING") && (
+                                <span className="ai-status-pill pending" title="AI background processing in progress">
+                                    <Sparkles size={11} className="spin-animation" />
+                                    <span>AI analyzing document...</span>
+                                </span>
+                            )}
+
+                            {item.aiStatus === "FAILED" && (
+                                <div style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                                    <span className="ai-status-pill failed" title="Document analysis was not completed">
+                                        <AlertCircle size={11} />
+                                        <span>AI summary unavailable</span>
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={handleRetryAi}
+                                        disabled={retryingAi}
+                                        className="ai-retry-btn"
+                                        title="Retry AI extraction and summary"
+                                    >
+                                        <RefreshCw size={10} className={retryingAi ? "spin-animation" : ""} />
+                                        <span>{retryingAi ? "Retrying..." : "Retry AI"}</span>
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         {/* Visible & User-Friendly View & Download Action Buttons */}
-                        {resource.fileUrl && (
+                        {item.fileUrl && (
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                 <a
-                                    href={resource.fileUrl}
+                                    href={item.fileUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="btn-view-resource"
@@ -161,7 +249,7 @@ function ResourceItem({ resource, onChanged, selectable, selected, onToggleSelec
                                     <Eye size={15} />
                                     <span>View</span>
                                 </a>
-                                {resource.resourceType !== "KUPPI_NOTES" && (
+                                {item.resourceType !== "KUPPI_NOTES" && (
                                     <button
                                         type="button"
                                         onClick={handleDownload}
@@ -189,7 +277,7 @@ function ResourceItem({ resource, onChanged, selectable, selected, onToggleSelec
                     {/* Title and Rating */}
                     <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", marginTop: 4 }}>
                         <a
-                            href={resource.fileUrl}
+                            href={item.fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 700, fontSize: 16, color: "#0D1B2A", transition: "color 0.12s", textDecoration: "none", fontFamily: "var(--font-display)" }}
@@ -197,31 +285,82 @@ function ResourceItem({ resource, onChanged, selectable, selected, onToggleSelec
                             onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "#0D1B2A")}
                             title="Open resource"
                         >
-                            {resource.title}
+                            {item.title}
                             <ExternalLink size={13} color="#9CA3AF" />
                         </a>
-                        <StarRating resourceId={resource.id} />
+                        <StarRating resourceId={item.id} />
                     </div>
 
-                    {/* AI Summary */}
-                    {resource.summary && (
-                        <p style={{ fontSize: 13, color: "#4B5563", lineHeight: 1.6, marginTop: 8, maxWidth: 680 }}>
-                            ✨ {resource.summary}
-                        </p>
+                    {/* AI Summary Box */}
+                    {item.summary && (
+                        <div className="ai-summary-container">
+                            <div className="ai-summary-header">
+                                <div className="ai-summary-label">
+                                    <Sparkles size={12} color="#10B981" />
+                                    <span>AI Summary</span>
+                                </div>
+                                {item.summary.length > 220 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowFullSummary(!showFullSummary)}
+                                        style={{
+                                            background: "none",
+                                            border: "none",
+                                            fontSize: 11,
+                                            fontWeight: 600,
+                                            color: "#047857",
+                                            cursor: "pointer",
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            gap: 2,
+                                        }}
+                                    >
+                                        <span>{showFullSummary ? "Show less" : "Read more"}</span>
+                                        {showFullSummary ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                                    </button>
+                                )}
+                            </div>
+                            <p className="ai-summary-text">
+                                {showFullSummary || item.summary.length <= 220
+                                    ? item.summary
+                                    : `${item.summary.slice(0, 215)}...`}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* AI Generated Topic Tags */}
+                    {item.tags && item.tags.length > 0 && (
+                        <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
+                            {item.tags.map((tag) => {
+                                const isSelected = activeTag?.toLowerCase() === tag.toLowerCase();
+                                return (
+                                    <button
+                                        key={tag}
+                                        type="button"
+                                        onClick={() => onTagClick?.(tag)}
+                                        className={`tag-pill ${isSelected ? "active" : ""}`}
+                                        title={`Filter by topic: #${tag}`}
+                                    >
+                                        <TagIcon size={10} />
+                                        <span>#{tag}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
                     )}
 
                     {/* Embedded Video Player */}
-                    {resource.resourceType === "KUPPI_NOTES" && resource.fileUrl && (
+                    {item.resourceType === "KUPPI_NOTES" && item.fileUrl && (
                         <div style={{ marginTop: 16, borderRadius: 12, overflow: 'hidden', border: '1px solid #E5E7EB', background: '#000' }}>
                             {/* @ts-ignore */}
-                            <ReactPlayer url={resource.fileUrl} width="100%" height="320px" controls light />
+                            <ReactPlayer url={item.fileUrl} width="100%" height="320px" controls light />
                         </div>
                     )}
 
                     {/* Meta row */}
                     <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 12, flexWrap: "wrap" }}>
                         <a
-                            href={resource.fileUrl}
+                            href={item.fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, color: "#4B5563", textDecoration: "none", transition: "color 0.12s", background: "#F9FAFB", border: "1px solid #E5E7EB", padding: "3px 8px", borderRadius: 6 }}
@@ -267,20 +406,20 @@ function ResourceItem({ resource, onChanged, selectable, selected, onToggleSelec
                         </button>
 
                         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#6B7280", flexWrap: "wrap" }}>
-                            <span style={{ fontWeight: 500, color: "#374151" }}>{resource.uploadedByName}</span>
+                            <span style={{ fontWeight: 500, color: "#374151" }}>{item.uploadedByName}</span>
                             {isOwner && (
                                 <span className="badge-my-upload" title="You uploaded this resource">You</span>
                             )}
                             <span>·</span>
-                            <span>{formatDate(resource.createdAt)}</span>
+                            <span>{formatDate(item.createdAt)}</span>
 
                             {canModify && (
                                 <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginLeft: 6 }}>
                                     <button
                                         type="button"
                                         onClick={() => {
-                                            setTitle(resource.title);
-                                            setResourceType(resource.resourceType);
+                                            setTitle(item.title);
+                                            setResourceType(item.resourceType);
                                             setEditing(true);
                                         }}
                                         className="btn-resource-edit"
@@ -308,7 +447,7 @@ function ResourceItem({ resource, onChanged, selectable, selected, onToggleSelec
             {/* Comment section */}
             {expanded && (
                 <div style={{ borderTop: "1px solid #F3F4F6", padding: "16px 22px 16px 78px", background: "#FAFAFA" }}>
-                    <CommentSection resourceId={resource.id} />
+                    <CommentSection resourceId={item.id} />
                 </div>
             )}
 
@@ -359,7 +498,7 @@ function ResourceItem({ resource, onChanged, selectable, selected, onToggleSelec
             {/* Delete Modal */}
             <Modal open={confirmingDelete} onClose={() => setConfirmingDelete(false)} title="Delete Resource">
                 <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.6 }}>
-                    Are you sure you want to delete <strong>"{resource.title}"</strong>? This action cannot be undone.
+                    Are you sure you want to delete <strong>"{item.title}"</strong>? This action cannot be undone.
                 </p>
                 <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 24 }}>
                     <button className="btn-secondary" onClick={() => setConfirmingDelete(false)}>Cancel</button>

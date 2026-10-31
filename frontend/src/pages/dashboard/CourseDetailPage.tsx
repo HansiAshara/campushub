@@ -5,7 +5,7 @@ import ResourceItem from "../../components/features/resources/ResourceItem";
 import { resourceService } from "../../api/resourceService";
 import { CoordinatorOwnBanner, StudentCoordinatorInfo } from "../../components/features/courses/CoordinatorBanner";
 import { CourseQueriesList } from "../../components/features/courses/CourseQueriesList";
-import { Filter, Upload, ArrowLeft, FileText, Users, Clock, CheckSquare, Square, Trash2, ListChecks, Database, MessageSquare } from "lucide-react";
+import { Filter, Upload, ArrowLeft, FileText, Users, Clock, CheckSquare, Square, Trash2, ListChecks, Database, MessageSquare, Tag as TagIcon, X } from "lucide-react";
 import { latestDate } from "../../utils/dateUtils";
 
 const RESOURCE_TYPES = [
@@ -20,6 +20,7 @@ const RESOURCE_TYPES = [
 function CourseDetailPage() {
     const { courseId } = useParams();
     const [category, setCategory] = useState("ALL");
+    const [selectedTag, setSelectedTag] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<"RESOURCES" | "QUERIES">("RESOURCES");
     const { resources, loading, refetch } = useResourcesByCourse(courseId);
 
@@ -33,7 +34,11 @@ function CourseDetailPage() {
         }
     }, [courseId]);
 
-    const filtered = category === "ALL" ? resources : resources.filter((r) => r.resourceType === category);
+    const availableTags = Array.from(new Set(resources.flatMap((r) => r.tags || []))).sort();
+
+    const filtered = resources
+        .filter((r) => category === "ALL" || r.resourceType === category)
+        .filter((r) => !selectedTag || r.tags?.some((t) => t.toLowerCase() === selectedTag.toLowerCase()));
     const contributors = new Set(resources.map((r) => r.uploadedByName)).size;
     const courseName = course?.name || resources[0]?.courseName || "Course";
     const role = localStorage.getItem("role") || "STUDENT";
@@ -173,6 +178,40 @@ function CourseDetailPage() {
                                 </div>
                             </div>
 
+                            {/* Topic Tags Section */}
+                            {availableTags.length > 0 && (
+                                <div style={{ marginBottom: 20 }}>
+                                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "#9CA3AF", textTransform: "uppercase", marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                        <span>Topic Tags</span>
+                                        {selectedTag && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedTag(null)}
+                                                style={{ background: "none", border: "none", fontSize: 11, color: "#10B981", fontWeight: 600, cursor: "pointer", padding: 0 }}
+                                            >
+                                                Clear
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div style={{ display: "flex", flexWrap: "wrap", gap: 5, maxHeight: 160, overflowY: "auto" }}>
+                                        {availableTags.map((tag) => {
+                                            const isSelected = selectedTag?.toLowerCase() === tag.toLowerCase();
+                                            return (
+                                                <button
+                                                    key={tag}
+                                                    type="button"
+                                                    onClick={() => setSelectedTag(isSelected ? null : tag)}
+                                                    className={`tag-pill ${isSelected ? "active" : ""}`}
+                                                    style={{ fontSize: 10, padding: "2px 7px" }}
+                                                >
+                                                    #{tag}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Stats */}
                             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 20, paddingTop: 16, borderTop: "1px solid #F3F4F6" }}>
                                 {[
@@ -274,6 +313,26 @@ function CourseDetailPage() {
                             </div>
                         )}
 
+                        {/* Active Tag Filter Banner */}
+                        {selectedTag && (
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#ECFDF5", border: "1px solid #A7F3D0", borderRadius: 10, padding: "10px 16px", marginBottom: 16 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                    <TagIcon size={14} color="#047857" />
+                                    <span style={{ fontSize: 13, color: "#065F46" }}>
+                                        Filtered by topic: <strong>#{selectedTag}</strong>
+                                    </span>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedTag(null)}
+                                    style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "white", border: "1px solid #A7F3D0", borderRadius: 6, padding: "4px 10px", fontSize: 12, fontWeight: 600, color: "#047857", cursor: "pointer" }}
+                                >
+                                    <X size={12} />
+                                    <span>Clear topic filter</span>
+                                </button>
+                            </div>
+                        )}
+
                         {/* Resources */}
                         {loading ? (
                             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -296,6 +355,8 @@ function CourseDetailPage() {
                                             selectable={isSelectionMode}
                                             selected={selectedIds.has(r.id)}
                                             onToggleSelect={() => toggleSelect(r.id)}
+                                            onTagClick={(tag) => setSelectedTag(selectedTag?.toLowerCase() === tag.toLowerCase() ? null : tag)}
+                                            activeTag={selectedTag}
                                         />
                                     </div>
                                 ))}

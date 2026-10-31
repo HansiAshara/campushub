@@ -524,3 +524,131 @@ textarea::-webkit-scrollbar-thumb:hover {
 .fade-in {
   animation: fadeSlideIn 0.3s ease both;
 }
+
+/* ===================== */
+/*   AI ENHANCEMENTS     */
+/* ===================== */
+.ai-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.ai-status-pill.pending {
+  background: #ECFDF5;
+  color: #047857;
+  border: 1px solid #A7F3D0;
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+
+.ai-status-pill.failed {
+  background: #FEF2F2;
+  color: #B91C1C;
+  border: 1px solid #FECACA;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(0.98);
+  }
+}
+
+.ai-retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #B91C1C;
+  background: #FEE2E2;
+  border: 1px solid #FCA5A5;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ai-retry-btn:hover:not(:disabled) {
+  background: #FECACA;
+  border-color: #F87171;
+  color: #991B1B;
+}
+
+.ai-retry-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ai-summary-container {
+  margin-top: 10px;
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-left: 3px solid #10B981;
+  border-radius: 8px;
+  padding: 10px 14px;
+  transition: all 0.2s ease;
+}
+
+.ai-summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.ai-summary-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #047857;
+}
+
+.ai-summary-text {
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #ECFDF5;
+  color: #047857;
+  border: 1px solid #A7F3D0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.tag-pill:hover {
+  background: #D1FAE5;
+  border-color: #6EE7B7;
+  color: #065F46;
+  transform: translateY(-1px);
+}
+
+.tag-pill.active {
+  background: #047857;
+  color: #FFFFFF;
+  border-color: #047857;
+}
