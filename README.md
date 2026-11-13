@@ -1,6 +1,7 @@
 # CampusHub
 
 **Smart Academic Resource Sharing Platform for University Students**
+[![XERJ Corpus Hub contributor](https://hub.xerj.org/contributors/HansiAshara/badge.svg)](https://hub.xerj.org/contributors/HansiAshara)
 
 CampusHub is a full-stack web platform that replaces the informal "shared Drive folder" workflow used across university batches with a structured, searchable, AI-assisted resource hub for notes, past papers, tutorials, and peer-led revision sessions (**kuppi**).
 
