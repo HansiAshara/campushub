@@ -33,5 +33,19 @@ public class DatabaseConstraintFixer implements CommandLineRunner {
         } catch (Exception e) {
             System.err.println("Warning: Could not update resources_resource_type_check constraint: " + e.getMessage());
         }
+
+        try {
+            // Setup pgvector extension and 768-dimensional embedding column (Phase 2: Semantic Intelligence)
+            jdbcTemplate.execute("CREATE EXTENSION IF NOT EXISTS vector");
+            jdbcTemplate.execute("ALTER TABLE resources ADD COLUMN IF NOT EXISTS embedding vector(768)");
+            try {
+                jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_resources_embedding ON resources USING hnsw (embedding vector_cosine_ops)");
+            } catch (Exception idxEx) {
+                // If table is newly created or HNSW parameter needs tuning, continue without blocking
+                System.out.println("Notice: HNSW vector index: " + idxEx.getMessage());
+            }
+        } catch (Exception e) {
+            System.err.println("Warning: Could not initialize pgvector extension or embedding column: " + e.getMessage());
+        }
     }
 }
