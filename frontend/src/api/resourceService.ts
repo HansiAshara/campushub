@@ -16,6 +16,14 @@ export const resourceService = {
     reprocessAi: (id: number | string) =>
         client.post<Resource>(`/resources/${id}/reprocess-ai`),
 
+    semanticSearch: (courseId?: string | number, query: string = "", minSimilarity: number = 0.20) =>
+        client.get<Resource[]>(`/resources/search/semantic`, {
+            params: { courseId, query, minSimilarity }
+        }),
+
+    getSimilar: (resourceId: string | number) =>
+        client.get<Resource[]>(`/resources/${resourceId}/similar`),
+
     upload: (formData: FormData) =>
         client.post<Resource>("/resources", formData, { headers: { "Content-Type": "multipart/form-data" } }),
 
