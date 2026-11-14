@@ -208,6 +208,29 @@ function ResourceItem({ resource, onChanged, selectable, selected, onToggleSelec
                             <span className="course-badge">{item.courseName?.split(" ")[0] || "COURSE"}</span>
                             <span className={`type-badge ${typeInfo.className}`}>{typeInfo.label.toUpperCase()}</span>
 
+                            {/* Semantic Search Match Score */}
+                            {typeof item.similarityScore === "number" && (
+                                <span
+                                    style={{
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        gap: 4,
+                                        padding: "2px 8px",
+                                        borderRadius: 6,
+                                        fontSize: 11,
+                                        fontWeight: 700,
+                                        background: "#ECFDF5",
+                                        color: "#047857",
+                                        border: "1px solid #A7F3D0",
+                                        letterSpacing: "0.02em"
+                                    }}
+                                    title={`AI Semantic relevance match: ${(item.similarityScore * 100).toFixed(1)}%`}
+                                >
+                                    <Sparkles size={11} color="#10B981" />
+                                    <span>{Math.round(item.similarityScore * 100)}% Match</span>
+                                </span>
+                            )}
+
                             {/* AI Processing Status Badges */}
                             {(item.aiStatus === "PENDING" || item.aiStatus === "PROCESSING") && (
                                 <span className="ai-status-pill pending" title="AI background processing in progress">
