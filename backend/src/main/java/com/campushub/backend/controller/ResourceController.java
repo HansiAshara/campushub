@@ -44,6 +44,22 @@ public class ResourceController {
         return ResponseEntity.ok(resourceService.previewPreprocess(file));
     }
 
+    @GetMapping("/search/semantic")
+    public ResponseEntity<List<ResourceResponse>> semanticSearch(
+            @RequestParam(required = false) Long courseId,
+            @RequestParam("query") String query,
+            @RequestParam(required = false, defaultValue = "0.20") Double minSimilarity,
+            @RequestParam(required = false, defaultValue = "15") Integer limit) {
+        return ResponseEntity.ok(resourceService.semanticSearch(courseId, query, minSimilarity, limit));
+    }
+
+    @GetMapping("/{id}/similar")
+    public ResponseEntity<List<ResourceResponse>> getSimilarResources(
+            @PathVariable Long id,
+            @RequestParam(required = false, defaultValue = "3") Integer limit) {
+        return ResponseEntity.ok(resourceService.findSimilarResources(id, limit));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ResourceResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(resourceService.getById(id));
