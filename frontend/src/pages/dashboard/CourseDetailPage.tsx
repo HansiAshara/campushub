@@ -3,9 +3,28 @@ import { useParams, Link } from "react-router-dom";
 import { useResourcesByCourse } from "../../hooks/useResources";
 import ResourceItem from "../../components/features/resources/ResourceItem";
 import { resourceService } from "../../api/resourceService";
+import { courseService } from "../../api/courseService";
 import { CoordinatorOwnBanner, StudentCoordinatorInfo } from "../../components/features/courses/CoordinatorBanner";
 import { CourseQueriesList } from "../../components/features/courses/CourseQueriesList";
-import { Filter, Upload, ArrowLeft, FileText, Users, Clock, CheckSquare, Square, Trash2, ListChecks, Database, MessageSquare, Tag as TagIcon, X } from "lucide-react";
+import { type Course, type Resource } from "../../types";
+import {
+    Filter,
+    Upload,
+    ArrowLeft,
+    FileText,
+    Users,
+    Clock,
+    CheckSquare,
+    Square,
+    Trash2,
+    ListChecks,
+    Database,
+    MessageSquare,
+    Tag as TagIcon,
+    X,
+    Sparkles,
+    Loader2
+} from "lucide-react";
 import { latestDate } from "../../utils/dateUtils";
 
 const RESOURCE_TYPES = [
@@ -21,31 +40,59 @@ function CourseDetailPage() {
     const { courseId } = useParams();
     const [category, setCategory] = useState("ALL");
     const [selectedTag, setSelectedTag] = useState<string | null>(null);
+    const [semanticQuery, setSemanticQuery] = useState("");
+    const [semanticResults, setSemanticResults] = useState<Resource[] | null>(null);
+    const [isSearchingSemantic, setIsSearchingSemantic] = useState(false);
     const [activeTab, setActiveTab] = useState<"RESOURCES" | "QUERIES">("RESOURCES");
     const { resources, loading, refetch } = useResourcesByCourse(courseId);
 
-    const [course, setCourse] = useState<any>(null);
+    const [course, setCourse] = useState<Course | null>(null);
 
     useEffect(() => {
         if (courseId) {
-            import("../../api/courseService").then(({ courseService }) => {
-                courseService.getById(courseId).then(res => setCourse(res.data)).catch(console.error);
-            });
+            courseService.getById(courseId)
+                .then((res) => setCourse(res.data))
+                .catch(console.error);
         }
     }, [courseId]);
+
+    const handleSemanticSearch = async (queryText: string) => {
+        setSemanticQuery(queryText);
+        if (!queryText.trim()) {
+            setSemanticResults(null);
+            return;
+        }
+
+        setIsSearchingSemantic(true);
+        try {
+            const res = await resourceService.semanticSearch(courseId, queryText.trim(), 0.15);
+            setSemanticResults(res.data);
+        } catch (err) {
+            console.error("Semantic search failed:", err);
+        } finally {
+            setIsSearchingSemantic(false);
+        }
+    };
+
+    const clearSemanticSearch = () => {
+        setSemanticQuery("");
+        setSemanticResults(null);
+    };
 
     const availableTags = Array.from(new Set(resources.flatMap((r) => r.tags || []))).sort();
 
     const filtered = resources
         .filter((r) => category === "ALL" || r.resourceType === category)
         .filter((r) => !selectedTag || r.tags?.some((t) => t.toLowerCase() === selectedTag.toLowerCase()));
+
+    const displayedResources = semanticResults !== null ? semanticResults : filtered;
     const contributors = new Set(resources.map((r) => r.uploadedByName)).size;
     const courseName = course?.name || resources[0]?.courseName || "Course";
     const role = localStorage.getItem("role") || "STUDENT";
     const userName = localStorage.getItem("userName") || "";
     const userIndexNo = localStorage.getItem("indexNo") || "";
-    const isCoordinator = role === "MODULE_COORDINATOR" && course?.canManage;
-    const canManageResources = course?.canManage || role === "BATCH_LEADER" || role === "ADMIN";
+    const isCoordinator = role === "MODULE_COORDINATOR" && Boolean(course?.canManage);
+    const canManageResources = Boolean(course?.canManage) || role === "BATCH_LEADER" || role === "ADMIN";
 
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -55,7 +102,7 @@ function CourseDetailPage() {
         if (selectedIds.size === filtered.length) {
             setSelectedIds(new Set());
         } else {
-            setSelectedIds(new Set(filtered.map(r => r.id)));
+            setSelectedIds(new Set(filtered.map((r) => r.id)));
         }
     };
 
@@ -72,7 +119,7 @@ function CourseDetailPage() {
 
         setBulkDeleting(true);
         try {
-            await Promise.all(Array.from(selectedIds).map(id => resourceService.remove(id)));
+            await Promise.all(Array.from(selectedIds).map((id) => resourceService.remove(id)));
             setSelectedIds(new Set());
             setIsSelectionMode(false);
             refetch();
@@ -104,269 +151,316 @@ function CourseDetailPage() {
                 <CoordinatorOwnBanner
                     courseCode={course.code}
                     courseName={course.name}
-                    userName={userName}
                     userIndexNo={userIndexNo}
+                    userName={userName}
                 />
             )}
 
-            {/* Module coordinator info — shown to all non-coordinator users when a coordinator is assigned */}
-            {!isCoordinator && course?.moderatorName && (
+                {/* Student info banner — shown to everyone EXCEPT the coordinator */ }
+            {!isCoordinator && course && course.moderatorName && (
                 <StudentCoordinatorInfo
                     moderatorName={course.moderatorName}
                     moderatorIndexNo={course.moderatorIndexNo}
                 />
             )}
 
-            {/* Tabs for Coordinators */}
-            {isCoordinator && (
-                <div style={{ display: "flex", gap: 32, marginBottom: 24, borderBottom: "1px solid #E5E7EB" }}>
-                    <button
-                        onClick={() => setActiveTab("RESOURCES")}
-                        style={{
-                            background: "none", border: "none", padding: "0 0 12px",
-                            fontSize: 15, fontWeight: 700, cursor: "pointer",
-                            color: activeTab === "RESOURCES" ? "#10B981" : "#6B7280",
-                            borderBottom: activeTab === "RESOURCES" ? "2px solid #10B981" : "2px solid transparent",
-                            display: "flex", alignItems: "center", gap: 8
-                        }}
-                    >
-                        <Database size={16} />
-                        Resources
-                    </button>
-                    <button
-                        onClick={() => setActiveTab("QUERIES")}
-                        style={{
-                            background: "none", border: "none", padding: "0 0 12px",
-                            fontSize: 15, fontWeight: 700, cursor: "pointer",
-                            color: activeTab === "QUERIES" ? "#10B981" : "#6B7280",
-                            borderBottom: activeTab === "QUERIES" ? "2px solid #10B981" : "2px solid transparent",
-                            display: "flex", alignItems: "center", gap: 8
-                        }}
-                    >
-                        <MessageSquare size={16} />
-                        Student Queries
-                    </button>
-                </div>
-            )}
+                    {/* Tab Navigation if user can manage queries */}
+                    {canManageResources && (
+                        <div style={{ display: "flex", gap: 24, borderBottom: "1px solid #E5E7EB", marginBottom: 24 }}>
+                            <button
+                                onClick={() => setActiveTab("RESOURCES")}
+                                style={{
+                                    background: "none", border: "none", padding: "0 0 12px",
+                                    fontSize: 15, fontWeight: 700, cursor: "pointer",
+                                    color: activeTab === "RESOURCES" ? "#10B981" : "#6B7280",
+                                    borderBottom: activeTab === "RESOURCES" ? "2px solid #10B981" : "2px solid transparent",
+                                    display: "flex", alignItems: "center", gap: 8
+                                }}
+                            >
+                                <Database size={16} />
+                                Resources
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("QUERIES")}
+                                style={{
+                                    background: "none", border: "none", padding: "0 0 12px",
+                                    fontSize: 15, fontWeight: 700, cursor: "pointer",
+                                    color: activeTab === "QUERIES" ? "#10B981" : "#6B7280",
+                                    borderBottom: activeTab === "QUERIES" ? "2px solid #10B981" : "2px solid transparent",
+                                    display: "flex", alignItems: "center", gap: 8
+                                }}
+                            >
+                                <MessageSquare size={16} />
+                                Student Queries
+                            </button>
+                        </div>
+                    )}
 
-            {activeTab === "QUERIES" ? (
-                <CourseQueriesList courseId={Number(courseId)} />
-            ) : (
-                <div style={{ display: "flex", gap: 32 }}>
-                    {/* ── LEFT FILTER SIDEBAR ── */}
-                    <aside style={{ width: 220, flexShrink: 0 }}>
-                        <div style={{ background: "white", border: "1px solid #E5E7EB", borderRadius: 14, padding: 20, position: "sticky", top: 80 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-                                <Filter size={15} color="#10B981" />
-                                <span style={{ fontSize: 14, fontWeight: 700, color: "#0D1B2A" }}>Scope</span>
-                            </div>
+                    {activeTab === "QUERIES" ? (
+                        <CourseQueriesList courseId={Number(courseId)} />
+                    ) : (
+                        <div style={{ display: "flex", gap: 32 }}>
+                            {/* ── LEFT FILTER SIDEBAR ── */}
+                            <aside style={{ width: 220, flexShrink: 0 }}>
+                                <div style={{ background: "white", border: "1px solid #E5E7EB", borderRadius: 14, padding: 20, position: "sticky", top: 80 }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
+                                        <Filter size={15} color="#10B981" />
+                                        <span style={{ fontSize: 14, fontWeight: 700, color: "#0D1B2A" }}>Scope</span>
+                                    </div>
 
-                            <div style={{ marginBottom: 20 }}>
-                                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "#9CA3AF", textTransform: "uppercase", marginBottom: 10 }}>
-                                    Resource Type
+                                    <div style={{ marginBottom: 20 }}>
+                                        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "#9CA3AF", textTransform: "uppercase", marginBottom: 10 }}>
+                                            Resource Type
+                                        </div>
+                                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                                            {RESOURCE_TYPES.map(({ key, label }) => (
+                                                <button
+                                                    key={key}
+                                                    onClick={() => setCategory(key)}
+                                                    className={`filter-pill${category === key ? " active" : ""}`}
+                                                >
+                                                    {label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Topic Tags Section */}
+                                    {availableTags.length > 0 && (
+                                        <div style={{ marginBottom: 20 }}>
+                                            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "#9CA3AF", textTransform: "uppercase", marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                                <span>Topic Tags</span>
+                                                {selectedTag && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setSelectedTag(null)}
+                                                        style={{ background: "none", border: "none", fontSize: 11, color: "#10B981", fontWeight: 600, cursor: "pointer", padding: 0 }}
+                                                    >
+                                                        Clear
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <div style={{ display: "flex", flexWrap: "wrap", gap: 5, maxHeight: 160, overflowY: "auto" }}>
+                                                {availableTags.map((tag) => {
+                                                    const isSelected = selectedTag?.toLowerCase() === tag.toLowerCase();
+                                                    return (
+                                                        <button
+                                                            key={tag}
+                                                            type="button"
+                                                            onClick={() => setSelectedTag(isSelected ? null : tag)}
+                                                            className={`tag-pill ${isSelected ? "active" : ""}`}
+                                                            style={{ fontSize: 10, padding: "2px 7px" }}
+                                                        >
+                                                            #{tag}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Stats */}
+                                    <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 20, paddingTop: 16, borderTop: "1px solid #F3F4F6" }}>
+                                        {[
+                                            { Icon: FileText, label: "Resources", value: resources.length },
+                                            { Icon: Users, label: "Contributors", value: contributors },
+                                            { Icon: Clock, label: "Latest", value: latestDate(resources) },
+                                        ].map(({ Icon, label, value }) => (
+                                            <div key={label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                                <Icon size={13} color="#10B981" />
+                                                <span style={{ fontSize: 12, color: "#6B7280" }}>{label}</span>
+                                                <span style={{ fontSize: 12, fontWeight: 700, color: "#0D1B2A", marginLeft: "auto" }}>{value}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Role badge */}
+                                    {(role === "BATCH_LEADER" || role === "MODULE_COORDINATOR") && (
+                                        <div style={{ marginTop: 16, background: "#FEF3C7", border: "1px solid #FDE68A", borderRadius: 10, padding: "10px 14px" }}>
+                                            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "#92400E", textTransform: "uppercase" }}>
+                                                Your Role
+                                            </div>
+                                            <div style={{ fontSize: 13, fontWeight: 600, color: "#78350F", marginTop: 2 }}>
+                                                {role === "BATCH_LEADER" ? "Batch Leader" : "Module Coordinator"}
+                                            </div>
+                                            <div style={{ fontSize: 11, color: "#92400E", marginTop: 1 }}>
+                                                {role === "BATCH_LEADER" ? "Batch curriculum & leadership enabled" : "Course moderator privileges"}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                                    {RESOURCE_TYPES.map(({ key, label }) => (
-                                        <button
-                                            key={key}
-                                            onClick={() => setCategory(key)}
-                                            className={`filter-pill${category === key ? " active" : ""}`}
-                                        >
-                                            {label}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+                            </aside>
 
-                            {/* Topic Tags Section */}
-                            {availableTags.length > 0 && (
-                                <div style={{ marginBottom: 20 }}>
-                                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "#9CA3AF", textTransform: "uppercase", marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                        <span>Topic Tags</span>
-                                        {selectedTag && (
+                            {/* ── RESOURCE LIST ── */}
+                            <div style={{ flex: 1 }}>
+                                {/* Header */}
+                                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
+                                    <div>
+                                        <h1 style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 800, color: "#0D1B2A", marginBottom: 4 }}>
+                                            {courseName}
+                                        </h1>
+                                        <p style={{ fontSize: 13, color: "#9CA3AF" }}>
+                                            {loading ? "Loading..." : `${displayedResources.length} resource${displayedResources.length !== 1 ? "s" : ""}`}
+                                            {category !== "ALL" && ` · ${RESOURCE_TYPES.find((t) => t.key === category)?.label}`}
+                                        </p>
+                                    </div>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+
+                                        {canManageResources && (
                                             <button
-                                                type="button"
-                                                onClick={() => setSelectedTag(null)}
-                                                style={{ background: "none", border: "none", fontSize: 11, color: "#10B981", fontWeight: 600, cursor: "pointer", padding: 0 }}
+                                                onClick={() => setIsSelectionMode(!isSelectionMode)}
+                                                style={{
+                                                    display: "inline-flex", alignItems: "center", gap: 6,
+                                                    padding: "8px 12px", fontSize: 13, fontWeight: 600, borderRadius: 8,
+                                                    border: "1px solid #E5E7EB", background: isSelectionMode ? "#F3F4F6" : "white",
+                                                    color: "#4B5563", cursor: "pointer"
+                                                }}
                                             >
-                                                Clear
+                                                <ListChecks size={14} />
+                                                {isSelectionMode ? "Cancel Selection" : "Bulk Select"}
+                                            </button>
+                                        )}
+                                        <Link to={`/dashboard/courses/${courseId}/upload`}>
+                                            <button className="btn-primary" style={{ fontSize: 13, padding: "8px 16px" }}>
+                                                <Upload size={14} />
+                                                Upload
+                                            </button>
+                                        </Link>
+                                    </div>
+                                </div>
+
+                                {isSelectionMode && filtered.length > 0 && (
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 10, padding: "12px 16px", marginBottom: 16 }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                            <button
+                                                onClick={toggleSelectAll}
+                                                style={{ display: "flex", alignItems: "center", gap: 6, background: "transparent", border: "none", cursor: "pointer", color: "#1D4ED8", fontSize: 13, fontWeight: 600 }}
+                                            >
+                                                {selectedIds.size === filtered.length ? <CheckSquare size={16} /> : <Square size={16} />}
+                                                Select All
+                                            </button>
+                                            <span style={{ fontSize: 13, color: "#1E40AF" }}>
+                                                {selectedIds.size} selected
+                                            </span>
+                                        </div>
+                                        {selectedIds.size > 0 && (
+                                            <button
+                                                onClick={handleBulkDelete}
+                                                disabled={bulkDeleting}
+                                                style={{
+                                                    display: "flex", alignItems: "center", gap: 6, background: "#DC2626", color: "white",
+                                                    border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 13, fontWeight: 600,
+                                                    cursor: bulkDeleting ? "not-allowed" : "pointer", opacity: bulkDeleting ? 0.7 : 1
+                                                }}
+                                            >
+                                                <Trash2 size={14} />
+                                                {bulkDeleting ? "Deleting..." : "Delete Selected"}
                                             </button>
                                         )}
                                     </div>
-                                    <div style={{ display: "flex", flexWrap: "wrap", gap: 5, maxHeight: 160, overflowY: "auto" }}>
-                                        {availableTags.map((tag) => {
-                                            const isSelected = selectedTag?.toLowerCase() === tag.toLowerCase();
-                                            return (
-                                                <button
-                                                    key={tag}
-                                                    type="button"
-                                                    onClick={() => setSelectedTag(isSelected ? null : tag)}
-                                                    className={`tag-pill ${isSelected ? "active" : ""}`}
-                                                    style={{ fontSize: 10, padding: "2px 7px" }}
-                                                >
-                                                    #{tag}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Stats */}
-                            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 20, paddingTop: 16, borderTop: "1px solid #F3F4F6" }}>
-                                {[
-                                    { Icon: FileText, label: "Resources", value: resources.length },
-                                    { Icon: Users, label: "Contributors", value: contributors },
-                                    { Icon: Clock, label: "Latest", value: latestDate(resources) },
-                                ].map(({ Icon, label, value }) => (
-                                    <div key={label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                        <Icon size={13} color="#10B981" />
-                                        <span style={{ fontSize: 12, color: "#6B7280" }}>{label}</span>
-                                        <span style={{ fontSize: 12, fontWeight: 700, color: "#0D1B2A", marginLeft: "auto" }}>{value}</span>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Role badge */}
-                            {(role === "BATCH_LEADER" || role === "MODULE_COORDINATOR") && (
-                                <div style={{ marginTop: 16, background: "#FEF3C7", border: "1px solid #FDE68A", borderRadius: 10, padding: "10px 14px" }}>
-                                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "#92400E", textTransform: "uppercase" }}>
-                                        Your Role
-                                    </div>
-                                    <div style={{ fontSize: 13, fontWeight: 600, color: "#78350F", marginTop: 2 }}>
-                                        {role === "BATCH_LEADER" ? "Batch Leader" : "Module Coordinator"}
-                                    </div>
-                                    <div style={{ fontSize: 11, color: "#92400E", marginTop: 1 }}>
-                                        {role === "BATCH_LEADER" ? "Batch curriculum & leadership enabled" : "Course moderator privileges"}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </aside>
-
-                    {/* ── RESOURCE LIST ── */}
-                    <div style={{ flex: 1 }}>
-                        {/* Header */}
-                        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
-                            <div>
-                                <h1 style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 800, color: "#0D1B2A", marginBottom: 4 }}>
-                                    {courseName}
-                                </h1>
-                                <p style={{ fontSize: 13, color: "#9CA3AF" }}>
-                                    {loading ? "Loading..." : `${filtered.length} resource${filtered.length !== 1 ? "s" : ""}`}
-                                    {category !== "ALL" && ` · ${RESOURCE_TYPES.find(t => t.key === category)?.label}`}
-                                </p>
-                            </div>
-                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-
-                                {canManageResources && (
-                                    <button
-                                        onClick={() => setIsSelectionMode(!isSelectionMode)}
-                                        style={{
-                                            display: "inline-flex", alignItems: "center", gap: 6,
-                                            padding: "8px 12px", fontSize: 13, fontWeight: 600, borderRadius: 8,
-                                            border: "1px solid #E5E7EB", background: isSelectionMode ? "#F3F4F6" : "white",
-                                            color: "#4B5563", cursor: "pointer"
-                                        }}
-                                    >
-                                        <ListChecks size={14} />
-                                        {isSelectionMode ? "Cancel Selection" : "Bulk Select"}
-                                    </button>
                                 )}
-                                <Link to={`/dashboard/courses/${courseId}/upload`}>
-                                    <button className="btn-primary" style={{ fontSize: 13, padding: "8px 16px" }}>
-                                        <Upload size={14} />
-                                        Upload
-                                    </button>
-                                </Link>
-                            </div>
-                        </div>
 
-                        {isSelectionMode && filtered.length > 0 && (
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 10, padding: "12px 16px", marginBottom: 16 }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                                    <button
-                                        onClick={toggleSelectAll}
-                                        style={{ display: "flex", alignItems: "center", gap: 6, background: "transparent", border: "none", cursor: "pointer", color: "#1D4ED8", fontSize: 13, fontWeight: 600 }}
-                                    >
-                                        {selectedIds.size === filtered.length ? <CheckSquare size={16} /> : <Square size={16} />}
-                                        Select All
-                                    </button>
-                                    <span style={{ fontSize: 13, color: "#1E40AF" }}>
-                                        {selectedIds.size} selected
-                                    </span>
+                                {/* AI Semantic Concept Search */}
+                                <div style={{ marginBottom: 16, background: "#FFFFFF", border: "1.5px solid #E5E7EB", borderRadius: 10, padding: "8px 14px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
+                                    <Sparkles size={16} color="#10B981" />
+                                    <input
+                                        type="text"
+                                        value={semanticQuery}
+                                        onChange={(e) => handleSemanticSearch(e.target.value)}
+                                        placeholder="AI Semantic Search: Ask a question or search concepts (e.g. 'How does TCP handle packet loss?')..."
+                                        style={{ flex: 1, border: "none", outline: "none", fontSize: 13, color: "#111827", background: "transparent" }}
+                                    />
+                                    {isSearchingSemantic && <Loader2 size={15} className="spin-animation" color="#10B981" />}
+                                    {semanticQuery && (
+                                        <button
+                                            type="button"
+                                            onClick={clearSemanticSearch}
+                                            style={{ background: "none", border: "none", cursor: "pointer", color: "#9CA3AF" }}
+                                            title="Clear semantic search"
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                    )}
                                 </div>
-                                {selectedIds.size > 0 && (
-                                    <button
-                                        onClick={handleBulkDelete}
-                                        disabled={bulkDeleting}
-                                        style={{
-                                            display: "flex", alignItems: "center", gap: 6, background: "#DC2626", color: "white",
-                                            border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 13, fontWeight: 600,
-                                            cursor: bulkDeleting ? "not-allowed" : "pointer", opacity: bulkDeleting ? 0.7 : 1
-                                        }}
-                                    >
-                                        <Trash2 size={14} />
-                                        {bulkDeleting ? "Deleting..." : "Delete Selected"}
-                                    </button>
+
+                                {/* Semantic Results Match Banner */}
+                                {semanticResults !== null && (
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#ECFDF5", border: "1px solid #A7F3D0", borderRadius: 10, padding: "10px 16px", marginBottom: 16 }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                            <Sparkles size={14} color="#047857" />
+                                            <span style={{ fontSize: 13, color: "#065F46" }}>
+                                                Found <strong>{semanticResults.length}</strong> conceptually relevant resource{semanticResults.length !== 1 ? "s" : ""} matching <em>"{semanticQuery}"</em>
+                                            </span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={clearSemanticSearch}
+                                            style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "white", border: "1px solid #A7F3D0", borderRadius: 6, padding: "4px 10px", fontSize: 12, fontWeight: 600, color: "#047857", cursor: "pointer" }}
+                                        >
+                                            <X size={12} />
+                                            <span>Reset to All</span>
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Active Tag Filter Banner */}
+                                {selectedTag && (
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#ECFDF5", border: "1px solid #A7F3D0", borderRadius: 10, padding: "10px 16px", marginBottom: 16 }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                            <TagIcon size={14} color="#047857" />
+                                            <span style={{ fontSize: 13, color: "#065F46" }}>
+                                                Filtered by topic: <strong>#{selectedTag}</strong>
+                                            </span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedTag(null)}
+                                            style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "white", border: "1px solid #A7F3D0", borderRadius: 6, padding: "4px 10px", fontSize: 12, fontWeight: 600, color: "#047857", cursor: "pointer" }}
+                                        >
+                                            <X size={12} />
+                                            <span>Clear topic filter</span>
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Resources */}
+                                {loading ? (
+                                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                                        {[1, 2, 3].map((i) => (
+                                            <div key={i} style={{ height: 110, background: "white", border: "1px solid #E5E7EB", borderRadius: 12 }} />
+                                        ))}
+                                    </div>
+                                ) : displayedResources.length === 0 ? (
+                                    <div style={{ textAlign: "center", padding: "60px 20px", background: "white", borderRadius: 14, border: "1.5px dashed #E5E7EB" }}>
+                                        <FileText size={32} color="#D1D5DB" style={{ margin: "0 auto 12px" }} />
+                                        <p style={{ fontSize: 14, color: "#9CA3AF", fontWeight: 500 }}>
+                                            {semanticQuery
+                                                ? `No resources found conceptually matching "${semanticQuery}". Try another keyword or question.`
+                                                : "Nothing here yet — be the first to share."}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                                        {displayedResources.map((r, i) => (
+                                            <div key={r.id} style={{ animationDelay: `${i * 0.04}s` }}>
+                                                <ResourceItem
+                                                    resource={r}
+                                                    onChanged={refetch}
+                                                    selectable={isSelectionMode}
+                                                    selected={selectedIds.has(r.id)}
+                                                    onToggleSelect={() => toggleSelect(r.id)}
+                                                    onTagClick={(tag) => setSelectedTag(selectedTag?.toLowerCase() === tag.toLowerCase() ? null : tag)}
+                                                    activeTag={selectedTag}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
                                 )}
                             </div>
-                        )}
-
-                        {/* Active Tag Filter Banner */}
-                        {selectedTag && (
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#ECFDF5", border: "1px solid #A7F3D0", borderRadius: 10, padding: "10px 16px", marginBottom: 16 }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                    <TagIcon size={14} color="#047857" />
-                                    <span style={{ fontSize: 13, color: "#065F46" }}>
-                                        Filtered by topic: <strong>#{selectedTag}</strong>
-                                    </span>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setSelectedTag(null)}
-                                    style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "white", border: "1px solid #A7F3D0", borderRadius: 6, padding: "4px 10px", fontSize: 12, fontWeight: 600, color: "#047857", cursor: "pointer" }}
-                                >
-                                    <X size={12} />
-                                    <span>Clear topic filter</span>
-                                </button>
-                            </div>
-                        )}
-
-                        {/* Resources */}
-                        {loading ? (
-                            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                                {[1, 2, 3].map((i) => (
-                                    <div key={i} style={{ height: 110, background: "white", border: "1px solid #E5E7EB", borderRadius: 12 }} />
-                                ))}
-                            </div>
-                        ) : filtered.length === 0 ? (
-                            <div style={{ textAlign: "center", padding: "60px 20px", background: "white", borderRadius: 14, border: "1.5px dashed #E5E7EB" }}>
-                                <FileText size={32} color="#D1D5DB" style={{ margin: "0 auto 12px" }} />
-                                <p style={{ fontSize: 14, color: "#9CA3AF", fontWeight: 500 }}>Nothing here yet — be the first to share.</p>
-                            </div>
-                        ) : (
-                            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                                {filtered.map((r, i) => (
-                                    <div key={r.id} style={{ animationDelay: `${i * 0.04}s` }}>
-                                        <ResourceItem
-                                            resource={r}
-                                            onChanged={refetch}
-                                            selectable={isSelectionMode}
-                                            selected={selectedIds.has(r.id)}
-                                            onToggleSelect={() => toggleSelect(r.id)}
-                                            onTagClick={(tag) => setSelectedTag(selectedTag?.toLowerCase() === tag.toLowerCase() ? null : tag)}
-                                            activeTag={selectedTag}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
-            )}
-        </div>
-    );
+            );
 }
 
-export default CourseDetailPage;
+            export default CourseDetailPage;
