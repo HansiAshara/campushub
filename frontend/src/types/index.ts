@@ -49,6 +49,7 @@ export interface Resource {
     canEdit: boolean;
     aiStatus?: string;
     tags?: string[];
+    similarityScore?: number;
 }
 
 export interface TextChunk {
