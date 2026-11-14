@@ -23,11 +23,19 @@ public class ResourceResponse {
     private boolean canEdit;
     private String aiStatus;
     private List<String> tags;
+    private Double similarityScore;
+
+    // Constructor with tags and aiStatus
+    public ResourceResponse(Long id, String title, String fileUrl, String resourceType, String summary,
+                            String courseName, String uploadedByName, Long uploadedById,
+                            LocalDateTime createdAt, boolean canEdit, String aiStatus, List<String> tags) {
+        this(id, title, fileUrl, resourceType, summary, courseName, uploadedByName, uploadedById, createdAt, canEdit, aiStatus, tags, null);
+    }
 
     // Backward-compatible constructor
     public ResourceResponse(Long id, String title, String fileUrl, String resourceType, String summary,
                             String courseName, String uploadedByName, Long uploadedById,
                             LocalDateTime createdAt, boolean canEdit) {
-        this(id, title, fileUrl, resourceType, summary, courseName, uploadedByName, uploadedById, createdAt, canEdit, "PENDING", List.of());
+        this(id, title, fileUrl, resourceType, summary, courseName, uploadedByName, uploadedById, createdAt, canEdit, "PENDING", List.of(), null);
     }
 }
