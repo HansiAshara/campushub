@@ -19,8 +19,10 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import com.campushub.backend.service.ai.embedding.EmbeddingService;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -36,6 +38,7 @@ public class ResourceService {
     private final AiService aiService;
     private final TagService tagService;
     private final ResourceAiProcessorService resourceAiProcessorService;
+    private final EmbeddingService embeddingService;
 
     public ResourceService(ResourceRepository resourceRepository, CourseRepository courseRepository,
                             UserRepository userRepository, FileStorageService fileStorageService,
@@ -44,7 +47,8 @@ public class ResourceService {
                             TextPreprocessorService textPreprocessorService,
                             AiService aiService,
                             TagService tagService,
-                            ResourceAiProcessorService resourceAiProcessorService) {
+                            ResourceAiProcessorService resourceAiProcessorService,
+                            EmbeddingService embeddingService) {
         this.resourceRepository = resourceRepository;
         this.courseRepository = courseRepository;
         this.userRepository = userRepository;
@@ -55,6 +59,7 @@ public class ResourceService {
         this.aiService = aiService;
         this.tagService = tagService;
         this.resourceAiProcessorService = resourceAiProcessorService;
+        this.embeddingService = embeddingService;
     }
 
     private User currentUser() {
@@ -239,6 +244,89 @@ public class ResourceService {
         } catch (IOException e) {
             return CleanedDocument.empty("Failed to read file: " + e.getMessage());
         }
+    }
+
+    /**
+     * Executes vector semantic search using pgvector cosine distance.
+     * Generates a 768-dimensional embedding for the input query, then queries PostgreSQL.
+     */
+    public List<ResourceResponse> semanticSearch(Long courseId, String query, Double minSimilarity, Integer limit) {
+        if (query == null || query.isBlank()) {
+            return List.of();
+        }
+
+        User user = currentUser();
+        float[] queryEmbedding = embeddingService.generateEmbedding(query);
+        if (queryEmbedding == null || queryEmbedding.length == 0) {
+            return List.of();
+        }
+
+        String queryVectorStr = embeddingService.toPgVectorString(queryEmbedding);
+        double threshold = minSimilarity != null ? minSimilarity : 0.20; // default 20% minimum similarity
+        int maxResults = limit != null && limit > 0 && limit <= 50 ? limit : 15;
+
+        List<Object[]> results = resourceRepository.findSimilarResourceIds(courseId, queryVectorStr, threshold, maxResults);
+        if (results.isEmpty()) {
+            return List.of();
+        }
+
+        List<ResourceResponse> matchedResponses = new ArrayList<>();
+        for (Object[] row : results) {
+            Long resourceId = ((Number) row[0]).longValue();
+            double similarity = ((Number) row[1]).doubleValue();
+
+            resourceRepository.findById(resourceId).ifPresent(r -> {
+                ResourceResponse resp = toResponse(r, user);
+                resp.setSimilarityScore(Math.round(similarity * 1000.0) / 1000.0);
+                matchedResponses.add(resp);
+            });
+        }
+
+        return matchedResponses;
+    }
+
+    /**
+     * Finds conceptually similar resources for an existing document.
+     * Useful for conceptual duplicate alerts and recommended reading.
+     */
+    public List<ResourceResponse> findSimilarResources(Long resourceId, Integer limit) {
+        Resource target = resourceRepository.findById(resourceId)
+                .orElseThrow(() -> new IllegalArgumentException("Resource not found"));
+
+        User user = currentUser();
+        int maxResults = limit != null && limit > 0 && limit <= 10 ? limit : 3;
+
+        String textToEmbed = embeddingService.buildEmbeddingText(
+                target.getTitle(),
+                target.getSummary(),
+                target.getTags() != null ? target.getTags().stream().map(Tag::getName).toList() : List.of(),
+                ""
+        );
+
+        float[] embedding = embeddingService.generateEmbedding(textToEmbed);
+        String vectorStr = embeddingService.toPgVectorString(embedding);
+
+        List<Object[]> duplicates = resourceRepository.findConceptualDuplicatesInCourse(
+                target.getCourse().getId(),
+                target.getId(),
+                vectorStr,
+                0.65, // 65% similarity threshold for related / similar documents
+                maxResults
+        );
+
+        List<ResourceResponse> similarList = new ArrayList<>();
+        for (Object[] row : duplicates) {
+            Long similarId = ((Number) row[0]).longValue();
+            double similarity = ((Number) row[1]).doubleValue();
+
+            resourceRepository.findById(similarId).ifPresent(r -> {
+                ResourceResponse resp = toResponse(r, user);
+                resp.setSimilarityScore(Math.round(similarity * 1000.0) / 1000.0);
+                similarList.add(resp);
+            });
+        }
+
+        return similarList;
     }
 
     private ResourceResponse toResponse(Resource resource, User currentUser) {
