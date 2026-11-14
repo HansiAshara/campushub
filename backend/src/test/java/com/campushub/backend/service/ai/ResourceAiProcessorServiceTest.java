@@ -5,6 +5,7 @@ import com.campushub.backend.entity.Resource;
 import com.campushub.backend.entity.Tag;
 import com.campushub.backend.repository.ResourceRepository;
 import com.campushub.backend.service.TagService;
+import com.campushub.backend.service.ai.embedding.EmbeddingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,7 @@ class ResourceAiProcessorServiceTest {
     private TextPreprocessorService textPreprocessorService;
     private AiService aiService;
     private TagService tagService;
+    private EmbeddingService embeddingService;
     private ResourceAiProcessorService processorService;
 
     @BeforeEach
@@ -34,13 +36,19 @@ class ResourceAiProcessorServiceTest {
         textPreprocessorService = Mockito.mock(TextPreprocessorService.class);
         aiService = Mockito.mock(AiService.class);
         tagService = Mockito.mock(TagService.class);
+        embeddingService = Mockito.mock(EmbeddingService.class);
+
+        when(embeddingService.buildEmbeddingText(any(), any(), any(), any())).thenReturn("sample embedding text");
+        when(embeddingService.generateEmbedding(any())).thenReturn(new float[]{0.1f, 0.2f});
+        when(embeddingService.toPgVectorString(any())).thenReturn("[0.1,0.2]");
 
         processorService = new ResourceAiProcessorService(
                 resourceRepository,
                 documentTextExtractorService,
                 textPreprocessorService,
                 aiService,
-                tagService
+                tagService,
+                embeddingService
         );
     }
 
@@ -92,7 +100,7 @@ class ResourceAiProcessorServiceTest {
         processorService.processResourceAsync(2L, "scanned-notes.pdf", new byte[]{1, 2});
 
         assertEquals(Resource.AiStatus.SKIPPED, resource.getAiStatus());
-        assertTrue(resource.getSummary().contains("scanned"));
+        assertTrue(resource.getSummary().toLowerCase().contains("scanned"));
     }
 
     @Test
