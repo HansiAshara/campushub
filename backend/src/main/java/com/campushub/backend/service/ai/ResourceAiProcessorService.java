@@ -4,19 +4,19 @@ import com.campushub.backend.entity.Resource;
 import com.campushub.backend.entity.Tag;
 import com.campushub.backend.repository.ResourceRepository;
 import com.campushub.backend.service.TagService;
+import com.campushub.backend.service.ai.embedding.EmbeddingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Set;
 
 /**
- * Background worker service for asynchronous AI extraction, summarization, and tag generation.
- * <p>
- * Ensures resource uploads return to the student immediately (Status: PENDING),
- * while document parsing, cleaning, and model analysis proceed non-blockingly.
+ * Handles asynchronous background execution of document text extraction,
+ * preprocessing, AI summarization, normalized tagging, and pgvector embeddings.
  */
 @Service
 public class ResourceAiProcessorService {
@@ -28,19 +28,22 @@ public class ResourceAiProcessorService {
     private final TextPreprocessorService textPreprocessorService;
     private final AiService aiService;
     private final TagService tagService;
+    private final EmbeddingService embeddingService;
 
     public ResourceAiProcessorService(
             ResourceRepository resourceRepository,
             DocumentTextExtractorService documentTextExtractorService,
             TextPreprocessorService textPreprocessorService,
             AiService aiService,
-            TagService tagService
+            TagService tagService,
+            EmbeddingService embeddingService
     ) {
         this.resourceRepository = resourceRepository;
         this.documentTextExtractorService = documentTextExtractorService;
         this.textPreprocessorService = textPreprocessorService;
         this.aiService = aiService;
         this.tagService = tagService;
+        this.embeddingService = embeddingService;
     }
 
     /**
@@ -61,22 +64,26 @@ public class ResourceAiProcessorService {
             resource.setAiStatus(Resource.AiStatus.PROCESSING);
             resourceRepository.save(resource);
 
-            // 1. Deterministic text extraction
+            // 1. Text Extraction
             ExtractedDocument extracted = documentTextExtractorService.extract(fileName, fileBytes);
+
             if (!extracted.hasExtractableText()) {
-                log.info("Resource ID {} has no extractable text (e.g. scanned/image-only). Skipping AI.", resourceId);
+                String reason = extracted.errorMessage() != null ? extracted.errorMessage() : "No extractable text found";
+                log.info("File '{}' contains no extractable text ({}). Skipping AI summarization.", fileName, reason);
                 resource.setAiStatus(Resource.AiStatus.SKIPPED);
-                resource.setSummary("Document contains scanned or non-extractable text. AI summary unavailable.");
+                resource.setSummary("AI summarization skipped: " + reason);
                 resourceRepository.save(resource);
                 return;
             }
 
-            // 2. Deterministic text preprocessing and chunking
+            // 2. Preprocessing & Sanitization
             CleanedDocument cleaned = textPreprocessorService.preprocess(extracted);
+
             if (!cleaned.hasSufficientContent()) {
-                log.info("Resource ID {} contains insufficient content. Skipping AI.", resourceId);
+                log.info("Document '{}' has insufficient extracted text ({}) to generate meaningful AI summary. Skipping.",
+                        fileName, cleaned.statusMessage());
                 resource.setAiStatus(Resource.AiStatus.SKIPPED);
-                resource.setSummary("Document content is too brief for automated AI analysis.");
+                resource.setSummary("AI summarization skipped: " + cleaned.statusMessage());
                 resourceRepository.save(resource);
                 return;
             }
@@ -99,6 +106,45 @@ public class ResourceAiProcessorService {
 
                 log.info("Background AI processing completed for resource ID {}: generated summary and {} tags.",
                         resourceId, tags.size());
+
+                // 5. Phase 2: Vector Embedding & Duplicate Analysis
+                try {
+                    String excerpt = cleaned.chunks().isEmpty() ? "" : cleaned.chunks().get(0).text();
+                    String embeddingInput = embeddingService.buildEmbeddingText(
+                            resource.getTitle(),
+                            aiResult.summary(),
+                            aiResult.tags(),
+                            excerpt
+                    );
+
+                    float[] embedding = embeddingService.generateEmbedding(embeddingInput);
+                    if (embedding != null && embedding.length > 0) {
+                        String vectorStr = embeddingService.toPgVectorString(embedding);
+                        resourceRepository.updateEmbedding(resource.getId(), vectorStr);
+                        log.info("Persisted {}d vector embedding for resource ID {}", embedding.length, resourceId);
+
+                        // Check for conceptual duplicates in the same course (threshold >= 88%)
+                        if (resource.getCourse() != null) {
+                            List<Object[]> duplicates = resourceRepository.findConceptualDuplicatesInCourse(
+                                    resource.getCourse().getId(),
+                                    resource.getId(),
+                                    vectorStr,
+                                    0.88,
+                                    1
+                            );
+                            if (!duplicates.isEmpty()) {
+                                Object[] topMatch = duplicates.get(0);
+                                Long duplicateId = ((Number) topMatch[0]).longValue();
+                                double sim = ((Number) topMatch[1]).doubleValue();
+                                log.warn("Conceptual duplicate detected: Resource ID {} is {:.1f}% similar to existing Resource ID {}",
+                                        resourceId, sim * 100, duplicateId);
+                            }
+                        }
+                    }
+                } catch (Exception vectorEx) {
+                    log.warn("Vector embedding generation failed for resource ID {}: {}", resourceId, vectorEx.getMessage());
+                }
+
             } else {
                 log.warn("AI analysis for resource ID {} returned empty output.", resourceId);
                 resource.setAiStatus(Resource.AiStatus.FAILED);
@@ -116,4 +162,3 @@ public class ResourceAiProcessorService {
         }
     }
 }
-
