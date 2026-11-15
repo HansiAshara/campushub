@@ -76,6 +76,11 @@ public class ResourceController {
         return ResponseEntity.ok(resourceService.getByCourse(courseId));
     }
 
+    @GetMapping("/batch/{batchId}/recent")
+    public ResponseEntity<List<ResourceResponse>> getRecentByBatch(@PathVariable Long batchId) {
+        return ResponseEntity.ok(resourceService.getRecentByBatch(batchId));
+    }
+
     @GetMapping("/mine")
     public ResponseEntity<List<ResourceResponse>> getMine() {
         return ResponseEntity.ok(resourceService.getMine());
