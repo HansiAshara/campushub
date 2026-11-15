@@ -5,7 +5,8 @@ import { userService, type UserResponse } from "../../api/userService";
 import { courseService } from "../../api/courseService";
 import { resourceService } from "../../api/resourceService";
 import { type Batch, type BatchStats, type Course, type Resource } from "../../types";
-import { formatBatchSubtitle, getBatchAcademicYear } from "../../utils/batchUtils";
+import { getBatchAcademicYear } from "../../utils/batchUtils";
+import { formatRelativeTime } from "../../utils/dateUtils";
 import {
     Search,
     X,
@@ -17,6 +18,7 @@ import {
     ChevronRight,
     Info,
     Loader2,
+    Video,
 } from "lucide-react";
 
 export default function StudentDashboardPage() {
@@ -27,7 +29,8 @@ export default function StudentDashboardPage() {
     const [userProfile, setUserProfile] = useState<UserResponse | null>(null);
     const [stats, setStats] = useState<BatchStats | null>(null);
     const [courses, setCourses] = useState<Course[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [recentUploads, setRecentUploads] = useState<Resource[]>([]);
+    const [recentLoading, setRecentLoading] = useState(true);
     const [statsLoading, setStatsLoading] = useState(true);
 
     // Search states
@@ -45,7 +48,6 @@ export default function StudentDashboardPage() {
     // 1. Fetch user profile and all batches
     useEffect(() => {
         let isMounted = true;
-        setLoading(true);
 
         Promise.all([
             batchService.getAll().catch(() => ({ data: [] })),
@@ -57,9 +59,6 @@ export default function StudentDashboardPage() {
                 if (profileRes.data) {
                     setUserProfile(profileRes.data);
                 }
-            })
-            .finally(() => {
-                if (isMounted) setLoading(false);
             });
 
         return () => {
@@ -77,29 +76,36 @@ export default function StudentDashboardPage() {
         (myBatch ? getBatchAcademicYear(myBatch) : 1);
     const currentSemester = (academicYear - 1) * 2 + 1;
 
-    // 3. Fetch batch-specific statistics (KPIs) and courses for search
+    // 3. Fetch batch-specific statistics (KPIs), courses for search, and recent batch uploads
     useEffect(() => {
         if (!effectiveBatchId) {
             setStatsLoading(false);
+            setRecentLoading(false);
             return;
         }
 
         let isMounted = true;
         setStatsLoading(true);
+        setRecentLoading(true);
 
         Promise.all([
             batchService.getStats(effectiveBatchId).catch(() => null),
             courseService.getByBatch(effectiveBatchId).catch(() => ({ data: [] })),
+            resourceService.getRecentByBatch(effectiveBatchId).catch(() => ({ data: [] })),
         ])
-            .then(([statsRes, coursesRes]) => {
+            .then(([statsRes, coursesRes, recentRes]) => {
                 if (!isMounted) return;
                 if (statsRes?.data) {
                     setStats(statsRes.data);
                 }
                 setCourses(coursesRes.data || []);
+                setRecentUploads(recentRes.data || []);
             })
             .finally(() => {
-                if (isMounted) setStatsLoading(false);
+                if (isMounted) {
+                    setStatsLoading(false);
+                    setRecentLoading(false);
+                }
             });
 
         return () => {
@@ -174,17 +180,40 @@ export default function StudentDashboardPage() {
         setSearchOpen(false);
     };
 
+    const handleSelectResource = (resource: Resource) => {
+        setSearchOpen(false);
+        const targetCourseId =
+            resource.courseId ||
+            courses.find(
+                (c) => resource.courseName?.includes(c.code) || resource.courseName === c.name
+            )?.id;
+
+        if (targetCourseId) {
+            navigate(`/dashboard/courses/${targetCourseId}`);
+        } else if (resource.fileUrl) {
+            window.open(resource.fileUrl, "_blank", "noopener,noreferrer");
+        }
+    };
+
     // Calculate dynamic greeting
     const hour = new Date().getHours();
     const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
     const studentName = (userProfile?.name || storedName).split(" ")[0] || "Student";
     const batchDisplayName = myBatch?.name || (effectiveBatchId ? `Batch ${effectiveBatchId}` : "Batch");
 
-    // Other batches: all available batches EXCEPT the authenticated student's own batch
-    const otherBatches = batches.filter((b) => {
-        if (!effectiveBatchId) return true;
-        return b.id.toString() !== effectiveBatchId.toString();
-    });
+    // Format subtitle matching the design: IN2101 · Object Oriented Programming · Recently uploaded
+    const formatResourceSubtitle = (resource: Resource): string => {
+        const rawCourse = resource.courseName || "";
+        const coursePart = rawCourse.includes(" - ")
+            ? rawCourse.split(" - ").join(" · ")
+            : rawCourse;
+
+        const date = resource.createdAt ? new Date(resource.createdAt) : null;
+        const isRecent = date ? (Date.now() - date.getTime()) < 5 * 24 * 60 * 60 * 1000 : true;
+        const timeLabel = isRecent ? "Recently uploaded" : formatRelativeTime(resource.createdAt);
+
+        return coursePart ? `${coursePart} · ${timeLabel}` : timeLabel;
+    };
 
     const hasSearchResults =
         matchedCourses.length > 0 || (semanticResults && semanticResults.length > 0);
@@ -251,8 +280,8 @@ export default function StudentDashboardPage() {
                     border: "1px solid #DCECE4",
                     borderRadius: 16,
                     padding: "24px 28px",
-                    boxShadow: "0 1px 4px rgba(20, 43, 42, 0.04)",
-                    marginBottom: 28,
+                    boxShadow: "0 1px 3px rgba(20, 43, 42, 0.04)",
+                    marginBottom: 24,
                 }}
             >
                 {/* ── Top Row: Batch Identity & Context ── */}
@@ -593,17 +622,7 @@ export default function StudentDashboardPage() {
                                                     {semanticResults.map((r) => (
                                                         <div
                                                             key={r.id}
-                                                            onClick={() => {
-                                                                setSearchOpen(false);
-                                                                const targetCourse = courses.find((c) =>
-                                                                    r.courseName?.includes(c.code) || r.courseName === c.name
-                                                                );
-                                                                if (targetCourse) {
-                                                                    navigate(`/dashboard/courses/${targetCourse.id}`);
-                                                                } else if (r.fileUrl) {
-                                                                    window.open(r.fileUrl, "_blank", "noopener,noreferrer");
-                                                                }
-                                                            }}
+                                                            onClick={() => handleSelectResource(r)}
                                                             style={{
                                                                 display: "flex",
                                                                 alignItems: "center",
@@ -796,116 +815,196 @@ export default function StudentDashboardPage() {
             </div>
 
             {/* ─────────────────────────────────────────────────────────────
-                3. OTHER BATCHES (EXCLUDING OWN BATCH)
+                3. RECENT BATCH UPLOADS (REPLACING THE DUPLICATE BATCH LIST)
             ───────────────────────────────────────────────────────────── */}
-            <div style={{ marginBottom: 28 }}>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 14 }}>
+            <div
+                style={{
+                    background: "#FFFFFF",
+                    border: "1px solid #DCECE4",
+                    borderRadius: 16,
+                    padding: "22px 24px",
+                    boxShadow: "0 1px 3px rgba(20, 43, 42, 0.04)",
+                    marginBottom: 24,
+                }}
+            >
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        marginBottom: 14,
+                    }}
+                >
                     <h2
                         style={{
                             fontFamily: "var(--font-display)",
                             fontSize: 18,
-                            fontWeight: 700,
+                            fontWeight: 800,
                             color: "#142B2A",
                             margin: 0,
                         }}
                     >
-                        Other Batches
+                        Recent Batch Uploads
                     </h2>
-                    <span style={{ fontSize: 12.5, color: "#71827B" }}>
-                        ({otherBatches.length} batch{otherBatches.length !== 1 ? "es" : ""} available)
-                    </span>
+
+                    {myBatch && (
+                        <button
+                            type="button"
+                            onClick={() => navigate(`/dashboard/batches/${myBatch.id}`)}
+                            style={{
+                                border: "none",
+                                background: "transparent",
+                                color: "#08B981",
+                                fontSize: 13,
+                                fontWeight: 700,
+                                cursor: "pointer",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 4,
+                            }}
+                        >
+                            <span>View All</span>
+                            <span>→</span>
+                        </button>
+                    )}
                 </div>
 
-                {loading ? (
+                {recentLoading ? (
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                         {[1, 2, 3].map((i) => (
                             <div
                                 key={i}
                                 style={{
-                                    height: 64,
-                                    background: "#FFFFFF",
-                                    border: "1px solid #DCECE4",
-                                    borderRadius: 12,
+                                    height: 52,
+                                    background: "#FAFFFD",
+                                    borderRadius: 10,
                                     animation: "pulse 1.5s infinite ease",
                                 }}
                             />
                         ))}
                     </div>
-                ) : otherBatches.length === 0 ? (
+                ) : recentUploads.length === 0 ? (
                     <div
                         style={{
-                            background: "#FFFFFF",
-                            border: "1px solid #DCECE4",
-                            borderRadius: 12,
-                            padding: "20px",
                             textAlign: "center",
+                            padding: "24px 16px",
                             color: "#71827B",
                             fontSize: 13.5,
                         }}
                     >
-                        No other batches available.
+                        No recent materials uploaded in your batch yet.
                     </div>
                 ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        {otherBatches.map((batch) => (
-                            <div
-                                key={batch.id}
-                                onClick={() => navigate(`/dashboard/batches/${batch.id}`)}
-                                style={{
-                                    background: "#FFFFFF",
-                                    border: "1px solid #DCECE4",
-                                    borderRadius: 12,
-                                    padding: "16px 20px",
-                                    cursor: "pointer",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    transition: "all 0.12s ease",
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.borderColor = "#08B981";
-                                    e.currentTarget.style.background = "#FAFFFD";
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.borderColor = "#DCECE4";
-                                    e.currentTarget.style.background = "#FFFFFF";
-                                }}
-                            >
-                                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                                    <div
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                        {recentUploads.map((resource, index) => {
+                            const isLast = index === recentUploads.length - 1;
+                            const isVideo =
+                                resource.resourceType === "KUPPI_NOTES" ||
+                                resource.fileUrl?.includes("youtube") ||
+                                resource.fileUrl?.includes("youtu.be");
+
+                            const badgeType = isVideo
+                                ? { label: "Video", bg: "#E5F6EE", color: "#078E69" }
+                                : resource.resourceType === "SLIDES"
+                                ? { label: "Slides", bg: "#EFF6FF", color: "#2563EB" }
+                                : resource.resourceType === "TUTE"
+                                ? { label: "Tute", bg: "#FEF3C7", color: "#B45309" }
+                                : { label: "PDF", bg: "#FEF2F2", color: "#DC2626" };
+
+                            return (
+                                <div
+                                    key={resource.id}
+                                    onClick={() => handleSelectResource(resource)}
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                        gap: 14,
+                                        padding: "13px 0",
+                                        borderBottom: isLast ? "none" : "1px solid #EBF5F0",
+                                        cursor: "pointer",
+                                        transition: "all 0.12s ease",
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.paddingLeft = "4px";
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.paddingLeft = "0px";
+                                    }}
+                                >
+                                    {/* Left: Icon and Title/Subtitle */}
+                                    <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, flex: 1 }}>
+                                        <div
+                                            style={{
+                                                width: 36,
+                                                height: 36,
+                                                borderRadius: 10,
+                                                background: "#E5F6EE",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                flexShrink: 0,
+                                            }}
+                                        >
+                                            {isVideo ? (
+                                                <Video size={18} color="#08B981" />
+                                            ) : (
+                                                <FileText size={18} color="#08B981" />
+                                            )}
+                                        </div>
+
+                                        <div style={{ minWidth: 0, flex: 1 }}>
+                                            <div
+                                                style={{
+                                                    fontSize: 14.5,
+                                                    fontWeight: 700,
+                                                    color: "#142B2A",
+                                                    overflow: "hidden",
+                                                    textOverflow: "ellipsis",
+                                                    whiteSpace: "nowrap",
+                                                }}
+                                            >
+                                                {resource.title}
+                                            </div>
+                                            <div
+                                                style={{
+                                                    fontSize: 12.5,
+                                                    color: "#71827B",
+                                                    marginTop: 2,
+                                                    overflow: "hidden",
+                                                    textOverflow: "ellipsis",
+                                                    whiteSpace: "nowrap",
+                                                }}
+                                            >
+                                                {formatResourceSubtitle(resource)}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Right: Badge */}
+                                    <span
                                         style={{
-                                            width: 38,
-                                            height: 38,
-                                            borderRadius: 10,
-                                            background: "#F1FAF5",
-                                            color: "#08B981",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
+                                            fontSize: 11,
+                                            fontWeight: 700,
+                                            padding: "3px 9px",
+                                            borderRadius: 6,
+                                            background: badgeType.bg,
+                                            color: badgeType.color,
                                             flexShrink: 0,
+                                            letterSpacing: "0.02em",
                                         }}
                                     >
-                                        <GraduationCap size={20} />
-                                    </div>
-                                    <div>
-                                        <div style={{ fontSize: 15, fontWeight: 700, color: "#142B2A" }}>
-                                            {batch.name}
-                                        </div>
-                                        <div style={{ fontSize: 12.5, color: "#71827B" }}>
-                                            {formatBatchSubtitle(batch)}
-                                        </div>
-                                    </div>
+                                        {badgeType.label}
+                                    </span>
                                 </div>
-
-                                <ChevronRight size={18} color="#71827B" />
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </div>
 
             {/* ─────────────────────────────────────────────────────────────
-                4. CROSS-BATCH RESOURCE ACCESS INFORMATION
+                4. CROSS-BATCH RESOURCE ACCESS BANNER
             ───────────────────────────────────────────────────────────── */}
             <div
                 style={{
@@ -915,32 +1014,58 @@ export default function StudentDashboardPage() {
                     padding: "14px 18px",
                     display: "flex",
                     alignItems: "center",
-                    gap: 12,
+                    justifyContent: "space-between",
+                    gap: 14,
+                    flexWrap: "wrap",
                 }}
             >
-                <div
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div
+                        style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: "50%",
+                            background: "#FFFFFF",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#078E69",
+                            flexShrink: 0,
+                        }}
+                    >
+                        <Info size={17} />
+                    </div>
+                    <div>
+                        <div style={{ fontSize: 13.5, fontWeight: 700, color: "#142B2A" }}>
+                            Access Batch Resources
+                        </div>
+                        <div style={{ fontSize: 12.5, color: "#71827B", marginTop: 2 }}>
+                            Looking for past papers or exploring curriculum from other batches? Uploading and editing are restricted to your authorized batch.
+                        </div>
+                    </div>
+                </div>
+
+                <button
+                    type="button"
+                    onClick={() => navigate("/dashboard/batches")}
                     style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: "50%",
+                        border: "1px solid #DCECE4",
                         background: "#FFFFFF",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
                         color: "#078E69",
-                        flexShrink: 0,
+                        padding: "6px 12px",
+                        borderRadius: 7,
+                        fontSize: 12.5,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 4,
+                        whiteSpace: "nowrap",
                     }}
                 >
-                    <Info size={18} />
-                </div>
-                <div>
-                    <div style={{ fontSize: 13.5, fontWeight: 700, color: "#142B2A" }}>
-                        Access Batch Resources
-                    </div>
-                    <div style={{ fontSize: 12.5, color: "#71827B", marginTop: 2 }}>
-                        Explore other batches to view and download their academic resources. Uploading, editing and deleting resources are restricted to your authorized batch.
-                    </div>
-                </div>
+                    <span>Browse All Batches</span>
+                    <ChevronRight size={14} />
+                </button>
             </div>
         </div>
     );
