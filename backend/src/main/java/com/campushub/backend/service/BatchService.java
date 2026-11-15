@@ -2,11 +2,14 @@ package com.campushub.backend.service;
 
 import com.campushub.backend.dto.BatchRequest;
 import com.campushub.backend.dto.BatchResponse;
+import com.campushub.backend.dto.BatchStatsResponse;
 import com.campushub.backend.entity.Batch;
 import com.campushub.backend.entity.User;
 import com.campushub.backend.repository.BatchRepository;
 import com.campushub.backend.repository.CourseRepository;
+import com.campushub.backend.repository.ResourceRepository;
 import com.campushub.backend.repository.UserRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,11 +21,13 @@ public class BatchService {
     private final BatchRepository batchRepository;
     private final UserRepository userRepository;
     private final CourseRepository courseRepository;
+    private final ResourceRepository resourceRepository;
 
-    public BatchService(BatchRepository batchRepository, UserRepository userRepository, CourseRepository courseRepository) {
+    public BatchService(BatchRepository batchRepository, UserRepository userRepository, CourseRepository courseRepository, ResourceRepository resourceRepository) {
         this.batchRepository = batchRepository;
         this.userRepository = userRepository;
         this.courseRepository = courseRepository;
+        this.resourceRepository = resourceRepository;
     }
 
     public BatchResponse create(BatchRequest request) {
@@ -91,6 +96,21 @@ public class BatchService {
 
     public List<BatchResponse> getAll() {
         return batchRepository.findAll().stream().map(this::toResponse).toList();
+    }
+
+    public BatchStatsResponse getBatchStats(Long batchId) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByEmail(email).orElse(null);
+        Long userId = currentUser != null ? currentUser.getId() : -1L;
+
+        Batch batch = batchRepository.findById(batchId)
+                .orElseThrow(() -> new IllegalArgumentException("Batch not found with ID: " + batchId));
+
+        long courseCount = courseRepository.countByBatch_Id(batchId);
+        long resourceCount = resourceRepository.countByCourse_Batch_Id(batchId);
+        long myUploadCount = resourceRepository.countByCourse_Batch_IdAndUploadedById(batchId, userId);
+
+        return new BatchStatsResponse(batch.getId(), batch.getName(), courseCount, resourceCount, myUploadCount);
     }
 
     private BatchResponse toResponse(Batch b) {
