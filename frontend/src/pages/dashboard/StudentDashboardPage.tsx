@@ -134,7 +134,7 @@ export default function StudentDashboardPage() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // Search filtering across courses
+    // Search filtering across courses in the student's batch
     const matchedCourses = useMemo(() => {
         const q = searchQuery.trim().toLowerCase();
         if (!q) return [];
@@ -147,12 +147,17 @@ export default function StudentDashboardPage() {
             .slice(0, 5);
     }, [searchQuery, courses]);
 
-    // Trigger AI semantic search using existing resource API
+    // Trigger AI semantic search strictly scoped to the student's batch on the backend
     const handleTriggerSemantic = async () => {
         if (!searchQuery.trim()) return;
         setSemanticLoading(true);
         try {
-            const res = await resourceService.semanticSearch(undefined, searchQuery.trim(), 0.15);
+            const res = await resourceService.semanticSearch(
+                undefined,
+                searchQuery.trim(),
+                0.15,
+                effectiveBatchId || undefined
+            );
             setSemanticResults(res.data || []);
             setSearchOpen(true);
         } catch (err) {
@@ -187,14 +192,14 @@ export default function StudentDashboardPage() {
     return (
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "32px 32px 60px" }}>
             {/* ─────────────────────────────────────────────────────────────
-                1. PERSONALIZED WELCOME SECTION
+                1. PERSONALIZED WELCOME BANNER
             ───────────────────────────────────────────────────────────── */}
             <div
                 style={{
                     background: "#FFFFFF",
                     border: "1px solid #DCECE4",
                     borderRadius: 14,
-                    padding: "24px 28px",
+                    padding: "22px 28px",
                     boxShadow: "0 1px 3px rgba(20, 43, 42, 0.04)",
                     marginBottom: 20,
                 }}
@@ -238,542 +243,578 @@ export default function StudentDashboardPage() {
             </div>
 
             {/* ─────────────────────────────────────────────────────────────
-                2. ACADEMIC SEARCH BAR
+                2. UNIFIED YOUR BATCH SECTION (IDENTITY + SEARCH + KPIS)
             ───────────────────────────────────────────────────────────── */}
-            <div ref={searchContainerRef} style={{ position: "relative", marginBottom: 28 }}>
+            <div
+                style={{
+                    background: "#FFFFFF",
+                    border: "1px solid #DCECE4",
+                    borderRadius: 16,
+                    padding: "24px 28px",
+                    boxShadow: "0 1px 4px rgba(20, 43, 42, 0.04)",
+                    marginBottom: 28,
+                }}
+            >
+                {/* ── Top Row: Batch Identity & Context ── */}
                 <div
                     style={{
                         display: "flex",
+                        flexWrap: "wrap",
                         alignItems: "center",
-                        background: "#FFFFFF",
-                        border: `1.5px solid ${searchOpen ? "#08B981" : "#DCECE4"}`,
-                        borderRadius: 12,
-                        padding: "5px 10px 5px 16px",
-                        boxShadow: searchOpen
-                            ? "0 4px 16px rgba(8, 185, 129, 0.12)"
-                            : "0 1px 3px rgba(20, 43, 42, 0.04)",
-                        transition: "all 0.15s ease",
+                        justifyContent: "space-between",
+                        gap: 16,
+                        paddingBottom: 20,
+                        borderBottom: "1px solid #EBF5F0",
                     }}
                 >
-                    <Search size={18} color="#71827B" style={{ marginRight: 10, flexShrink: 0 }} />
+                    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                        <div
+                            style={{
+                                width: 44,
+                                height: 44,
+                                borderRadius: 12,
+                                background: "#08B981",
+                                color: "white",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                flexShrink: 0,
+                            }}
+                        >
+                            <GraduationCap size={22} />
+                        </div>
+                        <div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                                <span
+                                    style={{
+                                        fontSize: 11,
+                                        fontWeight: 800,
+                                        textTransform: "uppercase",
+                                        letterSpacing: "0.06em",
+                                        padding: "2px 7px",
+                                        borderRadius: 5,
+                                        background: "#E5F6EE",
+                                        color: "#078E69",
+                                    }}
+                                >
+                                    Your Batch
+                                </span>
+                                <h2
+                                    style={{
+                                        fontFamily: "var(--font-display)",
+                                        fontSize: 19,
+                                        fontWeight: 800,
+                                        color: "#142B2A",
+                                        margin: 0,
+                                    }}
+                                >
+                                    {batchDisplayName}
+                                </h2>
+                            </div>
+                            <div style={{ fontSize: 13, color: "#71827B" }}>
+                                {myBatch?.intakeYear ? `Intake ${myBatch.intakeYear} · ` : ""}Year {academicYear} · Semester {currentSemester}
+                            </div>
+                        </div>
+                    </div>
 
-                    <input
-                        ref={searchInputRef}
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => {
-                            setSearchQuery(e.target.value);
-                            setSemanticResults(null);
-                            setSearchOpen(true);
-                        }}
-                        onFocus={() => {
-                            if (searchQuery.trim().length > 0) setSearchOpen(true);
-                        }}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter" && searchQuery.trim()) {
-                                handleTriggerSemantic();
-                            }
-                        }}
-                        placeholder="Search courses, notes, tutes, past papers..."
-                        style={{
-                            flex: 1,
-                            border: "none",
-                            outline: "none",
-                            fontSize: 14,
-                            color: "#142B2A",
-                            background: "transparent",
-                            fontFamily: "var(--font-sans)",
-                            padding: "8px 0",
-                        }}
-                    />
-
-                    {/* Clear button */}
-                    {searchQuery && (
+                    {myBatch && (
                         <button
                             type="button"
-                            onClick={handleClearSearch}
+                            onClick={() => navigate(`/dashboard/batches/${myBatch.id}`)}
                             style={{
-                                background: "transparent",
-                                border: "none",
-                                cursor: "pointer",
-                                padding: 4,
-                                color: "#71827B",
-                                display: "flex",
+                                display: "inline-flex",
                                 alignItems: "center",
-                                marginRight: 6,
+                                gap: 6,
+                                padding: "8px 14px",
+                                borderRadius: 8,
+                                border: "1px solid #DCECE4",
+                                background: "#FAFFFD",
+                                color: "#08B981",
+                                fontSize: 13,
+                                fontWeight: 600,
+                                cursor: "pointer",
+                                transition: "all 0.12s ease",
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.background = "#E5F6EE";
+                                e.currentTarget.style.borderColor = "#08B981";
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.background = "#FAFFFD";
+                                e.currentTarget.style.borderColor = "#DCECE4";
                             }}
                         >
-                            <X size={15} />
+                            <span>View Batch Courses</span>
+                            <ChevronRight size={15} />
                         </button>
                     )}
-
-                    {/* Keyboard shortcut hint pill */}
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 4,
-                            background: "#F1FAF5",
-                            border: "1px solid #DCECE4",
-                            borderRadius: 6,
-                            padding: "3px 7px",
-                            fontSize: 11,
-                            fontWeight: 700,
-                            color: "#71827B",
-                            userSelect: "none",
-                            marginRight: 8,
-                        }}
-                    >
-                        <span>Ctrl</span>
-                        <span>K</span>
-                    </div>
-
-                    {/* AI / Semantic Search trigger button */}
-                    <button
-                        type="button"
-                        onClick={handleTriggerSemantic}
-                        disabled={!searchQuery.trim() || semanticLoading}
-                        style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                            padding: "7px 13px",
-                            borderRadius: 8,
-                            border: "none",
-                            background: searchQuery.trim() ? "#08B981" : "#E5F6EE",
-                            color: searchQuery.trim() ? "#FFFFFF" : "#71827B",
-                            fontSize: 12.5,
-                            fontWeight: 600,
-                            cursor: searchQuery.trim() ? "pointer" : "default",
-                            transition: "all 0.15s ease",
-                        }}
-                        title="Search through document text and topic tags"
-                    >
-                        {semanticLoading ? (
-                            <Loader2 size={13} className="spin-animation" />
-                        ) : (
-                            <Sparkles size={13} />
-                        )}
-                        <span>{semanticLoading ? "Searching..." : "Search"}</span>
-                    </button>
                 </div>
 
-                {/* Search Results Dropdown */}
-                {searchOpen && searchQuery.trim().length > 0 && (
-                    <div
-                        style={{
-                            position: "absolute",
-                            top: "calc(100% + 8px)",
-                            left: 0,
-                            right: 0,
-                            background: "#FFFFFF",
-                            border: "1px solid #DCECE4",
-                            borderRadius: 12,
-                            boxShadow: "0 10px 30px rgba(20, 43, 42, 0.10)",
-                            zIndex: 100,
-                            maxHeight: 400,
-                            overflowY: "auto",
-                            padding: "12px 14px",
-                        }}
-                    >
-                        {hasSearchResults ? (
-                            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                                {/* Courses Results */}
-                                {matchedCourses.length > 0 && (
-                                    <div>
-                                        <div
-                                            style={{
-                                                fontSize: 11,
-                                                fontWeight: 700,
-                                                textTransform: "uppercase",
-                                                letterSpacing: "0.05em",
-                                                color: "#71827B",
-                                                marginBottom: 6,
-                                            }}
-                                        >
-                                            Courses ({matchedCourses.length})
-                                        </div>
-                                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                                            {matchedCourses.map((c) => (
-                                                <div
-                                                    key={c.id}
-                                                    onClick={() => {
-                                                        setSearchOpen(false);
-                                                        navigate(`/dashboard/courses/${c.id}`);
-                                                    }}
-                                                    style={{
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        justifyContent: "space-between",
-                                                        padding: "8px 12px",
-                                                        borderRadius: 8,
-                                                        cursor: "pointer",
-                                                        background: "#FAFFFD",
-                                                        border: "1px solid #EBF5F0",
-                                                    }}
-                                                    onMouseEnter={(e) => {
-                                                        e.currentTarget.style.background = "#E5F6EE";
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        e.currentTarget.style.background = "#FAFFFD";
-                                                    }}
-                                                >
-                                                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                                        <span
-                                                            style={{
-                                                                fontSize: 11,
-                                                                fontWeight: 700,
-                                                                padding: "2px 7px",
-                                                                borderRadius: 4,
-                                                                background: "#08B981",
-                                                                color: "white",
-                                                            }}
-                                                        >
-                                                            {c.code}
-                                                        </span>
-                                                        <span style={{ fontSize: 13.5, fontWeight: 600, color: "#142B2A" }}>
-                                                            {c.name}
-                                                        </span>
-                                                        <span style={{ fontSize: 12, color: "#71827B" }}>
-                                                            Year {c.academicYear} · Sem {c.semesterNumber}
-                                                        </span>
-                                                    </div>
-                                                    <ChevronRight size={15} color="#71827B" />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Semantic AI Results */}
-                                {semanticResults && semanticResults.length > 0 && (
-                                    <div>
-                                        <div
-                                            style={{
-                                                fontSize: 11,
-                                                fontWeight: 700,
-                                                textTransform: "uppercase",
-                                                letterSpacing: "0.05em",
-                                                color: "#078E69",
-                                                marginBottom: 6,
-                                            }}
-                                        >
-                                            Resources ({semanticResults.length})
-                                        </div>
-                                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                                            {semanticResults.map((r) => (
-                                                <div
-                                                    key={r.id}
-                                                    onClick={() => {
-                                                        setSearchOpen(false);
-                                                        const targetCourse = courses.find((c) =>
-                                                            r.courseName?.includes(c.code) || r.courseName === c.name
-                                                        );
-                                                        if (targetCourse) {
-                                                            navigate(`/dashboard/courses/${targetCourse.id}`);
-                                                        } else if (r.fileUrl) {
-                                                            window.open(r.fileUrl, "_blank", "noopener,noreferrer");
-                                                        }
-                                                    }}
-                                                    style={{
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        justifyContent: "space-between",
-                                                        padding: "8px 12px",
-                                                        borderRadius: 8,
-                                                        cursor: "pointer",
-                                                        background: "#F0FDF4",
-                                                        border: "1px solid #A7F3D0",
-                                                    }}
-                                                    onMouseEnter={(e) => {
-                                                        e.currentTarget.style.background = "#DCFCE7";
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        e.currentTarget.style.background = "#F0FDF4";
-                                                    }}
-                                                >
-                                                    <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: 1 }}>
-                                                        <span
-                                                            className={`type-badge ${r.resourceType === "KUPPI_NOTES" ? "kuppi" : r.resourceType === "PAST_PAPER" ? "past-paper" : r.resourceType === "TUTE" ? "tute" : ""}`}
-                                                            style={{ fontSize: 10, flexShrink: 0 }}
-                                                        >
-                                                            {r.resourceType?.replace("_", " ")}
-                                                        </span>
-                                                        <span
-                                                            style={{
-                                                                fontSize: 13,
-                                                                fontWeight: 600,
-                                                                color: "#142B2A",
-                                                                overflow: "hidden",
-                                                                textOverflow: "ellipsis",
-                                                                whiteSpace: "nowrap",
-                                                            }}
-                                                        >
-                                                            {r.title}
-                                                        </span>
-                                                        {r.courseName && (
-                                                            <span style={{ fontSize: 11.5, color: "#71827B", flexShrink: 0 }}>
-                                                                {r.courseName}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <ChevronRight size={15} color="#08B981" />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <div style={{ textAlign: "center", padding: "16px", color: "#71827B", fontSize: 13 }}>
-                                No matching materials found for "{searchQuery}".
-                            </div>
-                        )}
-                    </div>
-                )}
-            </div>
-
-            {/* ─────────────────────────────────────────────────────────────
-                3. YOUR BATCH OVERVIEW – THREE KPI CARDS
-            ───────────────────────────────────────────────────────────── */}
-            <div style={{ marginBottom: 28 }}>
-                <h2
-                    style={{
-                        fontFamily: "var(--font-display)",
-                        fontSize: 20,
-                        fontWeight: 800,
-                        color: "#142B2A",
-                        margin: "0 0 4px",
-                    }}
-                >
-                    Your Batch Overview
-                </h2>
-                <p style={{ fontSize: 13.5, color: "#71827B", margin: "0 0 16px" }}>
-                    Key information and activity from {batchDisplayName}.
-                </p>
-
-                <div
-                    style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                        gap: 16,
-                    }}
-                >
-                    {/* KPI 1 – Courses */}
-                    <div
-                        style={{
-                            background: "#FFFFFF",
-                            border: "1px solid #DCECE4",
-                            borderRadius: 14,
-                            padding: "20px 22px",
-                            boxShadow: "0 1px 3px rgba(20, 43, 42, 0.04)",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 16,
-                        }}
-                    >
-                        <div
+                {/* ── Middle: Batch-Scoped Resource Search ── */}
+                <div style={{ padding: "20px 0" }}>
+                    <div style={{ marginBottom: 12 }}>
+                        <h3
                             style={{
-                                width: 46,
-                                height: 46,
-                                borderRadius: 12,
-                                background: "#E5F6EE",
-                                color: "#08B981",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                flexShrink: 0,
+                                fontSize: 15,
+                                fontWeight: 700,
+                                color: "#142B2A",
+                                margin: "0 0 2px",
                             }}
                         >
-                            <BookOpen size={22} />
-                        </div>
-                        <div>
-                            <div style={{ fontSize: 26, fontWeight: 800, color: "#142B2A", lineHeight: 1 }}>
-                                {statsLoading ? "—" : (stats?.courseCount ?? myBatch?.courseCount ?? courses.length ?? 0)}
-                            </div>
-                            <div style={{ fontSize: 12.5, color: "#71827B", marginTop: 4 }}>
-                                in your batch
-                            </div>
-                        </div>
+                            Find Academic Resources
+                        </h3>
+                        <p style={{ fontSize: 13, color: "#71827B", margin: 0 }}>
+                            Search resources shared within your batch.
+                        </p>
                     </div>
 
-                    {/* KPI 2 – Resources */}
-                    <div
-                        style={{
-                            background: "#FFFFFF",
-                            border: "1px solid #DCECE4",
-                            borderRadius: 14,
-                            padding: "20px 22px",
-                            boxShadow: "0 1px 3px rgba(20, 43, 42, 0.04)",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 16,
-                        }}
-                    >
+                    {/* Search Input Bar */}
+                    <div ref={searchContainerRef} style={{ position: "relative" }}>
                         <div
                             style={{
-                                width: 46,
-                                height: 46,
-                                borderRadius: 12,
-                                background: "#E5F6EE",
-                                color: "#08B981",
                                 display: "flex",
                                 alignItems: "center",
-                                justifyContent: "center",
-                                flexShrink: 0,
-                            }}
-                        >
-                            <FileText size={22} />
-                        </div>
-                        <div>
-                            <div style={{ fontSize: 26, fontWeight: 800, color: "#142B2A", lineHeight: 1 }}>
-                                {statsLoading ? "—" : (stats?.resourceCount ?? 0)}
-                            </div>
-                            <div style={{ fontSize: 12.5, color: "#71827B", marginTop: 4 }}>
-                                shared in {batchDisplayName}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* KPI 3 – My Uploads */}
-                    <div
-                        style={{
-                            background: "#FFFFFF",
-                            border: "1px solid #DCECE4",
-                            borderRadius: 14,
-                            padding: "20px 22px",
-                            boxShadow: "0 1px 3px rgba(20, 43, 42, 0.04)",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 16,
-                        }}
-                    >
-                        <div
-                            style={{
-                                width: 46,
-                                height: 46,
+                                background: "#FAFFFD",
+                                border: `1.5px solid ${searchOpen ? "#08B981" : "#DCECE4"}`,
                                 borderRadius: 12,
-                                background: "#E5F6EE",
-                                color: "#08B981",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                flexShrink: 0,
+                                padding: "5px 10px 5px 16px",
+                                boxShadow: searchOpen
+                                    ? "0 4px 16px rgba(8, 185, 129, 0.12)"
+                                    : "0 1px 2px rgba(20, 43, 42, 0.03)",
+                                transition: "all 0.15s ease",
                             }}
                         >
-                            <UploadCloud size={22} />
-                        </div>
-                        <div>
-                            <div style={{ fontSize: 26, fontWeight: 800, color: "#142B2A", lineHeight: 1 }}>
-                                {statsLoading ? "—" : (stats?.myUploadCount ?? 0)}
-                            </div>
-                            <div style={{ fontSize: 12.5, color: "#71827B", marginTop: 4 }}>
-                                by you in {batchDisplayName}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                            <Search size={18} color="#71827B" style={{ marginRight: 10, flexShrink: 0 }} />
 
-            {/* ─────────────────────────────────────────────────────────────
-                4. YOUR BATCH (SEPARATE HIGHLIGHTED CARD)
-            ───────────────────────────────────────────────────────────── */}
-            {myBatch && (
-                <div style={{ marginBottom: 28 }}>
-                    <div
-                        onClick={() => navigate(`/dashboard/batches/${myBatch.id}`)}
-                        style={{
-                            background: "#FAFFFD",
-                            border: "1.5px solid #A7F3D0",
-                            borderRadius: 14,
-                            padding: "20px 24px",
-                            boxShadow: "0 2px 8px rgba(8, 185, 129, 0.08)",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            gap: 16,
-                            transition: "all 0.15s ease",
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.borderColor = "#08B981";
-                            e.currentTarget.style.transform = "translateY(-1px)";
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.borderColor = "#A7F3D0";
-                            e.currentTarget.style.transform = "translateY(0)";
-                        }}
-                    >
-                        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                            <input
+                                ref={searchInputRef}
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value);
+                                    setSemanticResults(null);
+                                    setSearchOpen(true);
+                                }}
+                                onFocus={() => {
+                                    if (searchQuery.trim().length > 0) setSearchOpen(true);
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" && searchQuery.trim()) {
+                                        handleTriggerSemantic();
+                                    }
+                                }}
+                                placeholder="Search courses, notes, tutes, past papers..."
+                                style={{
+                                    flex: 1,
+                                    border: "none",
+                                    outline: "none",
+                                    fontSize: 14,
+                                    color: "#142B2A",
+                                    background: "transparent",
+                                    fontFamily: "var(--font-sans)",
+                                    padding: "8px 0",
+                                }}
+                            />
+
+                            {/* Clear button */}
+                            {searchQuery && (
+                                <button
+                                    type="button"
+                                    onClick={handleClearSearch}
+                                    style={{
+                                        background: "transparent",
+                                        border: "none",
+                                        cursor: "pointer",
+                                        padding: 4,
+                                        color: "#71827B",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        marginRight: 6,
+                                    }}
+                                >
+                                    <X size={15} />
+                                </button>
+                            )}
+
+                            {/* Keyboard shortcut hint pill */}
                             <div
                                 style={{
-                                    width: 48,
-                                    height: 48,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 4,
+                                    background: "#F1FAF5",
+                                    border: "1px solid #DCECE4",
+                                    borderRadius: 6,
+                                    padding: "3px 7px",
+                                    fontSize: 11,
+                                    fontWeight: 700,
+                                    color: "#71827B",
+                                    userSelect: "none",
+                                    marginRight: 8,
+                                }}
+                            >
+                                <span>Ctrl</span>
+                                <span>K</span>
+                            </div>
+
+                            {/* AI / Semantic Search trigger button */}
+                            <button
+                                type="button"
+                                onClick={handleTriggerSemantic}
+                                disabled={!searchQuery.trim() || semanticLoading}
+                                style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 6,
+                                    padding: "7px 13px",
+                                    borderRadius: 8,
+                                    border: "none",
+                                    background: searchQuery.trim() ? "#08B981" : "#E5F6EE",
+                                    color: searchQuery.trim() ? "#FFFFFF" : "#71827B",
+                                    fontSize: 12.5,
+                                    fontWeight: 600,
+                                    cursor: searchQuery.trim() ? "pointer" : "default",
+                                    transition: "all 0.15s ease",
+                                }}
+                                title="Search resources in this batch"
+                            >
+                                {semanticLoading ? (
+                                    <Loader2 size={13} className="spin-animation" />
+                                ) : (
+                                    <Sparkles size={13} />
+                                )}
+                                <span>{semanticLoading ? "Searching..." : "Search"}</span>
+                            </button>
+                        </div>
+
+                        {/* Search Results Dropdown */}
+                        {searchOpen && searchQuery.trim().length > 0 && (
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    top: "calc(100% + 8px)",
+                                    left: 0,
+                                    right: 0,
+                                    background: "#FFFFFF",
+                                    border: "1px solid #DCECE4",
                                     borderRadius: 12,
-                                    background: "#08B981",
-                                    color: "white",
+                                    boxShadow: "0 10px 30px rgba(20, 43, 42, 0.10)",
+                                    zIndex: 100,
+                                    maxHeight: 380,
+                                    overflowY: "auto",
+                                    padding: "12px 14px",
+                                }}
+                            >
+                                {hasSearchResults ? (
+                                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                                        {/* Courses Results */}
+                                        {matchedCourses.length > 0 && (
+                                            <div>
+                                                <div
+                                                    style={{
+                                                        fontSize: 11,
+                                                        fontWeight: 700,
+                                                        textTransform: "uppercase",
+                                                        letterSpacing: "0.05em",
+                                                        color: "#71827B",
+                                                        marginBottom: 6,
+                                                    }}
+                                                >
+                                                    Courses ({matchedCourses.length})
+                                                </div>
+                                                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                                                    {matchedCourses.map((c) => (
+                                                        <div
+                                                            key={c.id}
+                                                            onClick={() => {
+                                                                setSearchOpen(false);
+                                                                navigate(`/dashboard/courses/${c.id}`);
+                                                            }}
+                                                            style={{
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "space-between",
+                                                                padding: "8px 12px",
+                                                                borderRadius: 8,
+                                                                cursor: "pointer",
+                                                                background: "#FAFFFD",
+                                                                border: "1px solid #EBF5F0",
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.background = "#E5F6EE";
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.background = "#FAFFFD";
+                                                            }}
+                                                        >
+                                                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                                                <span
+                                                                    style={{
+                                                                        fontSize: 11,
+                                                                        fontWeight: 700,
+                                                                        padding: "2px 7px",
+                                                                        borderRadius: 4,
+                                                                        background: "#08B981",
+                                                                        color: "white",
+                                                                    }}
+                                                                >
+                                                                    {c.code}
+                                                                </span>
+                                                                <span style={{ fontSize: 13.5, fontWeight: 600, color: "#142B2A" }}>
+                                                                    {c.name}
+                                                                </span>
+                                                                <span style={{ fontSize: 12, color: "#71827B" }}>
+                                                                    Year {c.academicYear} · Sem {c.semesterNumber}
+                                                                </span>
+                                                            </div>
+                                                            <ChevronRight size={15} color="#71827B" />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Semantic AI Results */}
+                                        {semanticResults && semanticResults.length > 0 && (
+                                            <div>
+                                                <div
+                                                    style={{
+                                                        fontSize: 11,
+                                                        fontWeight: 700,
+                                                        textTransform: "uppercase",
+                                                        letterSpacing: "0.05em",
+                                                        color: "#078E69",
+                                                        marginBottom: 6,
+                                                    }}
+                                                >
+                                                    Resources ({semanticResults.length})
+                                                </div>
+                                                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                                                    {semanticResults.map((r) => (
+                                                        <div
+                                                            key={r.id}
+                                                            onClick={() => {
+                                                                setSearchOpen(false);
+                                                                const targetCourse = courses.find((c) =>
+                                                                    r.courseName?.includes(c.code) || r.courseName === c.name
+                                                                );
+                                                                if (targetCourse) {
+                                                                    navigate(`/dashboard/courses/${targetCourse.id}`);
+                                                                } else if (r.fileUrl) {
+                                                                    window.open(r.fileUrl, "_blank", "noopener,noreferrer");
+                                                                }
+                                                            }}
+                                                            style={{
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "space-between",
+                                                                padding: "8px 12px",
+                                                                borderRadius: 8,
+                                                                cursor: "pointer",
+                                                                background: "#F0FDF4",
+                                                                border: "1px solid #A7F3D0",
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.background = "#DCFCE7";
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.background = "#F0FDF4";
+                                                            }}
+                                                        >
+                                                            <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: 1 }}>
+                                                                <span
+                                                                    className={`type-badge ${r.resourceType === "KUPPI_NOTES" ? "kuppi" : r.resourceType === "PAST_PAPER" ? "past-paper" : r.resourceType === "TUTE" ? "tute" : ""}`}
+                                                                    style={{ fontSize: 10, flexShrink: 0 }}
+                                                                >
+                                                                    {r.resourceType?.replace("_", " ")}
+                                                                </span>
+                                                                <span
+                                                                    style={{
+                                                                        fontSize: 13,
+                                                                        fontWeight: 600,
+                                                                        color: "#142B2A",
+                                                                        overflow: "hidden",
+                                                                        textOverflow: "ellipsis",
+                                                                        whiteSpace: "nowrap",
+                                                                    }}
+                                                                >
+                                                                    {r.title}
+                                                                </span>
+                                                                {r.courseName && (
+                                                                    <span style={{ fontSize: 11.5, color: "#71827B", flexShrink: 0 }}>
+                                                                        {r.courseName}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <ChevronRight size={15} color="#08B981" />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div style={{ textAlign: "center", padding: "16px", color: "#71827B", fontSize: 13 }}>
+                                        No matching materials found in your batch for "{searchQuery}".
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* ── Bottom: Three Batch-Specific KPI Cards ── */}
+                <div style={{ borderTop: "1px solid #EBF5F0", paddingTop: 20 }}>
+                    <div
+                        style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                            gap: 14,
+                        }}
+                    >
+                        {/* KPI 1 – Courses */}
+                        <div
+                            style={{
+                                background: "#FAFFFD",
+                                border: "1px solid #EBF5F0",
+                                borderRadius: 12,
+                                padding: "16px 18px",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 14,
+                            }}
+                        >
+                            <div
+                                style={{
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: 10,
+                                    background: "#E5F6EE",
+                                    color: "#08B981",
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
                                     flexShrink: 0,
                                 }}
                             >
-                                <GraduationCap size={24} />
+                                <BookOpen size={20} />
                             </div>
-
                             <div>
-                                <div
-                                    style={{
-                                        fontSize: 11,
-                                        fontWeight: 800,
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.06em",
-                                        color: "#078E69",
-                                        marginBottom: 2,
-                                    }}
-                                >
-                                    Your Batch
+                                <div style={{ fontSize: 22, fontWeight: 800, color: "#142B2A", lineHeight: 1 }}>
+                                    {statsLoading ? "—" : (stats?.courseCount ?? myBatch?.courseCount ?? courses.length ?? 0)}
                                 </div>
-                                <h3
-                                    style={{
-                                        fontFamily: "var(--font-display)",
-                                        fontSize: 18,
-                                        fontWeight: 800,
-                                        color: "#142B2A",
-                                        margin: "0 0 2px",
-                                    }}
-                                >
-                                    {myBatch.name}
-                                </h3>
-                                <div style={{ fontSize: 13, color: "#71827B" }}>
-                                    {formatBatchSubtitle(myBatch)}
+                                <div style={{ fontSize: 13, fontWeight: 600, color: "#142B2A", marginTop: 3 }}>
+                                    Courses
+                                </div>
+                                <div style={{ fontSize: 11.5, color: "#71827B" }}>
+                                    Available
                                 </div>
                             </div>
                         </div>
 
-                        <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#08B981", fontWeight: 600, fontSize: 13.5 }}>
-                            <span>View Courses</span>
-                            <ChevronRight size={18} />
+                        {/* KPI 2 – Resources */}
+                        <div
+                            style={{
+                                background: "#FAFFFD",
+                                border: "1px solid #EBF5F0",
+                                borderRadius: 12,
+                                padding: "16px 18px",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 14,
+                            }}
+                        >
+                            <div
+                                style={{
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: 10,
+                                    background: "#E5F6EE",
+                                    color: "#08B981",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    flexShrink: 0,
+                                }}
+                            >
+                                <FileText size={20} />
+                            </div>
+                            <div>
+                                <div style={{ fontSize: 22, fontWeight: 800, color: "#142B2A", lineHeight: 1 }}>
+                                    {statsLoading ? "—" : (stats?.resourceCount ?? 0)}
+                                </div>
+                                <div style={{ fontSize: 13, fontWeight: 600, color: "#142B2A", marginTop: 3 }}>
+                                    Resources
+                                </div>
+                                <div style={{ fontSize: 11.5, color: "#71827B" }}>
+                                    Shared
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* KPI 3 – My Uploads */}
+                        <div
+                            style={{
+                                background: "#FAFFFD",
+                                border: "1px solid #EBF5F0",
+                                borderRadius: 12,
+                                padding: "16px 18px",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 14,
+                            }}
+                        >
+                            <div
+                                style={{
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: 10,
+                                    background: "#E5F6EE",
+                                    color: "#08B981",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    flexShrink: 0,
+                                }}
+                            >
+                                <UploadCloud size={20} />
+                            </div>
+                            <div>
+                                <div style={{ fontSize: 22, fontWeight: 800, color: "#142B2A", lineHeight: 1 }}>
+                                    {statsLoading ? "—" : (stats?.myUploadCount ?? 0)}
+                                </div>
+                                <div style={{ fontSize: 13, fontWeight: 600, color: "#142B2A", marginTop: 3 }}>
+                                    My Uploads
+                                </div>
+                                <div style={{ fontSize: 11.5, color: "#71827B" }}>
+                                    Contributed
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            )}
+            </div>
 
             {/* ─────────────────────────────────────────────────────────────
-                5. OTHER BATCHES (EXCLUDING OWN BATCH)
+                3. OTHER BATCHES (EXCLUDING OWN BATCH)
             ───────────────────────────────────────────────────────────── */}
-            <div style={{ marginBottom: 32 }}>
-                <h2
-                    style={{
-                        fontFamily: "var(--font-display)",
-                        fontSize: 18,
-                        fontWeight: 700,
-                        color: "#142B2A",
-                        margin: "0 0 14px",
-                    }}
-                >
-                    Other Batches
-                </h2>
+            <div style={{ marginBottom: 28 }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 14 }}>
+                    <h2
+                        style={{
+                            fontFamily: "var(--font-display)",
+                            fontSize: 18,
+                            fontWeight: 700,
+                            color: "#142B2A",
+                            margin: 0,
+                        }}
+                    >
+                        Other Batches
+                    </h2>
+                    <span style={{ fontSize: 12.5, color: "#71827B" }}>
+                        ({otherBatches.length} batch{otherBatches.length !== 1 ? "es" : ""} available)
+                    </span>
+                </div>
 
                 {loading ? (
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -864,7 +905,7 @@ export default function StudentDashboardPage() {
             </div>
 
             {/* ─────────────────────────────────────────────────────────────
-                6. CROSS-BATCH RESOURCE ACCESS INFORMATION
+                4. CROSS-BATCH RESOURCE ACCESS INFORMATION
             ───────────────────────────────────────────────────────────── */}
             <div
                 style={{
@@ -897,7 +938,7 @@ export default function StudentDashboardPage() {
                         Access Batch Resources
                     </div>
                     <div style={{ fontSize: 12.5, color: "#71827B", marginTop: 2 }}>
-                        View and download academic resources from your batch or other batches.
+                        Explore other batches to view and download their academic resources. Uploading, editing and deleting resources are restricted to your authorized batch.
                     </div>
                 </div>
             </div>

@@ -47,10 +47,11 @@ public class ResourceController {
     @GetMapping("/search/semantic")
     public ResponseEntity<List<ResourceResponse>> semanticSearch(
             @RequestParam(required = false) Long courseId,
+            @RequestParam(required = false) Long batchId,
             @RequestParam("query") String query,
             @RequestParam(required = false, defaultValue = "0.20") Double minSimilarity,
             @RequestParam(required = false, defaultValue = "15") Integer limit) {
-        return ResponseEntity.ok(resourceService.semanticSearch(courseId, query, minSimilarity, limit));
+        return ResponseEntity.ok(resourceService.semanticSearch(courseId, batchId, query, minSimilarity, limit));
     }
 
     @GetMapping("/{id}/similar")

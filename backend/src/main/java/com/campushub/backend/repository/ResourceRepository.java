@@ -47,7 +47,9 @@ public interface ResourceRepository extends JpaRepository<Resource, Long> {
         SELECT r.id,
                1.0 - (r.embedding <=> CAST(:queryVector AS vector)) AS similarity
         FROM resources r
+        JOIN courses c ON r.course_id = c.id
         WHERE (:courseId IS NULL OR r.course_id = :courseId)
+          AND (:batchId IS NULL OR c.batch_id = :batchId)
           AND r.embedding IS NOT NULL
           AND (1.0 - (r.embedding <=> CAST(:queryVector AS vector))) >= :minSimilarity
         ORDER BY r.embedding <=> CAST(:queryVector AS vector) ASC
@@ -55,6 +57,7 @@ public interface ResourceRepository extends JpaRepository<Resource, Long> {
     """)
     List<Object[]> findSimilarResourceIds(
             @Param("courseId") Long courseId,
+            @Param("batchId") Long batchId,
             @Param("queryVector") String queryVector,
             @Param("minSimilarity") double minSimilarity,
             @Param("limit") int limit
