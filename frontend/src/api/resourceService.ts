@@ -8,6 +8,9 @@ export const resourceService = {
     getByCourse: (courseId: string | number) =>
         client.get<Resource[]>(`/resources/course/${courseId}`),
 
+    getRecentByBatch: (batchId: string | number) =>
+        client.get<Resource[]>(`/resources/batch/${batchId}/recent`),
+
     getMine: () => client.get<Resource[]>("/resources/mine"),
 
     getByTag: (tag: string) =>
