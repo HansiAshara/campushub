@@ -2,6 +2,7 @@ package com.campushub.backend.controller;
 
 import com.campushub.backend.dto.BatchRequest;
 import com.campushub.backend.dto.BatchResponse;
+import com.campushub.backend.dto.BatchStatsResponse;
 import com.campushub.backend.service.BatchService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,11 @@ public class BatchController {
     @GetMapping
     public ResponseEntity<List<BatchResponse>> getAll() {
         return ResponseEntity.ok(batchService.getAll());
+    }
+
+    @GetMapping("/{batchId}/stats")
+    public ResponseEntity<BatchStatsResponse> getBatchStats(@PathVariable Long batchId) {
+        return ResponseEntity.ok(batchService.getBatchStats(batchId));
     }
 
     @PutMapping("/{id}")
