@@ -17,6 +17,7 @@ public class ResourceResponse {
     private String resourceType;
     private String summary;
     private String courseName;
+    private Long courseId;
     private String uploadedByName;
     private Long uploadedById;
     private LocalDateTime createdAt;
@@ -29,13 +30,13 @@ public class ResourceResponse {
     public ResourceResponse(Long id, String title, String fileUrl, String resourceType, String summary,
                             String courseName, String uploadedByName, Long uploadedById,
                             LocalDateTime createdAt, boolean canEdit, String aiStatus, List<String> tags) {
-        this(id, title, fileUrl, resourceType, summary, courseName, uploadedByName, uploadedById, createdAt, canEdit, aiStatus, tags, null);
+        this(id, title, fileUrl, resourceType, summary, courseName, null, uploadedByName, uploadedById, createdAt, canEdit, aiStatus, tags, null);
     }
 
     // Backward-compatible constructor
     public ResourceResponse(Long id, String title, String fileUrl, String resourceType, String summary,
                             String courseName, String uploadedByName, Long uploadedById,
                             LocalDateTime createdAt, boolean canEdit) {
-        this(id, title, fileUrl, resourceType, summary, courseName, uploadedByName, uploadedById, createdAt, canEdit, "PENDING", List.of(), null);
+        this(id, title, fileUrl, resourceType, summary, courseName, null, uploadedByName, uploadedById, createdAt, canEdit, "PENDING", List.of(), null);
     }
 }
