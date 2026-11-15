@@ -333,6 +333,14 @@ public class ResourceService {
         return similarList;
     }
 
+    public List<ResourceResponse> getRecentByBatch(Long batchId) {
+        User user = currentUser();
+        return resourceRepository.findTop5ByCourse_Batch_IdOrderByCreatedAtDesc(batchId)
+                .stream()
+                .map(r -> toResponse(r, user))
+                .toList();
+    }
+
     private ResourceResponse toResponse(Resource resource, User currentUser) {
         boolean canEdit = permissionService.canEditResource(currentUser, resource);
         String courseDisplayName = resource.getCourse().getCode() + " - " + resource.getCourse().getName();
@@ -341,12 +349,16 @@ public class ResourceService {
                 : List.of();
         String aiStatusStr = resource.getAiStatus() != null ? resource.getAiStatus().name() : "PENDING";
 
-        return new ResourceResponse(
+        ResourceResponse resp = new ResourceResponse(
                 resource.getId(), resource.getTitle(), resource.getFileUrl(),
                 resource.getResourceType().name(), resource.getSummary(),
                 courseDisplayName, resource.getUploadedBy().getName(),
                 resource.getUploadedBy().getId(), resource.getCreatedAt(), canEdit,
                 aiStatusStr, tagNames
         );
+        if (resource.getCourse() != null) {
+            resp.setCourseId(resource.getCourse().getId());
+        }
+        return resp;
     }
 }
