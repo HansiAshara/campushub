@@ -100,3 +100,11 @@ export interface AuthResponse {
     academicYear?: number;
     userId?: number;
 }
+
+export interface BatchStats {
+    batchId: number;
+    batchName: string;
+    courseCount: number;
+    resourceCount: number;
+    myUploadCount: number;
+}
