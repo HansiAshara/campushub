@@ -26,6 +26,8 @@ public interface ResourceRepository extends JpaRepository<Resource, Long> {
 
     long countByCourse_Batch_IdAndUploadedById(Long batchId, Long userId);
 
+    List<Resource> findTop5ByCourse_Batch_IdOrderByCreatedAtDesc(Long batchId);
+
     @Query("SELECT r FROM Resource r JOIN r.tags t WHERE t.normalizedName = :normalizedTag")
     List<Resource> findByTagNormalizedName(@Param("normalizedTag") String normalizedTag);
 
