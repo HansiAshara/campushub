@@ -43,6 +43,7 @@ export interface Resource {
     resourceType: string;
     summary: string | null;
     courseName: string;
+    courseId?: number;
     uploadedByName: string;
     uploadedById: number;
     createdAt: string;
