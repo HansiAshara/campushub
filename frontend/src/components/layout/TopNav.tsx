@@ -67,6 +67,7 @@ function TopNav() {
     const batchIdInUrl = path.match(/^\/dashboard\/batches\/(\d+)/)?.[1] ?? null;
     // e.g. /dashboard/courses/5  or /dashboard/courses/5/...
     const onCoursePage = /^\/dashboard\/courses\/\d+/.test(path);
+    const onDashboard = path === "/dashboard";
     const onBatchList = path === "/dashboard/batches";
     const onCourseList = !!batchIdInUrl && !onCoursePage; // /dashboard/batches/:id
 
@@ -115,7 +116,7 @@ function TopNav() {
 
                 {/* ── Logo ── */}
                 <Link
-                    to="/dashboard/batches"
+                    to="/dashboard"
                     style={{ display: "flex", alignItems: "center", gap: 9, flexShrink: 0, marginRight: 20 }}
                 >
                     <div style={{
@@ -142,7 +143,18 @@ function TopNav() {
 
                     {/* ─── GROUP 1: Content hierarchy tabs ─── */}
 
-                    {/* 1. Batches — always visible */}
+                    {/* 1. Dashboard — always visible */}
+                    <HoverTab
+                        to="/dashboard"
+                        active={onDashboard}
+                        ghost={false}
+                        label="Dashboard"
+                    />
+
+                    {/* Arrow separator */}
+                    <span style={{ color: "#D1D5DB", fontSize: 14, margin: "0 1px", userSelect: "none" }}>›</span>
+
+                    {/* 2. Batches — always visible */}
                     <HoverTab
                         to="/dashboard/batches"
                         active={onBatchList}
@@ -153,7 +165,7 @@ function TopNav() {
                     {/* Arrow separator */}
                     <span style={{ color: "#D1D5DB", fontSize: 14, margin: "0 1px", userSelect: "none" }}>›</span>
 
-                    {/* 2. Courses — enabled once a batch has been visited */}
+                    {/* 3. Courses — enabled once a batch has been visited */}
                     {coursesLink ? (
                         <HoverTab
                             to={coursesLink}
