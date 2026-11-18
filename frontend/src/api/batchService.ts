@@ -1,8 +1,9 @@
 import client from "./client";
-import { type Batch } from "../types";
+import { type Batch, type BatchStats } from "../types";
 
 export const batchService = {
     getAll: () => client.get<Batch[]>("/batches"),
+    getStats: (batchId: number | string) => client.get<BatchStats>(`/batches/${batchId}/stats`),
     create: (batchData: { name: string; intakeYear: number }) => client.post<Batch>("/batches", batchData),
     update: (id: number | string, batchData: { name: string; intakeYear: number }) => client.put<Batch>(`/batches/${id}`, batchData),
     delete: (id: number | string) => client.delete<void>(`/batches/${id}`),

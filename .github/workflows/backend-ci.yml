@@ -1,0 +1,66 @@
+name: Backend CI
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/**'
+      - 'feature-*'
+      - 'feat/**'
+      - 'feat-*'
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  backend-build:
+    name: Backend Tests and Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_DB: campushub_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/campushub_test
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      AI_PROVIDER: fallback
+      JWT_SECRET: SKb2EvW1t8XW1QfW1Yd4yym1q/B+ApCv+dxdyobRrII
+      SUPABASE_URL: http://localhost:8000
+      SUPABASE_SERVICE_KEY: ci-test-supabase-key
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+          cache-dependency-path: backend/pom.xml
+
+      - name: Run Maven test suite
+        run: mvn --batch-mode test
+
+      - name: Verify and package backend
+        run: mvn --batch-mode verify -DskipTests

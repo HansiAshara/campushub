@@ -43,6 +43,7 @@ export interface Resource {
     resourceType: string;
     summary: string | null;
     courseName: string;
+    courseId?: number;
     uploadedByName: string;
     uploadedById: number;
     createdAt: string;
@@ -99,4 +100,12 @@ export interface AuthResponse {
     batchName?: string | null;
     academicYear?: number;
     userId?: number;
+}
+
+export interface BatchStats {
+    batchId: number;
+    batchName: string;
+    courseCount: number;
+    resourceCount: number;
+    myUploadCount: number;
 }

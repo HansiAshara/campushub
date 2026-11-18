@@ -250,7 +250,7 @@ public class ResourceService {
      * Executes vector semantic search using pgvector cosine distance.
      * Generates a 768-dimensional embedding for the input query, then queries PostgreSQL.
      */
-    public List<ResourceResponse> semanticSearch(Long courseId, String query, Double minSimilarity, Integer limit) {
+    public List<ResourceResponse> semanticSearch(Long courseId, Long batchId, String query, Double minSimilarity, Integer limit) {
         if (query == null || query.isBlank()) {
             return List.of();
         }
@@ -265,7 +265,7 @@ public class ResourceService {
         double threshold = minSimilarity != null ? minSimilarity : 0.20; // default 20% minimum similarity
         int maxResults = limit != null && limit > 0 && limit <= 50 ? limit : 15;
 
-        List<Object[]> results = resourceRepository.findSimilarResourceIds(courseId, queryVectorStr, threshold, maxResults);
+        List<Object[]> results = resourceRepository.findSimilarResourceIds(courseId, batchId, queryVectorStr, threshold, maxResults);
         if (results.isEmpty()) {
             return List.of();
         }
@@ -283,6 +283,10 @@ public class ResourceService {
         }
 
         return matchedResponses;
+    }
+
+    public List<ResourceResponse> semanticSearch(Long courseId, String query, Double minSimilarity, Integer limit) {
+        return semanticSearch(courseId, null, query, minSimilarity, limit);
     }
 
     /**
@@ -329,6 +333,14 @@ public class ResourceService {
         return similarList;
     }
 
+    public List<ResourceResponse> getRecentByBatch(Long batchId) {
+        User user = currentUser();
+        return resourceRepository.findTop5ByCourse_Batch_IdOrderByCreatedAtDesc(batchId)
+                .stream()
+                .map(r -> toResponse(r, user))
+                .toList();
+    }
+
     private ResourceResponse toResponse(Resource resource, User currentUser) {
         boolean canEdit = permissionService.canEditResource(currentUser, resource);
         String courseDisplayName = resource.getCourse().getCode() + " - " + resource.getCourse().getName();
@@ -337,12 +349,16 @@ public class ResourceService {
                 : List.of();
         String aiStatusStr = resource.getAiStatus() != null ? resource.getAiStatus().name() : "PENDING";
 
-        return new ResourceResponse(
+        ResourceResponse resp = new ResourceResponse(
                 resource.getId(), resource.getTitle(), resource.getFileUrl(),
                 resource.getResourceType().name(), resource.getSummary(),
                 courseDisplayName, resource.getUploadedBy().getName(),
                 resource.getUploadedBy().getId(), resource.getCreatedAt(), canEdit,
                 aiStatusStr, tagNames
         );
+        if (resource.getCourse() != null) {
+            resp.setCourseId(resource.getCourse().getId());
+        }
+        return resp;
     }
 }

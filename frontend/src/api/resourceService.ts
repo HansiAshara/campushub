@@ -8,6 +8,9 @@ export const resourceService = {
     getByCourse: (courseId: string | number) =>
         client.get<Resource[]>(`/resources/course/${courseId}`),
 
+    getRecentByBatch: (batchId: string | number) =>
+        client.get<Resource[]>(`/resources/batch/${batchId}/recent`),
+
     getMine: () => client.get<Resource[]>("/resources/mine"),
 
     getByTag: (tag: string) =>
@@ -16,9 +19,9 @@ export const resourceService = {
     reprocessAi: (id: number | string) =>
         client.post<Resource>(`/resources/${id}/reprocess-ai`),
 
-    semanticSearch: (courseId?: string | number, query: string = "", minSimilarity: number = 0.20) =>
+    semanticSearch: (courseId?: string | number, query: string = "", minSimilarity: number = 0.20, batchId?: string | number) =>
         client.get<Resource[]>(`/resources/search/semantic`, {
-            params: { courseId, query, minSimilarity }
+            params: { courseId, batchId, query, minSimilarity }
         }),
 
     getSimilar: (resourceId: string | number) =>

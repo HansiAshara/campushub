@@ -3,7 +3,7 @@ import { batchService } from "../../api/batchService";
 import { type Batch } from "../../types";
 import { useNavigate } from "react-router-dom";
 import { formatBatchSubtitle } from "../../utils/batchUtils";
-import { Search, Fingerprint, Sparkles, GitBranch, ChevronRight, GraduationCap } from "lucide-react";
+import { ChevronRight, GraduationCap } from "lucide-react";
 
 function BatchesPage() {
     const [batches, setBatches] = useState<Batch[]>([]);
@@ -21,55 +21,21 @@ function BatchesPage() {
 
     return (
         <div>
-            {/* ── HERO SECTION ── */}
-            <div className="grid-bg" style={{ padding: "60px 0 52px" }}>
-                <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 40px" }}>
-                    <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "#10B981", textTransform: "uppercase", marginBottom: 20 }}>
-                        University of Moratuwa · IT
-                    </p>
-                    <h1 style={{ fontFamily: "var(--font-display)", fontSize: 52, fontWeight: 900, color: "#0D1B2A", lineHeight: 1.1, marginBottom: 20, maxWidth: 700 }}>
-                        Every tute, paper and kuppi recording{" "}
-                        <span style={{ color: "#10B981" }}>— finally in order.</span>
-                    </h1>
-                    <p style={{ fontSize: 16, color: "#374151", maxWidth: 520, lineHeight: 1.65, marginBottom: 36 }}>
-                        CampusHub replaces chaotic ACA Drive folders with a batch- and semester-scoped
-                        hub: content-aware search, SHA-256 duplicate prevention, version threads and AI
-                        summaries on every upload.
-                    </p>
-
-                    {/* Search bar placeholder */}
-                    <div style={{ display: "flex", gap: 0, maxWidth: 560, background: "white", border: "1px solid #D1D5DB", borderRadius: 10, overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 18px", flex: 1 }}>
-                            <Search size={16} color="#9CA3AF" />
-                            <input
-                                style={{ flex: 1, border: "none", outline: "none", fontSize: 14, color: "#374151", background: "transparent", fontFamily: "var(--font-sans)" }}
-                                placeholder='Try "b-trees", "IT3200 past paper", "deadlock prevention"...'
-                            />
-                        </div>
-                        <button className="btn-primary" style={{ borderRadius: 0, borderLeft: "1px solid #E5E7EB", padding: "12px 24px", fontSize: 14 }}>
-                            Search
-                        </button>
-                    </div>
-
-                    {/* Feature cards */}
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginTop: 36, maxWidth: 720 }}>
-                        {[
-                            { Icon: Fingerprint, title: "SHA-256 dedupe", desc: "Exact matches short-circuit on upload." },
-                            { Icon: Sparkles, title: "AI summaries", desc: "2–3 sentence gist plus topic tags." },
-                            { Icon: GitBranch, title: "Version threads", desc: "Revisions link, never fragment." },
-                        ].map(({ Icon, title, desc }) => (
-                            <div key={title} style={{ background: "white", borderRadius: 12, padding: "18px 20px", border: "1px solid rgba(209, 250, 229, 0.6)", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-                                <Icon size={22} color="#10B981" style={{ marginBottom: 10 }} />
-                                <div style={{ fontWeight: 700, fontSize: 14, color: "#0D1B2A", marginBottom: 4 }}>{title}</div>
-                                <div style={{ fontSize: 13, color: "#10B981" }}>{desc}</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+            {/* ── HEADER SECTION ── */}
+            <div style={{ maxWidth: 1160, margin: "0 auto", padding: "36px 40px 0" }}>
+                <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", color: "#08B981", textTransform: "uppercase", marginBottom: 6 }}>
+                    University of Moratuwa · IT
+                </p>
+                <h1 style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 800, color: "#142B2A", marginBottom: 6 }}>
+                    Academic Batches
+                </h1>
+                <p style={{ fontSize: 14, color: "#71827B", margin: 0 }}>
+                    Browse all available IT batches and view semester courses, notes, and past papers.
+                </p>
             </div>
 
             {/* ── BATCH SELECTOR SECTION ── */}
-            <div style={{ maxWidth: 1160, margin: "0 auto", padding: "40px 40px 60px" }}>
+            <div style={{ maxWidth: 1160, margin: "0 auto", padding: "32px 40px 60px" }}>
                 
                 {/* ── ENROLLED BATCH HUB (For users with an assigned batch from registration) ── */}
                 {myBatch && (
